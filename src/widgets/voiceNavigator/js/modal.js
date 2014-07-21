@@ -166,7 +166,7 @@ var MMVoice = {
             if (action === 'open') {
                 var config = event.data.data;
                 self.$mm_parent.addClass('open');
-                if (MMVoice.is_voice_ready && config.startQuery !== null) { // we have init before
+                if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
                     MMVoice.submitText(config.startQuery);
                     MMVoice._updateUI();
                 }
