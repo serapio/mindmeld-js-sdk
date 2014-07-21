@@ -164,18 +164,16 @@ var MMVoice = {
                 self.onConfig();
             }
             if (action === 'open') {
-                self.$mm_parent.addClass('open');
                 var config = event.data.data;
-                if (config !== undefined) {
-                    if (MMVoice.is_voice_ready && config.startQuery !== null) { // we have init before
-                        MMVoice.submitText(config.startQuery);
-                        MMVoice._updateUI();
-                    }
-                    else if (config.startQuery === null && self.config.listeningMode) {
-                        self._do_on_voice_ready(function() {
-                            MMVoice.listen(self.config.listeningMode === 'continuous');
-                        });
-                    }
+                self.$mm_parent.addClass('open');
+                if (MMVoice.is_voice_ready && config.startQuery !== null) { // we have init before
+                    MMVoice.submitText(config.startQuery);
+                    MMVoice._updateUI();
+                }
+                else if (self.config.startQuery === null && self.config.listeningMode) {
+                    self._do_on_voice_ready(function() {
+                        MMVoice.listen(self.config.listeningMode === 'continuous');
+                    });
                 }
             }
         });

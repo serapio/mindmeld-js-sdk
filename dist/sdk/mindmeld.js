@@ -3192,13 +3192,13 @@ var MM = ( function (window, $, Faye) {
          * @example <caption> Example credentials to get an admin token </caption>
          *
          var adminCredentials = {
-            appsecret: '<appsecret>'
+            appsceret: '<appsecret>'
          };
 
          * @example <caption> Example credentials to get a simple user token </caption>
          *
          var simpleUserCredentials = {
-            appsecret: '<appsecret>',
+            appsceret: '<appsecret>',
             simple: {
                 userid: 'einstein79',
                 name: 'Albert Einstein'
