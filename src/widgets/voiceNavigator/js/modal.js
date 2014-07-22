@@ -869,29 +869,29 @@ var MMVoice = {
 
     _numColumns : function () {
         var self = this;
-        var cardWidth = 218;
-        var cardPadding = 20;
-        var widthRemaining = self.$cards.width() - cardPadding;
-        var numCols = 0;
-        while (widthRemaining >= 0) {
-            numCols++;
-            widthRemaining -= cardWidth + cardPadding;
+        var cardWidth = self.config.cardWidth;
+        if (cardWidth === undefined) {
+            cardWidth = $('.card:nth-child(2)').width() || 300;
         }
+        var totalWidth = self.$cards.width();
+        var numCols = Math.floor(totalWidth / cardWidth);
+        console.log('card w: ' + cardWidth + '\tnumCols: ' + numCols);
         return numCols;
     },
 
-    _numDocuments : function () {
+    _numDocumentsToRender : function (resultsLength) {
         var self = this;
         if (typeof self.config.numResults !== 'undefined') {
             return self.config.numResults;
         }
 
         var numCols = self._numColumns();
-        var numDocs = Math.max(numCols * 2, 8);
-        if (numDocs % numCols !== 0) {
-            numDocs += numCols - (numDocs % numCols);
+        var numDocs = numCols * 4;
+        if (resultsLength <= numDocs) {
+            return resultsLength;
+        } else {
+            return numDocs;
         }
-        return numDocs;
     },
 
     getDocuments : function() {
@@ -932,12 +932,10 @@ var MMVoice = {
             } else {
                 UTIL.log("Got documents from cache");
             }
-
-            var numDocuments = self._numDocuments();
-            if (result.data.length > numDocuments) {
-                result.data.splice(numDocuments, result.data.length - numDocuments);
-            }
-            MMVoice.showResults(result.data);
+            var documents = result.data;
+            var numDocuments = self._numDocumentsToRender(documents.length);
+            documents.splice(numDocuments);
+            MMVoice.showResults(documents);
         }
 
         function onError(error) {
