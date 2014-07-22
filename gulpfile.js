@@ -1,8 +1,9 @@
+/* jshint node: true */
 
 var gulp = require('gulp');
-require('gulp-grunt')(gulp); // Load Grunt tasks for jsdoc until gulp-jsdoc becomes more legit
 var taskListing = require('gulp-task-listing');
 var connect = require('gulp-connect');
+var shell = require('gulp-shell');
 
 
 // -------------------------- Mindmeld.js Tasks -------------------------- //
@@ -31,9 +32,23 @@ gulp.task('buildVoiceNavigator', ['vn.build']);
 // --------------------------------------------------------------------- //
 
 // General Tasks
-gulp.task('archive', ['sdk.archive', 'sw.build', 'vn.build']);
+gulp.task('archive', ['sdk.archive', 'docs', 'sw.build', 'vn.build']);
 gulp.task('build', ['sdk.build', 'sw.build', 'vn.build']);
-gulp.task('default', ['build']);
+
+gulp.task('docs', function () {
+  // We do it this slightly hacky way, because you need to jsdoc all the files at once,
+  // otherwise index.html keeps getting overwritten.
+  var docPaths = ['src/sdk/main.js', 'README.md', 'src/widgets/voiceNavigator/js/widget.js'];
+  var jsdocCmd = './node_modules/.bin/jsdoc --destination dist/docs/' +
+    ' --template src/docsTemplate/jaguarjs-doc/' +
+    ' --configure src/docsTemplate/jaguar.conf.json' +
+    ' ' + docPaths.join(' ');
+
+  return gulp.src('')
+    .pipe(shell(jsdocCmd));
+});
+
+gulp.task('default', ['build', 'docs']);
 
 gulp.task('serve.no-build', function() {
     connect.server({
@@ -60,4 +75,3 @@ gulp.task('serve.livereload', function() {
 
 // Task to show list of tasks
 gulp.task('tasks', taskListing.withFilters(/\./));
-
