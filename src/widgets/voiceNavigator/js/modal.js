@@ -875,7 +875,6 @@ var MMVoice = {
         }
         var totalWidth = self.$cards.width();
         var numCols = Math.floor(totalWidth / cardWidth);
-        console.log('card w: ' + cardWidth + '\tnumCols: ' + numCols);
         return numCols;
     },
 
