@@ -428,6 +428,8 @@ var MMVoice = {
 
         var recording = self.confirmedRecording;
         if (recording.textEntryID) {
+            var deletedTextEntryIndex = self._currentTextEntries.indexOf(recording.textEntryID);
+            self._currentTextEntries.splice(deletedTextEntryIndex, 1);
             MM.activeSession.textentries.delete(recording.textEntryID);
         }
         recording.transcript = text;
@@ -898,6 +900,9 @@ var MMVoice = {
         var self = this;
 
         var queryParams = { limit: self.config.numResults || 14 };
+        if (self.config.highlight !== undefined) {
+            queryParams['highlight'] = JSON.stringify(self.config.highlight);
+        }
         var requestKey = 'default';
         var selectedEntityIDs = Object.keys(MMVoice.selectedEntityMap);
         if (selectedEntityIDs.length > 0) {
@@ -1451,4 +1456,4 @@ function startVolumeMonitor() {
 
         return volume / ( to - from );
     }
-};
+}
