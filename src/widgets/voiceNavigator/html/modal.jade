@@ -47,9 +47,11 @@ html(lang="en")
               ul
                 li.on#initialText
               div#warningContainer
-                span#warningMessage To use speech recognition, please try using Chrome
-
-
+                p#warningMessage
+                  | Your browser does not support speech input. Try using a
+                  a#supportedBrowserLink(href="http://caniuse.com/web-speech", target="_blank") supported browser.
+                div#closeWarning
+                  a#closeButton(href="google.com") ×
               textarea.editable
 
         #results
