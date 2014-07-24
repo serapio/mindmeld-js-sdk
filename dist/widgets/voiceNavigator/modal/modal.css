@@ -1034,6 +1034,16 @@ body #mindmeld-parent.results {
   top: 0;
   width: 100%;
 }
+#history-wrapper #warningContainer {
+  display: none;
+  text-align: center;
+  padding-bottom: 10px;
+}
+#history-wrapper #warningContainer span#warningMessage {
+  color: #f38989;
+  font-weight: 300;
+  font-style: italic;
+}
 #history {
   position: relative;
   background-color: #fff;
@@ -1514,7 +1524,7 @@ body #mindmeld-parent.results {
   opacity: 1;
   -ms-filter: none;
   filter: none;
-  padding: 10px 30px 30px;
+  padding: 10px 30px 15px 30px;
 }
 #history #history-data ul li.text-input form {
   padding: 0 50px 0 0;

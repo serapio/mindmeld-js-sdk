@@ -216,6 +216,9 @@ var MMVoice = {
                 self.submitText(text);
             });
 
+            // show warning container
+            $('#warningContainer').show();
+
             $text_input.append($form);
             $form.append($input);
             $form.append($button);
