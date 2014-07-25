@@ -216,8 +216,17 @@ var MMVoice = {
                 self.submitText(text);
             });
 
-            // show warning container
-            $('#warningContainer').show();
+            var MM_VOICE_SUPPORT_WARNING_HIDDEN = 'voice_navigator_warning_hidden';
+            var voiceSupportWarningHidden = $.cookie(MM_VOICE_SUPPORT_WARNING_HIDDEN);
+            if (voiceSupportWarningHidden === undefined) {
+                var warningContainer = $('#warningContainer').show();
+                $('a#closeWarningButton').click(
+                    function onCloseClick () {
+                        warningContainer.hide();
+                        $.cookie(MM_VOICE_SUPPORT_WARNING_HIDDEN, true);
+                    }
+                )
+            }
 
             $text_input.append($form);
             $form.append($input);
