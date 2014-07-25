@@ -2856,6 +2856,7 @@ function extend(target) {
   return target
 }
 
+/* global window, ajax, Faye */
 
 /**
  * MM is the primary interface to all MindMeld JavaScript SDK functionality. Call {@link MM#init} before anything
@@ -2863,7 +2864,7 @@ function extend(target) {
  *
  * @namespace
  */
-var MM = ( function (window, Faye) {
+var MM = ( function (window, ajax, Faye) {
 
     var MM = window.MM = window.MM || {};
 
@@ -7141,4 +7142,4 @@ var MM = ( function (window, Faye) {
     MM.Internal.setup();
     return MM;
 
-}(window, Faye));
+}(window, ajax, Faye));
