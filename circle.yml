@@ -4,6 +4,11 @@ machine:
   timezone:
     America/Los_Angeles # Set the timezone
 
+  # Install python for tests
+  python:
+    version:
+      2.7.5
+
   # Install node for building tools
   node:
     version:
@@ -20,6 +25,7 @@ dependencies:
     - npm install -g gulp@3.6.2
 
   post:
+    - pip install -r deployScripts/requirements.txt
     - gulp
 
 ## Omit database setup, until we need it
