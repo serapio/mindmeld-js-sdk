@@ -1688,6 +1688,7 @@ body #mindmeld-parent.open {
   font-size: 20px;
   color: #333;
   padding: 0;
+  padding-top: 7px;
   outline: 0 none;
   width: 100%;
   resize: none;
