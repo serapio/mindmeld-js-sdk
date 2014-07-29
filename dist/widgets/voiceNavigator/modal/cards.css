@@ -4,7 +4,7 @@
   background-color: #f9f9f9;
   background: #f3f3f3;
 }
-@media only screen and (min-device-width : 320px) and (max-device-width : 480px) {
+@media only screen and (max-device-width : 512px) {
   #cards {
     width: 259px;
     margin: auto;
