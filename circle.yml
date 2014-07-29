@@ -4,7 +4,7 @@ machine:
   timezone:
     America/Los_Angeles # Set the timezone
 
-  # Install python for tests
+  # Install python for deploying to s3
   python:
     version:
       2.7.5
@@ -24,8 +24,13 @@ dependencies:
   pre:
     - npm install -g gulp@3.6.2
 
+  override:
+    - npm-cache install
+
   post:
+    # Python dependencies for deployment
     - pip install -r deployScripts/requirements.txt
+    # Build the dist files and docs.
     - gulp
 
 ## Omit database setup, until we need it
