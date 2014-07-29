@@ -22,7 +22,7 @@ machine:
 ## Customize dependencies
 dependencies:
   pre:
-    - npm install -g gulp@3.6.2
+    - npm install -g gulp@3.6.2 npm-cache@0.0.4
 
   override:
     - npm-cache install
@@ -32,6 +32,9 @@ dependencies:
     - pip install -r deployScripts/requirements.txt
     # Build the dist files and docs.
     - gulp
+
+  cache_directories:
+    - "~/.package_cache" # Cache dependencies from npm, bower, and composer
 
 ## Omit database setup, until we need it
 database:
