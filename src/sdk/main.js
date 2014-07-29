@@ -1,12 +1,58 @@
+/* global window, ajax, Faye */
+
 /**
  * MM is the primary interface to all MindMeld JavaScript SDK functionality. Call {@link MM#init} before anything
  * else. Next obtain a token via {@link MM#getToken} to start making API calls.
  *
  * @namespace
  */
-var MM = ( function (window, $, Faye) {
+var MM = ( function (window, ajax, Faye) {
 
     var MM = window.MM = window.MM || {};
+
+    var _extend = function (base) {
+      base = base || {};
+
+      for (var i = 1; i < arguments.length; i++) {
+        var obj = arguments[i];
+
+        if (!obj) continue;
+
+        for (var key in obj) {
+          if (obj.hasOwnProperty(key)) {
+            base[key] = obj[key];
+          }
+        }
+      }
+      return base;
+    };
+
+    var _isEmptyObject = function (obj) {
+  		var name;
+  		for ( name in obj ) {
+  			return false;
+  		}
+  		return true;
+  	};
+
+    var _isFunction = function(f) {
+      return 'function' === typeof f;
+    };
+
+    var _onDocumentReady = function(f) {
+      if (window.document.readyState === 'complete' ||
+        window.document.readyState === 'interactive') {
+          f();
+      } else {
+        window.document.onreadystatechange = function () {
+          console.log('readyState', window.document.readyState);
+          if (window.document.readyState === 'interactive') {
+            f();
+          }
+        };
+      }
+    };
+
 
     /**
      * MindMeld SDK Version
@@ -43,7 +89,7 @@ var MM = ( function (window, $, Faye) {
      * @namespace
      * @private
      */
-    MM.Internal = $.extend({}, {
+    MM.Internal = _extend({}, {
 
         /**
          * Perform any initialization here that can be done before the DOM loads.
@@ -77,7 +123,7 @@ var MM = ( function (window, $, Faye) {
          */
         initializeModels: function () {
             // App Model
-            $.extend(MM, new MM.models.App());
+            _extend(MM, new MM.models.App());
             MM.documents = new MM.models.AppDocumentList();
 
             // User Models
@@ -128,7 +174,7 @@ var MM = ( function (window, $, Faye) {
          * @memberOf MM.Internal
          */
         override: function (origclass, overrides) {
-            $.extend(origclass.prototype, overrides);
+            _extend(origclass.prototype, overrides);
         },
 
         /**
@@ -394,7 +440,7 @@ var MM = ( function (window, $, Faye) {
                 else {
                     if (this.namedEventHandlers[channel] !== undefined) {
                         delete self.namedEventHandlers[channel][updateEventConfig.name];
-                        if ($.isEmptyObject(self.namedEventHandlers[channel])) {
+                        if (_isEmptyObject(self.namedEventHandlers[channel])) {
                             delete self.namedEventHandlers[channel];
                         }
                     }
@@ -588,7 +634,7 @@ var MM = ( function (window, $, Faye) {
 
 
     // Apply the API methods to the MindMeld API object
-    $.extend(MM, {
+    _extend(MM, {
 
         /**
          *  This method will initialize the MindMeld SDK and must be called before any other
@@ -618,11 +664,13 @@ var MM = ( function (window, $, Faye) {
 
             // Allow user to override defaults
             //noinspection JSCheckFunctionSignatures
-            MM.config = $.extend({}, defaultConfig, config);
+            MM.config = _extend({}, defaultConfig, config);
 
-            $(window.document).ready(function () {
-                MM.Internal.onReady();
+            // $(window.document).ready(function () {
+            _onDocumentReady(function () {
+              MM.Internal.onReady();
             });
+
         },
 
         /**
@@ -981,7 +1029,7 @@ var MM = ( function (window, $, Faye) {
          *                                                      and are sent as POST data for POST requests
          * @param {APISuccessCallback=}             success     A callback function to be called if the API request succeeds.
          * The function receives one argument containing the data returned from the server
-         * @param {qAPIErrorCallback=}               error       A callback function to be called if the API request fails.
+         * @param {APIErrorCallback=}               error       A callback function to be called if the API request fails.
          * The function receives one argument, the error message returned from the server
          * @memberOf MM
          * @instance
@@ -1027,7 +1075,7 @@ var MM = ( function (window, $, Faye) {
                     ' and Params: ' + JSON.stringify(params));
             }
             // Now call the API using AJAX.
-            $.ajax({
+            ajax({
                 type: method,
                 url: fullUrl,
                 data: params,
@@ -1357,7 +1405,7 @@ var MM = ( function (window, $, Faye) {
          */
         constructor: function () {
             MM.models.App.superclass.constructor.apply(this, arguments);
-            $.extend(this, MM.Internal.customEventHandlers); // adds support for custom events on app channel
+            _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on app channel
         },
         localStoragePath: function () {
             return 'MM.app';
@@ -1617,7 +1665,7 @@ var MM = ( function (window, $, Faye) {
          */
         constructor: function () {
             MM.models.ActiveUser.superclass.constructor.apply(this, arguments);
-            $.extend(this, MM.Internal.customEventHandlers); // adds support for custom events on user channel
+            _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on user channel
         },
         localStoragePath: function () {
             return 'MM.activeUser';
@@ -3490,7 +3538,7 @@ var MM = ( function (window, $, Faye) {
                     MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
                 });
             }
-            $.extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
+            _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
         },
         localStoragePath: function () {
             return 'MM.activeSession';
@@ -3791,7 +3839,7 @@ var MM = ( function (window, $, Faye) {
      * @namespace
      * @private
      */
-    MM.Util = $.extend({}, {
+    MM.Util = _extend({}, {
 
         /**
          * Tests whether given parameter is a function, and if so calls it
@@ -3811,7 +3859,7 @@ var MM = ( function (window, $, Faye) {
 
          */
         testAndCall: function (func) {
-            if($.isFunction(func)){
+            if(_isFunction(func)){
                 // args will be the arguments to be passed to func
                 // arguments[0] is a reference to func, so we call
                 // slice to remove it from the arguments list
@@ -3845,7 +3893,7 @@ var MM = ( function (window, $, Faye) {
          // Argument 2: b
          */
         testAndCallThis: function (func, thisArg) {
-            if($.isFunction(func)){
+            if(_isFunction(func)){
                 // args will be the arguments to be passed to func
                 // arguments[0] is a reference to func, so we call
                 // slice to remove it from the arguments list
@@ -4154,7 +4202,7 @@ var MM = ( function (window, $, Faye) {
             }
         });
 
-        var languageTags6391To6392 = {"ab":"abk","aa":"aar","af":"afr","sq":"sqi","am":"amh","ar":"ara","an":"arg","hy":"hye","as":"asm","ae":"ave","ay":"aym","az":"aze","ba":"bak","eu":"eus","be":"bel","bn":"ben","bh":"bih","bi":"bis","bs":"bos","br":"bre","bg":"bul","my":"mya","ca":"cat","ch":"cha","ce":"che","zh":"zho","cu":"chu","cv":"chv","kw":"cor","co":"cos","hr":"hrv","cs":"ces","da":"dan","dv":"div","nl":"nld","dz":"dzo","en":"eng","eo":"epo","et":"est","fo":"fao","fj":"fij","fi":"fin","fr":"fra","gd":"gla","gl":"glg","ka":"kat","de":"deu","el":"ell","gn":"grn","gu":"guj","ht":"hat","ha":"hau","he":"heb","hz":"her","hi":"hin","ho":"hmo","hu":"hun","is":"isl","io":"ido","id":"ind","ia":"ina","ie":"ile","iu":"iku","ik":"ipk","ga":"gle","it":"ita","ja":"jpn","jv":"jav","kl":"kal","kn":"kan","ks":"kas","kk":"kaz","km":"khm","ki":"kik","rw":"kin","ky":"kir","kv":"kom","ko":"kor","kj":"kua","ku":"kur","lo":"lao","la":"lat","lv":"lav","li":"lim","ln":"lin","lt":"lit","lb":"ltz","mk":"mkd","mg":"mlg","ms":"msa","ml":"mal","mt":"mlt","gv":"glv","mi":"mri","mr":"mar","mh":"mah","mo":"mol","mn":"mon","na":"nau","nv":"nav","nd":"nde","nr":"nbl","ng":"ndo","ne":"nep","se":"sme","no":"nor","nb":"nob","nn":"nno","ny":"nya","oc":"oci","or":"ori","om":"orm","os":"oss","pi":"pli","pa":"pan","fa":"fas","pl":"pol","pt":"por","ps":"pus","qu":"que","rm":"roh","ro":"ron","rn":"run","ru":"rus","sm":"smo","sg":"sag","sa":"san","sc":"srd","sr":"srp","sn":"sna","ii":"iii","sd":"snd","si":"sin","sk":"slk","sl":"slv","so":"som","st":"sot","es":"spa","su":"sun","sw":"swa","ss":"ssw","sv":"swe","tl":"tgl","ty":"tah","tg":"tgk","ta":"tam","tt":"tat","te":"tel","th":"tha","bo":"bod","ti":"tir","to":"ton","ts":"tso","tn":"tsn","tr":"tur","tk":"tuk","tw":"twi","ug":"uig","uk":"ukr","ur":"urd","uz":"uzb","vi":"vie","vo":"vol","wa":"wln","cy":"cym","fy":"fry","wo":"wol","xh":"xho","yi":"yid","yo":"yor","za":"zha","zu":"zul"}
+        var languageTags6391To6392 = {'ab':'abk','aa':'aar','af':'afr','sq':'sqi','am':'amh','ar':'ara','an':'arg','hy':'hye','as':'asm','ae':'ave','ay':'aym','az':'aze','ba':'bak','eu':'eus','be':'bel','bn':'ben','bh':'bih','bi':'bis','bs':'bos','br':'bre','bg':'bul','my':'mya','ca':'cat','ch':'cha','ce':'che','zh':'zho','cu':'chu','cv':'chv','kw':'cor','co':'cos','hr':'hrv','cs':'ces','da':'dan','dv':'div','nl':'nld','dz':'dzo','en':'eng','eo':'epo','et':'est','fo':'fao','fj':'fij','fi':'fin','fr':'fra','gd':'gla','gl':'glg','ka':'kat','de':'deu','el':'ell','gn':'grn','gu':'guj','ht':'hat','ha':'hau','he':'heb','hz':'her','hi':'hin','ho':'hmo','hu':'hun','is':'isl','io':'ido','id':'ind','ia':'ina','ie':'ile','iu':'iku','ik':'ipk','ga':'gle','it':'ita','ja':'jpn','jv':'jav','kl':'kal','kn':'kan','ks':'kas','kk':'kaz','km':'khm','ki':'kik','rw':'kin','ky':'kir','kv':'kom','ko':'kor','kj':'kua','ku':'kur','lo':'lao','la':'lat','lv':'lav','li':'lim','ln':'lin','lt':'lit','lb':'ltz','mk':'mkd','mg':'mlg','ms':'msa','ml':'mal','mt':'mlt','gv':'glv','mi':'mri','mr':'mar','mh':'mah','mo':'mol','mn':'mon','na':'nau','nv':'nav','nd':'nde','nr':'nbl','ng':'ndo','ne':'nep','se':'sme','no':'nor','nb':'nob','nn':'nno','ny':'nya','oc':'oci','or':'ori','om':'orm','os':'oss','pi':'pli','pa':'pan','fa':'fas','pl':'pol','pt':'por','ps':'pus','qu':'que','rm':'roh','ro':'ron','rn':'run','ru':'rus','sm':'smo','sg':'sag','sa':'san','sc':'srd','sr':'srp','sn':'sna','ii':'iii','sd':'snd','si':'sin','sk':'slk','sl':'slv','so':'som','st':'sot','es':'spa','su':'sun','sw':'swa','ss':'ssw','sv':'swe','tl':'tgl','ty':'tah','tg':'tgk','ta':'tam','tt':'tat','te':'tel','th':'tha','bo':'bod','ti':'tir','to':'ton','ts':'tso','tn':'tsn','tr':'tur','tk':'tuk','tw':'twi','ug':'uig','uk':'ukr','ur':'urd','uz':'uzb','vi':'vie','vo':'vol','wa':'wln','cy':'cym','fy':'fry','wo':'wol','xh':'xho','yi':'yid','yo':'yor','za':'zha','zu':'zul'}
 
         /**
          * Converts language name or tag to the [ISO 639-2](http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) language
@@ -4236,4 +4284,4 @@ var MM = ( function (window, $, Faye) {
     MM.Internal.setup();
     return MM;
 
-}(window, $, Faye));
+}(window, ajax, Faye));

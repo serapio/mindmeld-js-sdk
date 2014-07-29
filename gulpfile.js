@@ -31,6 +31,14 @@ gulp.task('buildVoiceNavigator', ['vn.build']);
 
 // --------------------------------------------------------------------- //
 
+// ------------------------------ Tests -------------------------------- //
+require('./gulp/tasks/tests');
+
+gulp.task('buildTests', ['tests.build']);
+
+// --------------------------------------------------------------------- //
+
+
 // General Tasks
 gulp.task('archive', ['sdk.archive', 'docs', 'sw.build', 'vn.build']);
 gulp.task('build', ['sdk.build', 'sw.build', 'vn.build']);
