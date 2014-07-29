@@ -888,7 +888,7 @@ var MMVoice = {
             cardWidth = $('.card:nth-child(2)').width() || 300;
         }
         var totalWidth = self.$cards.width();
-        var numCols = Math.floor(totalWidth / cardWidth);
+        var numCols = Math.max(Math.floor(totalWidth / cardWidth), 1);
         return numCols;
     },
 
