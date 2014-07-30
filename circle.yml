@@ -53,7 +53,7 @@ deployment:
     commands:
       - bash deployScripts/deploy_artifact.sh
   release:
-    branch: release
+    branch: /release\/.*/
     commands:
       - bash deployScripts/deploy_artifact.sh
   production:
