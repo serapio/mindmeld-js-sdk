@@ -1,7 +1,6 @@
 var UTIL =  require('./util');
 var highlightEntities = require('./entity-highlighting');
 var $ = window.$ = window.jQuery = require('./vendor/jquery-1.11.1');
-require('./vendor/jquery.slimscroll');
 require('./vendor/jquery.cookie-1.4.0');
 var _ = require('lodash/dist/lodash.compat');
 var MM = window.MM = window.MM || {};
@@ -110,12 +109,6 @@ var MMVoice = {
         }
         this.$tags.on('click', '.tag', onTagClick);
         this.$historyList.on('click', '.tag', onTagClick);
-
-        // Scrollbars
-        $('.inner-content-div').slimScroll({
-            height: '100%',
-            distance: '6px'
-        });
 
         // Resize
         self.$window.on('resize', function(){ self.resize(); });
@@ -344,8 +337,12 @@ var MMVoice = {
     },
 
     _historyHeight : function(scrollHeight) {
-        if(scrollHeight > this._height * 0.8) scrollHeight = this._height * 0.8;
-        if(scrollHeight < 270) scrollHeight = 270;
+        if (scrollHeight > this._height * 0.8) {
+            scrollHeight = this._height * 0.8;
+        }
+        if (scrollHeight < 270) {
+            scrollHeight = 270;
+        }
         return scrollHeight;
     },
 
@@ -454,14 +451,6 @@ var MMVoice = {
             self.onTextEntryPosted(response);
         });
     },
-
-    /*
-     resizeResults: function(size) {
-     this._height = size;
-     this.$results.outerHeight(size);
-     this.$history.outerHeight(this._historyHeight(size));
-     },
-     */
 
     lockWhileRecording : function() {
         this.is_locked = true;
@@ -927,7 +916,7 @@ var MMVoice = {
         // Return cached response if it exists and has not expired (expire time of 10 minutes)
         if (self._documentsCache.hasOwnProperty(requestKey) &&
             Date.now() - self._documentsCache[requestKey].requestTime < 600000) {
-            onSuccess(self._documentsCache[requestKey].result, true);
+            onSuccess(JSON.parse(self._documentsCache[requestKey].response), true);
             return;
         }
 
@@ -936,19 +925,19 @@ var MMVoice = {
         }
 
         var requestTime = this._documentLock.lastDocumentsRequest = Date.now();
-        function onSuccess(result, cached) {
+        function onSuccess(response, cached) {
             cached = !!cached;
 
             if (!cached) {
                 self._documentsCache[requestKey] = {
-                    result: result,
+                    response: JSON.stringify(response), // make a copy of the response
                     requestTime: requestTime
                 };
                 UTIL.log("Got documents");
             } else {
                 UTIL.log("Got documents from cache");
             }
-            var documents = result.data;
+            var documents = response.data;
             var numDocuments = self._numDocumentsToRender(documents.length);
             documents.splice(numDocuments);
             MMVoice.showResults(documents);

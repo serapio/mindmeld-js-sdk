@@ -1624,6 +1624,7 @@ body #mindmeld-parent.open {
 }
 #history.open #history-data {
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 #history.open #history-data ul li {
   opacity: 1;
@@ -1634,12 +1635,10 @@ body #mindmeld-parent.open {
   padding-top: 140px;
   height: 510px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .no-speech #results {
   padding-top: 107px;
-}
-#results .slimScrollDiv {
-  background-color: #f3f3f3;
 }
 #results #tags {
   padding: 10px;
