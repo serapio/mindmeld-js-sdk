@@ -1,4 +1,4 @@
-mobile = "only screen and (max-device-width : 512px)"
+mobile = "only screen and (max-device-width : 568px)"
 #inner-content-div
   background #f3f3f3
   width 100%
@@ -9,6 +9,8 @@ mobile = "only screen and (max-device-width : 512px)"
   @media mobile
     width 259px
     margin auto
+  @media mobile and (min-width : 496px)
+    width 496px
   &.loading
     opacity 0.3
   .card

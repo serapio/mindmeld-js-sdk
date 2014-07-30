@@ -510,9 +510,12 @@ body {
   padding: 60px;
   overflow: hidden;
 }
-@media only screen and (max-device-width : 512px) {
+@media only screen and (max-device-width : 568px) {
   body {
     padding: 50px 0 0;
+  }
+  body.no-speech {
+    padding: 0;
   }
 }
 body #mm-button {
@@ -930,7 +933,7 @@ body #mindmeld-parent.open {
 .results #mindmeld {
   height: 100%;
 }
-@media only screen and (max-device-width : 512px) {
+@media only screen and (max-device-width : 568px) {
   #mindmeld {
     width: 100%;
     left: auto;
@@ -970,11 +973,18 @@ body #mindmeld-parent.open {
     background-size: 31px 28px;
   }
 }
-@media only screen and (max-device-width : 512px) {
+@media only screen and (max-device-width : 568px) {
   #history-button {
-    background: none;
-    height: auto;
+    width: 30px;
+    height: 30px;
     padding-top: 0;
+    margin-top: 5px;
+    -webkit-background-size: 22px 20px;
+    -moz-background-size: 22px 20px;
+    background-size: 22px 20px;
+  }
+  #history-button span {
+    display: none;
   }
 }
 .no-speech #history-button {
@@ -1033,7 +1043,7 @@ body #mindmeld-parent.open {
 #history-wrapper #warningContainer:after {
   clear: both;
 }
-@media only screen and (max-device-width : 512px), (max-width: 751px) {
+@media only screen and (max-device-width : 568px), (max-width: 751px) {
   #history-wrapper #warningContainer {
     margin: 0 auto 2px auto;
   }
@@ -1045,7 +1055,7 @@ body #mindmeld-parent.open {
   margin: 0;
   width: 95%;
 }
-@media only screen and (max-device-width : 512px), (max-width: 751px) {
+@media only screen and (max-device-width : 568px), (max-width: 751px) {
   #history-wrapper #warningContainer p#warningMessage {
     font-size: 10px;
   }
@@ -1549,7 +1559,7 @@ body #mindmeld-parent.open {
   filter: none;
   padding: 15px 30px 28px 30px;
 }
-@media only screen and (max-device-width : 512px), (max-width: 751px) {
+@media only screen and (max-device-width : 568px), (max-width: 751px) {
   #history #history-data ul li.text-input {
     padding: 15px 30px 24px 30px;
   }
@@ -1558,6 +1568,11 @@ body #mindmeld-parent.open {
   padding: 0 50px 0 0;
   margin: 0 20px 0 75px;
   position: relative;
+}
+@media only screen and (max-device-width : 568px) {
+  #history #history-data ul li.text-input form {
+    margin: 0 20px 0 20px;
+  }
 }
 #history #history-data ul li.text-input input {
   border: 1px solid #bbb;

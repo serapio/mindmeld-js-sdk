@@ -6,10 +6,15 @@
   height: 1px;
   padding: 10px;
 }
-@media only screen and (max-device-width : 512px) {
+@media only screen and (max-device-width : 568px) {
   #cards {
     width: 259px;
     margin: auto;
+  }
+}
+@media only screen and (max-device-width : 568px) and (min-width: 496px) {
+  #cards {
+    width: 496px;
   }
 }
 #cards.loading {

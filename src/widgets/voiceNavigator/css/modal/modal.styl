@@ -2,7 +2,7 @@
 
 baseZ = 100000
 buttonBGColor = #ca6b37
-mobile = "only screen and (max-device-width : 512px)"
+mobile = "only screen and (max-device-width : 568px)"
 
 *, *:before, *:after
   box-sizing border-box
@@ -45,6 +45,8 @@ body
 
   @media mobile
     padding 50px 0 0
+    &.no-speech
+      padding 0
 
   #mm-button
     position absolute
@@ -335,9 +337,13 @@ body
   opacity 0.5
   color #797979
   @media mobile
-    background none
-    height auto
+    width 30px
+    height 30px
     padding-top 0
+    margin-top 5px
+    background-size 22px 20px
+    span
+      display none
   .no-speech &
     top 7px
     left 10px
@@ -489,6 +495,8 @@ body
           form
             padding 0 50px 0 0
             margin 0 20px 0 75px
+            @media mobile
+              margin 0 20px 0 20px
             position relative
           input
             border 1px solid #bbb

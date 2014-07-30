@@ -133,10 +133,10 @@ var MMVoice = {
             if(!history_open) {
                 var scrollHeight = self._historyHeight(self.$historyData[0].scrollHeight);
                 self.$history.css(self._prefix('transform'), 'translateY('+scrollHeight+'px)');
-                self.$historyButton.text('Close History');
+                self.$historyButton.find('span').text('Close History');
             } else {
                 self.$history.css(self._prefix('transform'), '');
-                self.$historyButton.text('Expand History');
+                self.$historyButton.find('span').text('Expand History');
             }
 
             // Snap to the bottom
@@ -201,9 +201,10 @@ var MMVoice = {
                 e.preventDefault();
                 var text = $input.val();
 
-                $input.val("").focus();
+                $input.val("");
                 $input.attr("placeholder", text);
                 self.appendHistory({transcript: text});
+                $input.blur();
 
                 // Submit!
                 self.submitText(text);
