@@ -56,18 +56,13 @@ To save the dependency in bower.json, run the above command with `--save`
 
 ## Usage
 
-The MindMeld JavaScript SDK relies on the popular jQuery library. You should first load the jQuery library before
-loading the MindMeld library.
-
 ### Without Bower
 ```html
-<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 <script src="path/to/mindmeld.min.js"></script>
 ```
 
 ### With Bower
 ```html
-<script src="bower_components/jquery/jquery.min.js"></script>
 <script src="bower_components/mindmeld-js-sdk/dist/sdk/mindmeld.js"></script>
 ```
 
@@ -347,6 +342,7 @@ if (MM.support.speechRecognition) { // check for support in the current browser
 * *src/sdk/widget/voiceNavigator/*: Directory containing source files for voice navigator widget
 * *src/docsTemplate/*: Directory containing templates and configuration files for building JS Docs
 * *src/embed.js*: Source for embed script used to asynchronously load widgets
+* *src/tests*: Our jasmine files and tests
 * *dist/*: Directory containing all built, uglified, and production-ready files for JS SDK
 * *dist/sdk/*: Directory containing compiled mindmeld.js, mindmeld.min.js, mindmeld-js-sdk.zip, and examples
 * *dist/widgets/searchWidget/*: Directory containing all files necessary for using autocomplete search widget
