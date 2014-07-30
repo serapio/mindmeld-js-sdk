@@ -4025,7 +4025,9 @@ var MM = ( function (window, ajax, Faye) {
          */
         backupData: function () {
             if (MM.support.localStorage) {
-                window.localStorage[this.localStoragePath()] = JSON.stringify(this.result);
+                try { // some devices may not have enough space
+                    window.localStorage[this.localStoragePath()] = JSON.stringify(this.result);
+                } catch (e) {}
             }
         },
 
