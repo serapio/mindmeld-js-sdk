@@ -206,14 +206,8 @@ body
     height 100%
     position relative
     opacity 0
-    transform translateY(120px)
-    transition 0.3s ease-out
-    -webkit-overflow-scrolling touch
     &.open
       opacity 1
-      transform translateY(80px)
-    &.results
-      transform translateY(0)
 
 #mindmeld-alert
   position absolute
@@ -345,8 +339,8 @@ body
     height auto
     padding-top 0
   .no-speech &
-    top 15px
-    left 30px
+    top 7px
+    left 10px
   &:hover
     opacity 1
     text-decoration none
@@ -373,6 +367,43 @@ body
   left 0
   top 0
   width 100%
+  #warningContainer
+    display none
+    text-align center
+    color #c91818
+    background-color #eedada
+    border 1px solid #fdbcbc
+    border-radius 2px
+    width 70%
+    margin 0 auto 10px auto
+    clearfix()
+    position relative
+    bottom 5px
+    @media mobile, (max-width: 751px)
+      margin 0 auto 2px auto
+    p#warningMessage
+      float left
+      font-weight 300
+      font-style italic
+      margin 0
+      width 95%
+      @media mobile, (max-width: 751px)
+        font-size 10px
+      a#supportedBrowserLink
+        text-emphasis none;
+        font-weight 600
+        color #D86B6B
+    div#closeWarning
+      float right
+      width 5%
+      padding-right 5px
+      a#closeWarningButton
+        color #C92727
+        &:hover
+          color #8A1212
+          cursor pointer
+
+
 #history
   position relative
   background-color #fff
@@ -452,10 +483,12 @@ body
                 animation zoomin 0.2s ease-out (0.04s * i) forwards
         &.text-input
           opacity 1
-          padding 10px 30px 30px
+          padding 15px 30px 28px 30px
+          @media mobile, (max-width: 751px)
+            padding 15px 30px 24px 30px
           form
             padding 0 50px 0 0
-            margin 0 20px
+            margin 0 20px 0 75px
             position relative
           input
             border 1px solid #bbb

@@ -1,0 +1,73 @@
+## Customize the test machine
+machine:
+
+  timezone:
+    America/Los_Angeles # Set the timezone
+
+  # Install python for deploying to s3
+  python:
+    version:
+      2.7.5
+
+  # Install node for building tools
+  node:
+    version:
+      0.10.21
+
+  # Add some environment variables
+  # Sensitive env variables go into the circle ui directly
+  environment:
+    CIRCLE_ENV: test
+
+## Customize dependencies
+dependencies:
+  pre:
+    - npm install -g gulp@3.6.2 npm-cache@0.0.4
+
+  override:
+    - npm-cache install
+
+  post:
+    # Python dependencies for deployment
+    - pip install -r deployScripts/requirements.txt
+    # Build the dist files and docs.
+    - gulp
+
+  cache_directories:
+    - "~/.package_cache" # Cache dependencies from npm, bower, and composer
+
+## Omit database setup, until we need it
+database:
+  override:
+    - echo "No databases."
+
+## Customize test commands
+test:
+  override:
+      - gulp tests
+
+## Customize deployment commands
+deployment:
+  develop:
+    branch: develop
+    commands:
+      - bash deployScripts/deploy_artifact.sh
+  release:
+    branch: /release\/.*/
+    commands:
+      - bash deployScripts/deploy_artifact.sh
+  production:
+    branch: master
+    commands:
+      - bash deployScripts/deploy_artifact.sh
+  feature:
+    branch: /feature\/.*/
+    commands:
+      #Build only if there's a CHEF_ENVIRONMENT variable set.
+      - "[ -z \"$CHEF_ENVIRONMENT\" ] || bash deployScripts/deploy_artifact.sh"
+
+## Custom notifications
+#notify:
+  #webhooks:
+    ## A list of hashes representing hooks. Only the url field is supported.
+    #- url: https://someurl.com/hooks/circle

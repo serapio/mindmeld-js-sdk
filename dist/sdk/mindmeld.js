@@ -2540,15 +2540,429 @@ var Faye = (function() {
     return Faye;
 
 })();
+;(function () {
+
+
+/**
+ * Inlining type fn
+ */
+var type = function (val) {
+  switch (toString.call(val)) {
+    case '[object Function]': return 'function';
+    case '[object Date]': return 'date';
+    case '[object RegExp]': return 'regexp';
+    case '[object Arguments]': return 'arguments';
+    case '[object Array]': return 'array';
+    case '[object String]': return 'string';
+  }
+
+  if (typeof val === 'object' && val && typeof val.length === 'number') {
+    try {
+      if (typeof val.callee === 'function') return 'arguments';
+    } catch (ex) {
+      if (ex instanceof TypeError) {
+        return 'arguments';
+      }
+    }
+  }
+
+  if (val === null) return 'null';
+  if (val === undefined) return 'undefined';
+  if (val && val.nodeType === 1) return 'element';
+  if (val === Object(val)) return 'object';
+
+  return typeof val;
+};
+
+/**
+ * jQuery's serialization fns, adapted
+ * ajax's were buggy, so going back to the source.
+ */
+
+var r20 = /%20/g,
+	rbracket = /\[\]$/;
+
+function buildParams( prefix, obj, add ) {
+	var name;
+
+	if ( type(obj) === 'array' ) {
+		// Serialize array item.
+		obj.forEach(function( v, i ) {
+			if ( rbracket.test( prefix ) ) {
+				// Treat each array item as a scalar.
+				add( prefix, v );
+
+			} else {
+				// Item is non-scalar (array or object), encode its numeric index.
+				buildParams(
+					prefix + '[' + ( typeof v === 'object' ? i : '' ) + ']',
+					v,
+					add
+				);
+			}
+		});
+
+	} else if ( type( obj ) === 'object' ) {
+		// Serialize object item.
+		for ( name in obj ) {
+			buildParams( prefix + '[' + name + ']', obj[ name ], add );
+		}
+
+	} else {
+		// Serialize scalar item.
+		add( prefix, obj );
+	}
+}
+
+// Serialize an array of form elements or a set of
+// key/values into a query string
+var param = function( a ) {
+	var prefix,
+		s = [],
+		add = function( key, value ) {
+			// If value is a function, invoke it and return its value
+      // XXX: We want the double equals here, since that's what jQuery used.
+			value = type(value) === 'function' ? value() : ( value == null ? '' : value );
+			s[ s.length ] = encodeURIComponent( key ) + '=' + encodeURIComponent( value );
+		};
+
+	for ( prefix in a ) {
+		buildParams( prefix, a[ prefix ], add );
+	}
+
+	// Return the resulting serialization
+	return s.join( '&' ).replace( r20, '+' );
+};
+
+
+
+
+/**
+ * Adapted from https://github.com/ForbesLindesay/ajax
+ * Removed the require/module code.
+ */
+
+
+var jsonpID = 0,
+    document = window.document,
+    key,
+    name,
+    rscript = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    scriptTypeRE = /^(?:text|application)\/javascript/i,
+    xmlTypeRE = /^(?:text|application)\/xml/i,
+    jsonType = 'application/json',
+    htmlType = 'text/html',
+    blankRE = /^\s*$/
+
+var ajax = function(options){
+  var settings = extend({}, options || {})
+  for (key in ajax.settings) if (settings[key] === undefined) settings[key] = ajax.settings[key]
+
+  ajaxStart(settings)
+
+  if (!settings.crossDomain) settings.crossDomain = /^([\w-]+:)?\/\/([^\/]+)/.test(settings.url) &&
+    RegExp.$2 != window.location.host
+
+  var dataType = settings.dataType, hasPlaceholder = /=\?/.test(settings.url)
+  if (dataType == 'jsonp' || hasPlaceholder) {
+    if (!hasPlaceholder) settings.url = appendQuery(settings.url, 'callback=?')
+    return ajax.JSONP(settings)
+  }
+
+  if (!settings.url) settings.url = window.location.toString()
+  serializeData(settings)
+
+  var mime = settings.accepts[dataType],
+      baseHeaders = { },
+      protocol = /^([\w-]+:)\/\//.test(settings.url) ? RegExp.$1 : window.location.protocol,
+      xhr = ajax.settings.xhr(), abortTimeout
+
+  if (!settings.crossDomain) baseHeaders['X-Requested-With'] = 'XMLHttpRequest'
+  if (mime) {
+    baseHeaders['Accept'] = mime
+    if (mime.indexOf(',') > -1) mime = mime.split(',', 2)[0]
+    xhr.overrideMimeType && xhr.overrideMimeType(mime)
+  }
+  if (settings.contentType || (settings.data && settings.type.toUpperCase() != 'GET'))
+    baseHeaders['Content-Type'] = (settings.contentType || 'application/x-www-form-urlencoded')
+  settings.headers = extend(baseHeaders, settings.headers || {})
+
+  xhr.onreadystatechange = function(){
+    if (xhr.readyState == 4) {
+      clearTimeout(abortTimeout)
+      var result, error = false
+      if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 || (xhr.status == 0 && protocol == 'file:')) {
+        dataType = dataType || mimeToDataType(xhr.getResponseHeader('content-type'))
+        result = xhr.responseText
+
+        try {
+          if (dataType == 'script')    (1,eval)(result)
+          else if (dataType == 'xml')  result = xhr.responseXML
+          else if (dataType == 'json') result = blankRE.test(result) ? null : JSON.parse(result)
+        } catch (e) { error = e }
+
+        if (error) ajaxError(error, 'parsererror', xhr, settings)
+        else ajaxSuccess(result, xhr, settings)
+      } else {
+        ajaxError(null, 'error', xhr, settings)
+      }
+    }
+  }
+
+  var async = 'async' in settings ? settings.async : true
+  xhr.open(settings.type, settings.url, async)
+
+  for (name in settings.headers) xhr.setRequestHeader(name, settings.headers[name])
+
+  if (ajaxBeforeSend(xhr, settings) === false) {
+    xhr.abort()
+    return false
+  }
+
+  if (settings.timeout > 0) abortTimeout = setTimeout(function(){
+      xhr.onreadystatechange = empty
+      xhr.abort()
+      ajaxError(null, 'timeout', xhr, settings)
+    }, settings.timeout)
+
+  // avoid sending empty string (#319)
+  xhr.send(settings.data ? settings.data : null)
+  return xhr
+}
+
+
+// trigger a custom event and return false if it was cancelled
+function triggerAndReturn(context, eventName, data) {
+  //todo: Fire off some events
+  //var event = $.Event(eventName)
+  //$(context).trigger(event, data)
+  return true;//!event.defaultPrevented
+}
+
+// trigger an Ajax "global" event
+function triggerGlobal(settings, context, eventName, data) {
+  if (settings.global) return triggerAndReturn(context || document, eventName, data)
+}
+
+// Number of active Ajax requests
+ajax.active = 0
+
+function ajaxStart(settings) {
+  if (settings.global && ajax.active++ === 0) triggerGlobal(settings, null, 'ajaxStart')
+}
+function ajaxStop(settings) {
+  if (settings.global && !(--ajax.active)) triggerGlobal(settings, null, 'ajaxStop')
+}
+
+// triggers an extra global event "ajaxBeforeSend" that's like "ajaxSend" but cancelable
+function ajaxBeforeSend(xhr, settings) {
+  var context = settings.context
+  if (settings.beforeSend.call(context, xhr, settings) === false ||
+      triggerGlobal(settings, context, 'ajaxBeforeSend', [xhr, settings]) === false)
+    return false
+
+  triggerGlobal(settings, context, 'ajaxSend', [xhr, settings])
+}
+function ajaxSuccess(data, xhr, settings) {
+  var context = settings.context, status = 'success'
+  settings.success.call(context, data, status, xhr)
+  triggerGlobal(settings, context, 'ajaxSuccess', [xhr, settings, data])
+  ajaxComplete(status, xhr, settings)
+}
+// type: "timeout", "error", "abort", "parsererror"
+function ajaxError(error, type, xhr, settings) {
+  var context = settings.context
+  settings.error.call(context, xhr, type, error)
+  triggerGlobal(settings, context, 'ajaxError', [xhr, settings, error])
+  ajaxComplete(type, xhr, settings)
+}
+// status: "success", "notmodified", "error", "timeout", "abort", "parsererror"
+function ajaxComplete(status, xhr, settings) {
+  var context = settings.context
+  settings.complete.call(context, xhr, status)
+  triggerGlobal(settings, context, 'ajaxComplete', [xhr, settings])
+  ajaxStop(settings)
+}
+
+// Empty function, used as default callback
+function empty() {}
+
+ajax.JSONP = function(options){
+  if (!('type' in options)) return ajax(options)
+
+  var callbackName = 'jsonp' + (++jsonpID),
+    script = document.createElement('script'),
+    abort = function(){
+      //todo: remove script
+      //$(script).remove()
+      if (callbackName in window) window[callbackName] = empty
+      ajaxComplete('abort', xhr, options)
+    },
+    xhr = { abort: abort }, abortTimeout,
+    head = document.getElementsByTagName("head")[0]
+      || document.documentElement
+
+  if (options.error) script.onerror = function() {
+    xhr.abort()
+    options.error()
+  }
+
+  window[callbackName] = function(data){
+    clearTimeout(abortTimeout)
+      //todo: remove script
+      //$(script).remove()
+    delete window[callbackName]
+    ajaxSuccess(data, xhr, options)
+  }
+
+  serializeData(options)
+  script.src = options.url.replace(/=\?/, '=' + callbackName)
+
+  // Use insertBefore instead of appendChild to circumvent an IE6 bug.
+  // This arises when a base node is used (see jQuery bugs #2709 and #4378).
+  head.insertBefore(script, head.firstChild);
+
+  if (options.timeout > 0) abortTimeout = setTimeout(function(){
+      xhr.abort()
+      ajaxComplete('timeout', xhr, options)
+    }, options.timeout)
+
+  return xhr
+}
+
+ajax.settings = {
+  // Default type of request
+  type: 'GET',
+  // Callback that is executed before request
+  beforeSend: empty,
+  // Callback that is executed if the request succeeds
+  success: empty,
+  // Callback that is executed the the server drops error
+  error: empty,
+  // Callback that is executed on request complete (both: error and success)
+  complete: empty,
+  // The context for the callbacks
+  context: null,
+  // Whether to trigger "global" Ajax events
+  global: true,
+  // Transport
+  xhr: function () {
+    return new window.XMLHttpRequest()
+  },
+  // MIME types mapping
+  accepts: {
+    script: 'text/javascript, application/javascript',
+    json:   jsonType,
+    xml:    'application/xml, text/xml',
+    html:   htmlType,
+    text:   'text/plain'
+  },
+  // Whether the request is to another domain
+  crossDomain: false,
+  // Default timeout
+  timeout: 0
+}
+
+function mimeToDataType(mime) {
+  return mime && ( mime == htmlType ? 'html' :
+    mime == jsonType ? 'json' :
+    scriptTypeRE.test(mime) ? 'script' :
+    xmlTypeRE.test(mime) && 'xml' ) || 'text'
+}
+
+function appendQuery(url, query) {
+  return (url + '&' + query).replace(/[&?]{1,2}/, '?')
+}
+
+// serialize payload and append it to the URL for GET requests
+function serializeData(options) {
+  if (type(options.data) === 'object') options.data = param(options.data)
+  if (options.data && (!options.type || options.type.toUpperCase() == 'GET'))
+    options.url = appendQuery(options.url, options.data)
+}
+
+ajax.get = function(url, success){ return ajax({ url: url, success: success }) }
+
+ajax.post = function(url, data, success, dataType){
+  if (type(data) === 'function') dataType = dataType || success, success = data, data = null
+  return ajax({ type: 'POST', url: url, data: data, success: success, dataType: dataType })
+}
+
+ajax.getJSON = function(url, success){
+  return ajax({ url: url, success: success, dataType: 'json' })
+}
+
+var escape = encodeURIComponent
+
+function extend(target) {
+  var slice = Array.prototype.slice;
+  slice.call(arguments, 1).forEach(function(source) {
+    for (key in source)
+      if (source[key] !== undefined)
+        target[key] = source[key]
+  })
+  return target
+}
+
+window.ajax = ajax;
+
+})();
+
+/* global window, ajax, Faye */
+
 /**
  * MM is the primary interface to all MindMeld JavaScript SDK functionality. Call {@link MM#init} before anything
  * else. Next obtain a token via {@link MM#getToken} to start making API calls.
  *
  * @namespace
  */
-var MM = ( function (window, $, Faye) {
+var MM = ( function (window, ajax, Faye) {
 
     var MM = window.MM = window.MM || {};
+
+    var _extend = function (base) {
+      base = base || {};
+
+      for (var i = 1; i < arguments.length; i++) {
+        var obj = arguments[i];
+
+        if (!obj) continue;
+
+        for (var key in obj) {
+          if (obj.hasOwnProperty(key)) {
+            base[key] = obj[key];
+          }
+        }
+      }
+      return base;
+    };
+
+    var _isEmptyObject = function (obj) {
+  		var name;
+  		for ( name in obj ) {
+  			return false;
+  		}
+  		return true;
+  	};
+
+    var _isFunction = function(f) {
+      return 'function' === typeof f;
+    };
+
+    var _onDocumentReady = function(f) {
+      if (window.document.readyState === 'complete' ||
+        window.document.readyState === 'interactive') {
+          f();
+      } else {
+        window.document.onreadystatechange = function () {
+          console.log('readyState', window.document.readyState);
+          if (window.document.readyState === 'interactive') {
+            f();
+          }
+        };
+      }
+    };
+
 
     /**
      * MindMeld SDK Version
@@ -2558,7 +2972,7 @@ var MM = ( function (window, $, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.4.0',
+        value: '2.4.1',
         writable: false
     });
 
@@ -2585,7 +2999,7 @@ var MM = ( function (window, $, Faye) {
      * @namespace
      * @private
      */
-    MM.Internal = $.extend({}, {
+    MM.Internal = _extend({}, {
 
         /**
          * Perform any initialization here that can be done before the DOM loads.
@@ -2619,7 +3033,7 @@ var MM = ( function (window, $, Faye) {
          */
         initializeModels: function () {
             // App Model
-            $.extend(MM, new MM.models.App());
+            _extend(MM, new MM.models.App());
             MM.documents = new MM.models.AppDocumentList();
 
             // User Models
@@ -2670,7 +3084,7 @@ var MM = ( function (window, $, Faye) {
          * @memberOf MM.Internal
          */
         override: function (origclass, overrides) {
-            $.extend(origclass.prototype, overrides);
+            _extend(origclass.prototype, overrides);
         },
 
         /**
@@ -2936,7 +3350,7 @@ var MM = ( function (window, $, Faye) {
                 else {
                     if (this.namedEventHandlers[channel] !== undefined) {
                         delete self.namedEventHandlers[channel][updateEventConfig.name];
-                        if ($.isEmptyObject(self.namedEventHandlers[channel])) {
+                        if (_isEmptyObject(self.namedEventHandlers[channel])) {
                             delete self.namedEventHandlers[channel];
                         }
                     }
@@ -3130,7 +3544,7 @@ var MM = ( function (window, $, Faye) {
 
 
     // Apply the API methods to the MindMeld API object
-    $.extend(MM, {
+    _extend(MM, {
 
         /**
          *  This method will initialize the MindMeld SDK and must be called before any other
@@ -3160,11 +3574,13 @@ var MM = ( function (window, $, Faye) {
 
             // Allow user to override defaults
             //noinspection JSCheckFunctionSignatures
-            MM.config = $.extend({}, defaultConfig, config);
+            MM.config = _extend({}, defaultConfig, config);
 
-            $(window.document).ready(function () {
-                MM.Internal.onReady();
+            // $(window.document).ready(function () {
+            _onDocumentReady(function () {
+              MM.Internal.onReady();
             });
+
         },
 
         /**
@@ -3192,13 +3608,13 @@ var MM = ( function (window, $, Faye) {
          * @example <caption> Example credentials to get an admin token </caption>
          *
          var adminCredentials = {
-            appsceret: '<appsecret>'
+            appsecret: '<appsecret>'
          };
 
          * @example <caption> Example credentials to get a simple user token </caption>
          *
          var simpleUserCredentials = {
-            appsceret: '<appsecret>',
+            appsecret: '<appsecret>',
             simple: {
                 userid: 'einstein79',
                 name: 'Albert Einstein'
@@ -3523,7 +3939,7 @@ var MM = ( function (window, $, Faye) {
          *                                                      and are sent as POST data for POST requests
          * @param {APISuccessCallback=}             success     A callback function to be called if the API request succeeds.
          * The function receives one argument containing the data returned from the server
-         * @param {qAPIErrorCallback=}               error       A callback function to be called if the API request fails.
+         * @param {APIErrorCallback=}               error       A callback function to be called if the API request fails.
          * The function receives one argument, the error message returned from the server
          * @memberOf MM
          * @instance
@@ -3569,7 +3985,7 @@ var MM = ( function (window, $, Faye) {
                     ' and Params: ' + JSON.stringify(params));
             }
             // Now call the API using AJAX.
-            $.ajax({
+            ajax({
                 type: method,
                 url: fullUrl,
                 data: params,
@@ -3661,7 +4077,9 @@ var MM = ( function (window, $, Faye) {
          */
         backupData: function () {
             if (MM.support.localStorage) {
-                window.localStorage[this.localStoragePath()] = JSON.stringify(this.result);
+                try { // some devices may not have enough space
+                    window.localStorage[this.localStoragePath()] = JSON.stringify(this.result);
+                } catch (e) {}
             }
         },
 
@@ -3899,7 +4317,7 @@ var MM = ( function (window, $, Faye) {
          */
         constructor: function () {
             MM.models.App.superclass.constructor.apply(this, arguments);
-            $.extend(this, MM.Internal.customEventHandlers); // adds support for custom events on app channel
+            _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on app channel
         },
         localStoragePath: function () {
             return 'MM.app';
@@ -4159,7 +4577,7 @@ var MM = ( function (window, $, Faye) {
          */
         constructor: function () {
             MM.models.ActiveUser.superclass.constructor.apply(this, arguments);
-            $.extend(this, MM.Internal.customEventHandlers); // adds support for custom events on user channel
+            _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on user channel
         },
         localStoragePath: function () {
             return 'MM.activeUser';
@@ -5119,27 +5537,45 @@ var MM = ( function (window, $, Faye) {
         },
         /**
          * Sets the activeSession's documents' onUpdate handler. Pass null as the updateHandler parameter to
-         * deregister a previously set updateHandler. Note that there are no push events for the documents
-         * collection so it must be polled instead. The update handler will be called automatically when
-         * calling {@link MM.activeSession.documents#get}
+         * deregister a previously set updateHandler.
          *
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's document list updates.
          * @memberOf MM.activeSession.documents
+         * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
+         * @param {function=} onError callback for when subscription to onUpdate event fails
          * @instance
          *
          * @example
          *
-         function getDocuments () {
-            MM.activeSession.documents.onUpdate(onGetDocuments);
-            MM.activeSession.documents.get();
+         function documentsOnUpdateExample () {
+            // set the onUpdate handler for the documents list
+            MM.activeSession.documents.onUpdate(onDocumentsUpdate,
+                                    onSubscribedToDocumentsUpdates);
          }
-         function onGetDocuments () {
+         function onSubscribedToDocumentsUpdates () {
+            // successfully subscribed to updates to the session's document list
+
+            // now, post a text entry
+            createTextEntry();
+         }
+
+         function onDocumentsUpdate () {
+            // there was an update to the documents list
             var documents = MM.activeSession.documents.json();
-            console.log(documents);
+            // documents contains the latest list of documents
+         }
+
+         function createTextEntry () {
+            var textEntryData = {
+                text: 'What was the episode where Elaine is banned from the soup shop?',
+                type: 'text',
+                weight: 1.0
+            };
+            MM.activeSession.textentries.post(textEntryData);
          }
          */
-        onUpdate: function (updateHandler) {
-            this._onUpdate(updateHandler, null, null);
+        onUpdate: function (updateHandler, onSuccess, onError) {
+            this._onUpdate(updateHandler,  onSuccess, onError);
         },
         /**
          * Get and search across all documents indexed for your application. In addition to providing
@@ -6014,7 +6450,7 @@ var MM = ( function (window, $, Faye) {
                     MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
                 });
             }
-            $.extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
+            _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
         },
         localStoragePath: function () {
             return 'MM.activeSession';
@@ -6315,7 +6751,7 @@ var MM = ( function (window, $, Faye) {
      * @namespace
      * @private
      */
-    MM.Util = $.extend({}, {
+    MM.Util = _extend({}, {
 
         /**
          * Tests whether given parameter is a function, and if so calls it
@@ -6335,7 +6771,7 @@ var MM = ( function (window, $, Faye) {
 
          */
         testAndCall: function (func) {
-            if($.isFunction(func)){
+            if(_isFunction(func)){
                 // args will be the arguments to be passed to func
                 // arguments[0] is a reference to func, so we call
                 // slice to remove it from the arguments list
@@ -6369,7 +6805,7 @@ var MM = ( function (window, $, Faye) {
          // Argument 2: b
          */
         testAndCallThis: function (func, thisArg) {
-            if($.isFunction(func)){
+            if(_isFunction(func)){
                 // args will be the arguments to be passed to func
                 // arguments[0] is a reference to func, so we call
                 // slice to remove it from the arguments list
@@ -6678,7 +7114,7 @@ var MM = ( function (window, $, Faye) {
             }
         });
 
-        var languageTags6391To6392 = {"ab":"abk","aa":"aar","af":"afr","sq":"sqi","am":"amh","ar":"ara","an":"arg","hy":"hye","as":"asm","ae":"ave","ay":"aym","az":"aze","ba":"bak","eu":"eus","be":"bel","bn":"ben","bh":"bih","bi":"bis","bs":"bos","br":"bre","bg":"bul","my":"mya","ca":"cat","ch":"cha","ce":"che","zh":"zho","cu":"chu","cv":"chv","kw":"cor","co":"cos","hr":"hrv","cs":"ces","da":"dan","dv":"div","nl":"nld","dz":"dzo","en":"eng","eo":"epo","et":"est","fo":"fao","fj":"fij","fi":"fin","fr":"fra","gd":"gla","gl":"glg","ka":"kat","de":"deu","el":"ell","gn":"grn","gu":"guj","ht":"hat","ha":"hau","he":"heb","hz":"her","hi":"hin","ho":"hmo","hu":"hun","is":"isl","io":"ido","id":"ind","ia":"ina","ie":"ile","iu":"iku","ik":"ipk","ga":"gle","it":"ita","ja":"jpn","jv":"jav","kl":"kal","kn":"kan","ks":"kas","kk":"kaz","km":"khm","ki":"kik","rw":"kin","ky":"kir","kv":"kom","ko":"kor","kj":"kua","ku":"kur","lo":"lao","la":"lat","lv":"lav","li":"lim","ln":"lin","lt":"lit","lb":"ltz","mk":"mkd","mg":"mlg","ms":"msa","ml":"mal","mt":"mlt","gv":"glv","mi":"mri","mr":"mar","mh":"mah","mo":"mol","mn":"mon","na":"nau","nv":"nav","nd":"nde","nr":"nbl","ng":"ndo","ne":"nep","se":"sme","no":"nor","nb":"nob","nn":"nno","ny":"nya","oc":"oci","or":"ori","om":"orm","os":"oss","pi":"pli","pa":"pan","fa":"fas","pl":"pol","pt":"por","ps":"pus","qu":"que","rm":"roh","ro":"ron","rn":"run","ru":"rus","sm":"smo","sg":"sag","sa":"san","sc":"srd","sr":"srp","sn":"sna","ii":"iii","sd":"snd","si":"sin","sk":"slk","sl":"slv","so":"som","st":"sot","es":"spa","su":"sun","sw":"swa","ss":"ssw","sv":"swe","tl":"tgl","ty":"tah","tg":"tgk","ta":"tam","tt":"tat","te":"tel","th":"tha","bo":"bod","ti":"tir","to":"ton","ts":"tso","tn":"tsn","tr":"tur","tk":"tuk","tw":"twi","ug":"uig","uk":"ukr","ur":"urd","uz":"uzb","vi":"vie","vo":"vol","wa":"wln","cy":"cym","fy":"fry","wo":"wol","xh":"xho","yi":"yid","yo":"yor","za":"zha","zu":"zul"}
+        var languageTags6391To6392 = {'ab':'abk','aa':'aar','af':'afr','sq':'sqi','am':'amh','ar':'ara','an':'arg','hy':'hye','as':'asm','ae':'ave','ay':'aym','az':'aze','ba':'bak','eu':'eus','be':'bel','bn':'ben','bh':'bih','bi':'bis','bs':'bos','br':'bre','bg':'bul','my':'mya','ca':'cat','ch':'cha','ce':'che','zh':'zho','cu':'chu','cv':'chv','kw':'cor','co':'cos','hr':'hrv','cs':'ces','da':'dan','dv':'div','nl':'nld','dz':'dzo','en':'eng','eo':'epo','et':'est','fo':'fao','fj':'fij','fi':'fin','fr':'fra','gd':'gla','gl':'glg','ka':'kat','de':'deu','el':'ell','gn':'grn','gu':'guj','ht':'hat','ha':'hau','he':'heb','hz':'her','hi':'hin','ho':'hmo','hu':'hun','is':'isl','io':'ido','id':'ind','ia':'ina','ie':'ile','iu':'iku','ik':'ipk','ga':'gle','it':'ita','ja':'jpn','jv':'jav','kl':'kal','kn':'kan','ks':'kas','kk':'kaz','km':'khm','ki':'kik','rw':'kin','ky':'kir','kv':'kom','ko':'kor','kj':'kua','ku':'kur','lo':'lao','la':'lat','lv':'lav','li':'lim','ln':'lin','lt':'lit','lb':'ltz','mk':'mkd','mg':'mlg','ms':'msa','ml':'mal','mt':'mlt','gv':'glv','mi':'mri','mr':'mar','mh':'mah','mo':'mol','mn':'mon','na':'nau','nv':'nav','nd':'nde','nr':'nbl','ng':'ndo','ne':'nep','se':'sme','no':'nor','nb':'nob','nn':'nno','ny':'nya','oc':'oci','or':'ori','om':'orm','os':'oss','pi':'pli','pa':'pan','fa':'fas','pl':'pol','pt':'por','ps':'pus','qu':'que','rm':'roh','ro':'ron','rn':'run','ru':'rus','sm':'smo','sg':'sag','sa':'san','sc':'srd','sr':'srp','sn':'sna','ii':'iii','sd':'snd','si':'sin','sk':'slk','sl':'slv','so':'som','st':'sot','es':'spa','su':'sun','sw':'swa','ss':'ssw','sv':'swe','tl':'tgl','ty':'tah','tg':'tgk','ta':'tam','tt':'tat','te':'tel','th':'tha','bo':'bod','ti':'tir','to':'ton','ts':'tso','tn':'tsn','tr':'tur','tk':'tuk','tw':'twi','ug':'uig','uk':'ukr','ur':'urd','uz':'uzb','vi':'vie','vo':'vol','wa':'wln','cy':'cym','fy':'fry','wo':'wol','xh':'xho','yi':'yid','yo':'yor','za':'zha','zu':'zul'}
 
         /**
          * Converts language name or tag to the [ISO 639-2](http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) language
@@ -6760,4 +7196,4 @@ var MM = ( function (window, $, Faye) {
     MM.Internal.setup();
     return MM;
 
-}(window, $, Faye));
+}(window, ajax, Faye));
