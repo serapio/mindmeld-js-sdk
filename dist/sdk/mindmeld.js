@@ -2540,11 +2540,12 @@ var Faye = (function() {
     return Faye;
 
 })();
-/**
- * Adapted from https://github.com/ForbesLindesay/ajax
- * Removed the require/module code.
- */
+;(function () {
 
+
+/**
+ * Inlining type fn
+ */
 var type = function (val) {
   switch (toString.call(val)) {
     case '[object Function]': return 'function';
@@ -2572,6 +2573,75 @@ var type = function (val) {
 
   return typeof val;
 };
+
+/**
+ * jQuery's serialization fns, adapted
+ * ajax's were buggy, so going back to the source.
+ */
+
+var r20 = /%20/g,
+	rbracket = /\[\]$/;
+
+function buildParams( prefix, obj, add ) {
+	var name;
+
+	if ( type(obj) === 'array' ) {
+		// Serialize array item.
+		obj.forEach(function( v, i ) {
+			if ( rbracket.test( prefix ) ) {
+				// Treat each array item as a scalar.
+				add( prefix, v );
+
+			} else {
+				// Item is non-scalar (array or object), encode its numeric index.
+				buildParams(
+					prefix + '[' + ( typeof v === 'object' ? i : '' ) + ']',
+					v,
+					add
+				);
+			}
+		});
+
+	} else if ( type( obj ) === 'object' ) {
+		// Serialize object item.
+		for ( name in obj ) {
+			buildParams( prefix + '[' + name + ']', obj[ name ], add );
+		}
+
+	} else {
+		// Serialize scalar item.
+		add( prefix, obj );
+	}
+}
+
+// Serialize an array of form elements or a set of
+// key/values into a query string
+var param = function( a ) {
+	var prefix,
+		s = [],
+		add = function( key, value ) {
+			// If value is a function, invoke it and return its value
+      // XXX: We want the double equals here, since that's what jQuery used.
+			value = type(value) === 'function' ? value() : ( value == null ? '' : value );
+			s[ s.length ] = encodeURIComponent( key ) + '=' + encodeURIComponent( value );
+		};
+
+	for ( prefix in a ) {
+		buildParams( prefix, a[ prefix ], add );
+	}
+
+	// Return the resulting serialization
+	return s.join( '&' ).replace( r20, '+' );
+};
+
+
+
+
+/**
+ * Adapted from https://github.com/ForbesLindesay/ajax
+ * Removed the require/module code.
+ */
+
 
 var jsonpID = 0,
     document = window.document,
@@ -2824,28 +2894,6 @@ ajax.getJSON = function(url, success){
 
 var escape = encodeURIComponent
 
-function serialize(params, obj, traditional, scope){
-  var array = type(obj) === 'array';
-  for (var key in obj) {
-    var value = obj[key];
-
-    if (scope) key = traditional ? scope : scope + '[' + (array ? '' : key) + ']'
-    // handle data in serializeArray() format
-    if (!scope && array) params.add(value.name, value.value)
-    // recurse into nested objects
-    else if (traditional ? (type(value) === 'array') : (type(value) === 'object'))
-      serialize(params, value, traditional, key)
-    else params.add(key, value)
-  }
-}
-
-function param(obj, traditional){
-  var params = []
-  params.add = function(k, v){ this.push(escape(k) + '=' + escape(v)) }
-  serialize(params, obj, traditional)
-  return params.join('&').replace('%20', '+')
-}
-
 function extend(target) {
   var slice = Array.prototype.slice;
   slice.call(arguments, 1).forEach(function(source) {
@@ -2855,6 +2903,10 @@ function extend(target) {
   })
   return target
 }
+
+window.ajax = ajax;
+
+})();
 
 /* global window, ajax, Faye */
 
