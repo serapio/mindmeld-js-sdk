@@ -512,10 +512,17 @@ body {
 }
 @media only screen and (max-device-width : 568px) {
   body {
-    padding: 50px 0 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+@media only screen and (max-device-height : 568px) {
+  body {
+    padding-top: 50px;
+    padding-bottom: 0;
   }
   body.no-speech {
-    padding: 0;
+    padding-top: 0;
   }
 }
 body #mm-button {
@@ -942,6 +949,12 @@ body #mindmeld-parent.open {
     border-radius: 0;
   }
 }
+@media only screen and (max-device-height : 568px) {
+  .results #mindmeld {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
 #history-button {
   z-index: 1000;
   display: none;
@@ -973,7 +986,7 @@ body #mindmeld-parent.open {
     background-size: 31px 28px;
   }
 }
-@media only screen and (max-device-width : 568px) {
+@media only screen and (max-device-width : 568px), only screen and (max-device-height : 568px) {
   #history-button {
     width: 30px;
     height: 30px;
@@ -1055,7 +1068,7 @@ body #mindmeld-parent.open {
   margin: 0;
   width: 95%;
 }
-@media only screen and (max-device-width : 568px), (max-width: 751px) {
+@media only screen and (max-device-width : 568px), only screen and (max-device-height : 568px), (max-width: 751px) {
   #history-wrapper #warningContainer p#warningMessage {
     font-size: 10px;
   }
@@ -1122,6 +1135,15 @@ body #mindmeld-parent.open {
 }
 .no-speech #history {
   border-bottom: 5px solid #777;
+}
+@media only screen and (max-device-height : 568px) {
+  .results #history {
+    -webkit-transform: translateY(107px);
+    -moz-transform: translateY(107px);
+    -o-transform: translateY(107px);
+    -ms-transform: translateY(107px);
+    transform: translateY(107px);
+  }
 }
 #history #history-data {
   max-height: 350px;
@@ -1559,7 +1581,7 @@ body #mindmeld-parent.open {
   filter: none;
   padding: 15px 30px 28px 30px;
 }
-@media only screen and (max-device-width : 568px), (max-width: 751px) {
+@media only screen and (max-device-height : 568px), (max-width: 751px) {
   #history #history-data ul li.text-input {
     padding: 15px 30px 24px 30px;
   }
@@ -1569,7 +1591,7 @@ body #mindmeld-parent.open {
   margin: 0 20px 0 75px;
   position: relative;
 }
-@media only screen and (max-device-width : 568px) {
+@media only screen and (max-device-width : 568px), only screen and (max-device-height : 568px) {
   #history #history-data ul li.text-input form {
     margin: 0 20px 0 20px;
   }
@@ -1677,6 +1699,11 @@ body #mindmeld-parent.open {
 #results #tags .selected {
   font-weight: bold;
   background-color: #ddf;
+}
+@media only screen and (max-device-height : 568px) {
+  .results #results {
+    padding-top: 107px;
+  }
 }
 /* Isotope */
 .isotope.no-transition,

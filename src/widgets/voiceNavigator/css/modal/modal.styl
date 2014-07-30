@@ -2,6 +2,9 @@
 
 baseZ = 100000
 buttonBGColor = #ca6b37
+narrow-screen = "only screen and (max-device-width : 568px)"
+short-screen = "only screen and (max-device-height : 568px)"
+
 mobile = "only screen and (max-device-width : 568px)"
 
 *, *:before, *:after
@@ -43,10 +46,14 @@ body
   padding 60px
   overflow hidden
 
-  @media mobile
-    padding 50px 0 0
+  @media narrow-screen
+    padding-left 0
+    padding-right 0
+  @media short-screen
+    padding-top 50px
+    padding-bottom 0
     &.no-speech
-      padding 0
+      padding-top 0
 
   #mm-button
     position absolute
@@ -310,11 +317,16 @@ body
   transition height 0.3s ease-out
   .results &
     height 100%
-  @media mobile
+  @media narrow-screen
     width 100%
     left auto
     margin-left 0
     border-radius 0
+
+.results #mindmeld
+  @media short-screen
+    border-bottom-left-radius 0
+    border-bottom-right-radius 0
 
 #history-button
   z-index 1000
@@ -336,7 +348,7 @@ body
   margin-top 9px
   opacity 0.5
   color #797979
-  @media mobile
+  @media narrow-screen, short-screen
     width 30px
     height 30px
     padding-top 0
@@ -385,7 +397,7 @@ body
     clearfix()
     position relative
     bottom 5px
-    @media mobile, (max-width: 751px)
+    @media narrow-screen, (max-width: 751px)
       margin 0 auto 2px auto
     p#warningMessage
       float left
@@ -393,7 +405,7 @@ body
       font-style italic
       margin 0
       width 95%
-      @media mobile, (max-width: 751px)
+      @media narrow-screen, short-screen, (max-width: 751px)
         font-size 10px
       a#supportedBrowserLink
         text-emphasis none;
@@ -431,6 +443,11 @@ body
   .no-speech &
     border-bottom 5px solid #777
 
+.results #history
+  @media short-screen
+    transform translateY(107px)
+
+#history
   #history-data
     max-height 350px
     max-height 100%
@@ -490,12 +507,12 @@ body
         &.text-input
           opacity 1
           padding 15px 30px 28px 30px
-          @media mobile, (max-width: 751px)
+          @media short-screen, (max-width: 751px)
             padding 15px 30px 24px 30px
           form
             padding 0 50px 0 0
             margin 0 20px 0 75px
-            @media mobile
+            @media narrow-screen, short-screen
               margin 0 20px 0 20px
             position relative
           input
@@ -547,6 +564,7 @@ body
   padding-top 140px
   .no-speech &
     padding-top 107px
+
   height 510px
   overflow auto
   -webkit-overflow-scrolling touch
@@ -569,6 +587,10 @@ body
     .selected
       font-weight bold
       background-color #ddf
+
+.results #results
+  @media short-screen
+    padding-top 107px
 
 /* Isotope */
 .isotope.no-transition,
