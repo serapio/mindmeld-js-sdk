@@ -44,7 +44,7 @@ database:
 ## Customize test commands
 test:
   override:
-      - gulp tests.unit
+      - gulp tests
 
 ## Customize deployment commands
 deployment:
