@@ -1,0 +1,4 @@
+#! /bin/sh
+set +e
+command -v phantomjs >/dev/null 2>&1 || { echo >&2 "Please install phantomjs to run the tests.  Aborting."; exit 1; }
+gulp tests
