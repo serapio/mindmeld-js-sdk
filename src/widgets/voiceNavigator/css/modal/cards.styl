@@ -1,4 +1,3 @@
-mobile = "only screen and (max-device-width : 568px)"
 narrow-screen = "only screen and (max-device-width : 568px)"
 short-screen = "only screen and (max-device-height : 568px)"
 
@@ -10,10 +9,13 @@ short-screen = "only screen and (max-device-height : 568px)"
   height 1px
   padding 10px
   @media narrow-screen
-    width 259px
     margin auto
-  @media narrow-screen and (min-width : 496px)
-    width 496px
+  for i in (1...8)
+    el-width = ((218px + 20) * i) + 20 + 2
+    // ((card width + 20 padding) * i) + outer padding + border
+    el-media = narrow-screen + " and (min-width: " + el-width + ")"
+    @media el-media
+      width el-width
   &.loading
     opacity 0.3
   .card

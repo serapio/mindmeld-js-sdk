@@ -8,13 +8,42 @@
 }
 @media only screen and (max-device-width : 568px) {
   #cards {
-    width: 259px;
     margin: auto;
   }
 }
-@media only screen and (max-device-width : 568px) and (min-width: 496px) {
+@media only screen and (max-device-width : 568px) and (min-width: 260px) {
   #cards {
-    width: 496px;
+    width: 260px;
+  }
+}
+@media only screen and (max-device-width : 568px) and (min-width: 498px) {
+  #cards {
+    width: 498px;
+  }
+}
+@media only screen and (max-device-width : 568px) and (min-width: 736px) {
+  #cards {
+    width: 736px;
+  }
+}
+@media only screen and (max-device-width : 568px) and (min-width: 974px) {
+  #cards {
+    width: 974px;
+  }
+}
+@media only screen and (max-device-width : 568px) and (min-width: 1212px) {
+  #cards {
+    width: 1212px;
+  }
+}
+@media only screen and (max-device-width : 568px) and (min-width: 1450px) {
+  #cards {
+    width: 1450px;
+  }
+}
+@media only screen and (max-device-width : 568px) and (min-width: 1688px) {
+  #cards {
+    width: 1688px;
   }
 }
 #cards.loading {
