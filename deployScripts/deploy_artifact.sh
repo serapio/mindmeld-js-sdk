@@ -15,7 +15,7 @@ SCRIPT_DIR=`dirname $0`
 if [ -z "$CHEF_ENVIRONMENT" ]; then
   if [ "$CIRCLE_BRANCH" = "develop" ]; then
       CHEF_ENVIRONMENT='west-dev-d'
-  elif [ "$CIRCLE_BRANCH" = "release" ]; then
+  elif [[ "$CIRCLE_BRANCH" == release/* ]]; then
       CHEF_ENVIRONMENT='west-dev-e'
   elif [ "$CIRCLE_BRANCH" = "master" ]; then
       CHEF_ENVIRONMENT='west-prod-a'
