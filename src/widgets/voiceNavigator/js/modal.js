@@ -889,7 +889,7 @@ var MMVoice = {
         }
 
         var numCols = self._numColumns();
-        var numDocs = numCols * 4;
+        var numDocs = Math.max(numCols * 4, 8);
         if (resultsLength <= numDocs) {
             return resultsLength;
         } else {
