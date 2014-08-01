@@ -44,7 +44,7 @@ database:
 ## Customize test commands
 test:
   override:
-      - gulp tests.unit
+      - gulp tests
 
 ## Customize deployment commands
 deployment:
@@ -53,7 +53,7 @@ deployment:
     commands:
       - bash deployScripts/deploy_artifact.sh
   release:
-    branch: release
+    branch: /release\/.*/
     commands:
       - bash deployScripts/deploy_artifact.sh
   production:

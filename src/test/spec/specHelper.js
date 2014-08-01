@@ -35,6 +35,10 @@ window.customMatchers = {
   }
 };
 
+window.randomString = function () {
+  return Math.random().toString(16).slice(2);
+};
+
 var onErrorCallback = function (error) {
   throw error || new Error ('Received error callback');
 };
@@ -64,53 +68,45 @@ var onErrorCallback = function (error) {
  */
 MM.initializeMindMeld = function (config, callback) {
   var self = this;
-  self.init({
-    appid: config.appid,
-    cleanUrl: config.cleanUrl,
-    fayeClientUrl: config.fayeClientUrl,
 
-    onInit: function () {
-      if (!config.credentials) {
-        callback();
-      } else {
-        //TODO: Also allow to set existing token.
-        self.getToken(config.credentials, function onSuccess (){
-          console.log('Token retrieved.');
+  config.onInit = function () {
+    if (!config.credentials) {
+      callback();
+    } else {
+      //TODO: Also allow to set existing token.
+      self.getToken(config.credentials, function onSuccess (){
 
-          var setActiveSession = function (sessionid, cb) {
-            self.setActiveSessionID(
-              sessionid,
-              function onSessionStart () {
-                console.log('Session started!');
-                cb();
+        var setActiveSession = function (sessionid, cb) {
+          self.setActiveSessionID(
+            sessionid,
+            function onSessionStart () {
+              cb();
+            },
+            onErrorCallback
+          );
+        };
+
+        if (config.session) {
+          if (config.session.id) {
+            // We already have an id, let's use it
+            setActiveSession(config.session.id, callback);
+          } else {
+            // Make a new session
+            self.activeUser.sessions.post(
+              config.session,
+              function onSessionPosted(result) {
+                setActiveSession(result.data.sessionid, callback);
               },
               onErrorCallback
             );
-          };
-
-          if (config.session) {
-            if (config.session.id) {
-              // We already have an id, let's use it
-              console.log('Using supplied sessionid to set session.');
-              setActiveSession(config.session.id, callback);
-            } else {
-              // Make a new session
-              console.log('Making new session with', config.session);
-              self.activeUser.sessions.post(
-                config.session,
-                function onSessionPosted(result) {
-                  console.log('Create session results:', result);
-                  setActiveSession(result.data.sessionid, callback);
-                },
-                onErrorCallback
-              );
-            }
-          } else {
-            callback();
           }
-        }, onErrorCallback
-        );
-      }
+        } else {
+          callback();
+        }
+      }, onErrorCallback
+      );
     }
-  });
+  };
+
+  self.init(config);
 };

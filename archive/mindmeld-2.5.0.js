@@ -2920,107 +2920,34 @@ var MM = ( function (window, ajax, Faye) {
 
     var MM = window.MM = window.MM || {};
 
-    var _isFunction = function(f) {
-        return 'function' === typeof f;
-    };
+    var _extend = function (base) {
+      base = base || {};
 
-    var _isWindow = function( obj ) {
-        return obj != null && obj === obj.window;
-    };
+      for (var i = 1; i < arguments.length; i++) {
+        var obj = arguments[i];
 
-    var _isPlainObject = function( obj ) {
-        // Not plain objects:
-        // - Any object or value whose internal [[Class]] property is not "[object Object]"
-        // - DOM nodes
-        // - window
-        if ( typeof obj !== "object" || obj.nodeType || _isWindow( obj ) ) {
-            return false;
+        if (!obj) continue;
+
+        for (var key in obj) {
+          if (obj.hasOwnProperty(key)) {
+            base[key] = obj[key];
+          }
         }
-
-        if ( obj.constructor &&
-            !hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
-            return false;
-        }
-
-        // If the function hasn't returned already, we're confident that
-        // |obj| is a plain object, created by {} or constructed with new Object
-        return true;
-    };
-
-    var _extend = function() {
-        var src, copyIsArray, copy, name, options, clone,
-            target = arguments[0] || {},
-            i = 1,
-            length = arguments.length,
-            deep = false;
-
-        // Handle a deep copy situation
-        if ( typeof target === "boolean" ) {
-            deep = target;
-
-            // skip the boolean and the target
-            target = arguments[ i ] || {};
-            i++;
-        }
-
-        // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== "object" && ! _isFunction(target) ) {
-            target = {};
-        }
-
-        // extend jQuery itself if only one argument is passed
-        if ( i === length ) {
-            target = this;
-            i--;
-        }
-
-        for ( ; i < length; i++ ) {
-            // Only deal with non-null/undefined values
-            if ( (options = arguments[ i ]) != null ) {
-                // Extend the base object
-                for ( name in options ) {
-                    src = target[ name ];
-                    copy = options[ name ];
-
-                    // Prevent never-ending loop
-                    if ( target === copy ) {
-                        continue;
-                    }
-
-                    // Recurse if we're merging plain objects or arrays
-                    if ( deep && copy && ( _isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
-                        if ( copyIsArray ) {
-                            copyIsArray = false;
-                            clone = src && jQuery.isArray(src) ? src : [];
-
-                        } else {
-                            clone = src && _isPlainObject(src) ? src : {};
-                        }
-
-                        // Never move original objects, clone them
-                        target[ name ] = _extend( deep, clone, copy );
-
-                        // Don't bring in undefined values
-                    } else if ( copy !== undefined ) {
-                        target[ name ] = copy;
-                    }
-                }
-            }
-        }
-
-        // Return the modified object
-        return target;
+      }
+      return base;
     };
 
     var _isEmptyObject = function (obj) {
   		var name;
-  		for (name in obj ) {
+  		for ( name in obj ) {
   			return false;
   		}
   		return true;
   	};
 
-
+    var _isFunction = function(f) {
+      return 'function' === typeof f;
+    };
 
     var _onDocumentReady = function(f) {
       if (window.document.readyState === 'complete' ||
@@ -3045,7 +2972,7 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.5.2',
+        value: '2.5.0',
         writable: false
     });
 
