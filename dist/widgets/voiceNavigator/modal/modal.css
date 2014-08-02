@@ -510,13 +510,13 @@ body {
   padding: 60px;
   overflow: hidden;
 }
-@media only screen and (max-device-width : 568px) {
+@media only screen and (max-device-width : 600px), only screen and (max-width : 600px) {
   body {
     padding-left: 0;
     padding-right: 0;
   }
 }
-@media only screen and (max-device-height : 568px) {
+@media only screen and (max-device-height : 600px), only screen and (max-height : 600px) {
   body {
     padding-top: 50px;
     padding-bottom: 0;
@@ -802,8 +802,6 @@ body #mindmeld-parent.open {
   filter: none;
 }
 #mindmeld-alert {
-  position: absolute;
-  background-color: #fff;
   border: 1px solid #bbb;
   -webkit-border-radius: 5px;
   border-radius: 5px;
@@ -940,7 +938,7 @@ body #mindmeld-parent.open {
 .results #mindmeld {
   height: 100%;
 }
-@media only screen and (max-device-width : 568px) {
+@media only screen and (max-device-width : 600px), only screen and (max-width : 600px) {
   #mindmeld {
     width: 100%;
     left: auto;
@@ -949,10 +947,16 @@ body #mindmeld-parent.open {
     border-radius: 0;
   }
 }
-@media only screen and (max-device-height : 568px) {
+@media only screen and (max-device-height : 600px), only screen and (max-height : 600px) {
   .results #mindmeld {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+  }
+}
+@media only screen and (max-device-height : 600px), only screen and (max-height : 600px) {
+  .no-speech #mindmeld {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
   }
 }
 #history-button {
@@ -986,7 +990,7 @@ body #mindmeld-parent.open {
     background-size: 31px 28px;
   }
 }
-@media only screen and (max-device-width : 568px), only screen and (max-device-height : 568px) {
+@media only screen and (max-device-width : 600px), only screen and (max-width : 600px), only screen and (max-device-height : 600px), only screen and (max-height : 600px) {
   #history-button {
     width: 30px;
     height: 30px;
@@ -1056,7 +1060,7 @@ body #mindmeld-parent.open {
 #history-wrapper #warningContainer:after {
   clear: both;
 }
-@media only screen and (max-device-width : 568px), (max-width: 751px) {
+@media only screen and (max-device-width : 600px), only screen and (max-width : 600px) {
   #history-wrapper #warningContainer {
     margin: 0 auto 2px auto;
   }
@@ -1068,7 +1072,7 @@ body #mindmeld-parent.open {
   margin: 0;
   width: 95%;
 }
-@media only screen and (max-device-width : 568px), only screen and (max-device-height : 568px), (max-width: 751px) {
+@media only screen and (max-device-width : 600px), only screen and (max-device-height : 600px), only screen and (max-height : 600px), (max-width: 751px) {
   #history-wrapper #warningContainer p#warningMessage {
     font-size: 10px;
   }
@@ -1091,7 +1095,6 @@ body #mindmeld-parent.open {
   cursor: pointer;
 }
 #history {
-  position: relative;
   background-color: #fff;
   -webkit-box-shadow: 0 -5px 5px 6px rgba(0,0,0,0.25);
   box-shadow: 0 -5px 5px 6px rgba(0,0,0,0.25);
@@ -1136,7 +1139,7 @@ body #mindmeld-parent.open {
 .no-speech #history {
   border-bottom: 5px solid #777;
 }
-@media only screen and (max-device-height : 568px) {
+@media only screen and (max-device-height : 600px), only screen and (max-height : 600px) {
   .results #history {
     -webkit-transform: translateY(107px);
     -moz-transform: translateY(107px);
@@ -1581,7 +1584,7 @@ body #mindmeld-parent.open {
   filter: none;
   padding: 15px 30px 28px 30px;
 }
-@media only screen and (max-device-height : 568px), (max-width: 751px) {
+@media only screen and (max-device-height : 600px), only screen and (max-height : 600px), (max-width: 751px) {
   #history #history-data ul li.text-input {
     padding: 15px 30px 24px 30px;
   }
@@ -1591,7 +1594,7 @@ body #mindmeld-parent.open {
   margin: 0 20px 0 75px;
   position: relative;
 }
-@media only screen and (max-device-width : 568px), only screen and (max-device-height : 568px) {
+@media only screen and (max-device-width : 600px), only screen and (max-width : 600px), only screen and (max-device-height : 600px), only screen and (max-height : 600px) {
   #history #history-data ul li.text-input form {
     margin: 0 20px 0 20px;
   }
@@ -1700,7 +1703,7 @@ body #mindmeld-parent.open {
   font-weight: bold;
   background-color: #ddf;
 }
-@media only screen and (max-device-height : 568px) {
+@media only screen and (max-device-height : 600px), only screen and (max-height : 600px) {
   .results #results {
     padding-top: 107px;
   }
@@ -1717,22 +1720,22 @@ body #mindmeld-parent.open {
 }
 .editable {
   background-color: #eee;
+  display: block;
   height: 36px;
+  width: 100%;
+  max-width: 950px;
+  margin: auto;
+  margin-bottom: 20px;
+  padding: 0;
+  padding-top: 7px;
+  text-align: center;
+  font-size: 20px;
+  color: #333;
+  resize: none;
   -webkit-box-shadow: 0 0;
   box-shadow: 0 0;
   border: 0 none;
-  margin: auto;
-  max-width: 950px;
-  display: block;
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 20px;
-  color: #333;
-  padding: 0;
-  padding-top: 7px;
   outline: 0 none;
-  width: 100%;
-  resize: none;
 }
 @-moz-keyframes mm-pulse {
   0% {

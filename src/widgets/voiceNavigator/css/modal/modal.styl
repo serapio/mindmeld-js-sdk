@@ -2,10 +2,13 @@
 
 baseZ = 100000
 buttonBGColor = #ca6b37
-narrow-screen = "only screen and (max-device-width : 568px)"
-short-screen = "only screen and (max-device-height : 568px)"
 
-mobile = "only screen and (max-device-width : 568px)"
+narrow-device = "only screen and (max-device-width : 600px)"
+narrow-window = "only screen and (max-width : 600px)"
+narrow-device-or-window = narrow-device + ", " + narrow-window
+short-device = "only screen and (max-device-height : 600px)"
+short-window = "only screen and (max-height : 600px)"
+short-device-or-window = short-device + ", " + short-window
 
 *, *:before, *:after
   box-sizing border-box
@@ -46,10 +49,10 @@ body
   padding 60px
   overflow hidden
 
-  @media narrow-screen
+  @media narrow-device-or-window
     padding-left 0
     padding-right 0
-  @media short-screen
+  @media short-device-or-window
     padding-top 50px
     padding-bottom 0
     &.no-speech
@@ -219,8 +222,6 @@ body
       opacity 1
 
 #mindmeld-alert
-  position absolute
-  background-color #fff
   border 1px solid #bbb
   border-radius 5px
   background #ffffff
@@ -317,16 +318,21 @@ body
   transition height 0.3s ease-out
   .results &
     height 100%
-  @media narrow-screen
+  @media narrow-device-or-window
     width 100%
     left auto
     margin-left 0
     border-radius 0
 
 .results #mindmeld
-  @media short-screen
+  @media short-device-or-window
     border-bottom-left-radius 0
     border-bottom-right-radius 0
+
+.no-speech #mindmeld
+  @media short-device-or-window
+    border-top-left-radius 0
+    border-top-right-radius 0
 
 #history-button
   z-index 1000
@@ -348,7 +354,7 @@ body
   margin-top 9px
   opacity 0.5
   color #797979
-  @media narrow-screen, short-screen
+  @media narrow-device-or-window, short-device-or-window
     width 30px
     height 30px
     padding-top 0
@@ -397,7 +403,7 @@ body
     clearfix()
     position relative
     bottom 5px
-    @media narrow-screen, (max-width: 751px)
+    @media narrow-device-or-window
       margin 0 auto 2px auto
     p#warningMessage
       float left
@@ -405,7 +411,7 @@ body
       font-style italic
       margin 0
       width 95%
-      @media narrow-screen, short-screen, (max-width: 751px)
+      @media narrow-device, short-device-or-window, (max-width: 751px)
         font-size 10px
       a#supportedBrowserLink
         text-emphasis none;
@@ -423,7 +429,6 @@ body
 
 
 #history
-  position relative
   background-color #fff
   box-shadow 0 -5px 5px 6px rgba(0,0,0,0.25)
   z-index 100
@@ -444,7 +449,7 @@ body
     border-bottom 5px solid #777
 
 .results #history
-  @media short-screen
+  @media short-device-or-window
     transform translateY(107px)
 
 #history
@@ -507,12 +512,12 @@ body
         &.text-input
           opacity 1
           padding 15px 30px 28px 30px
-          @media short-screen, (max-width: 751px)
+          @media short-device-or-window, (max-width: 751px)
             padding 15px 30px 24px 30px
           form
             padding 0 50px 0 0
             margin 0 20px 0 75px
-            @media narrow-screen, short-screen
+            @media narrow-device-or-window, short-device-or-window
               margin 0 20px 0 20px
             position relative
           input
@@ -589,7 +594,7 @@ body
       background-color #ddf
 
 .results #results
-  @media short-screen
+  @media short-device-or-window
     padding-top 107px
 
 /* Isotope */
@@ -624,18 +629,18 @@ body
 
 .editable
   background-color #eee
-  height 36px
-  box-shadow 0 0
-  border 0 none
-  margin auto
-  max-width 950px
   display block
-  text-align center
+  height 36px
+  width 100%
+  max-width 950px
+  margin auto
   margin-bottom 20px
-  font-size 20px
-  color #333
   padding 0
   padding-top 7px
-  outline 0 none
-  width 100%
+  text-align center
+  font-size 20px
+  color #333
   resize none
+  box-shadow 0 0
+  border 0 none
+  outline 0 none
