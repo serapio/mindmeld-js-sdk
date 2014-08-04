@@ -2,6 +2,7 @@
 
 var gulp = require('gulp');
 var shell = require('gulp-shell');
+var taskListing  = require('gulp-task-listing');
 
 var rootDirectory = __dirname + '/../../';
 var distDirectory = rootDirectory + 'dist/';
@@ -65,3 +66,5 @@ gulp.task('tests.integration', ['tests.build'], function () {
 });
 
 gulp.task('tests', ['tests.unit', 'tests.integration']);
+gulp.task('tests.tasks', taskListing.withFilters(/\./, /^(?!tests).+/));
+
