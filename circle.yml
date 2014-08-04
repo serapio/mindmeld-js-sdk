@@ -61,8 +61,7 @@ deployment:
     commands:
       - bash deployScripts/deploy_artifact.sh
   feature:
-    branch: feature/decouple-js-sdk
-    # branch: feature/voiceNavigator
+    branch: feature/voiceNavigator
     commands:
       - bash deployScripts/deploy_artifact.sh"
   feature:
