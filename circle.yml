@@ -61,6 +61,11 @@ deployment:
     commands:
       - bash deployScripts/deploy_artifact.sh
   feature:
+    branch: feature/decouple-js-sdk
+    # branch: feature/voiceNavigator
+    commands:
+      - bash deployScripts/deploy_artifact.sh"
+  feature:
     branch: /feature\/.*/
     commands:
       #Build only if there's a CHEF_ENVIRONMENT variable set.

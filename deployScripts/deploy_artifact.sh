@@ -30,6 +30,11 @@ fi
 
 #Set specific params from the circle params
 REPO=$CIRCLE_PROJECT_REPONAME
+if [ "$CIRCLE_BRANCH" = "feature/decouple-js-sdk" ]; then
+# if [ "$CIRCLE_BRANCH" = "feature/voiceNavigator" ]; then
+  REPO="$CIRCLE_PROJECT_REPONAME"-voice-navigator
+fi
+
 PREFIX="$REPO/"
 GIT_COMMIT=$CIRCLE_SHA1
 BUILD_ID="$CIRCLE_BUILD_NUM"_`date +"%Y-%m-%d_%H-%M-%S"`
