@@ -2,7 +2,13 @@
 
 baseZ = 100000
 buttonBGColor = #ca6b37
-mobile = "only screen and (min-device-width : 320px) and (max-device-width : 480px)"
+
+narrow-device = "only screen and (max-device-width : 600px)"
+narrow-window = "only screen and (max-width : 600px)"
+narrow-device-or-window = narrow-device + ", " + narrow-window
+short-device = "only screen and (max-device-height : 600px)"
+short-window = "only screen and (max-height : 600px)"
+short-device-or-window = short-device + ", " + short-window
 
 *, *:before, *:after
   box-sizing border-box
@@ -43,8 +49,14 @@ body
   padding 60px
   overflow hidden
 
-  @media mobile
-    padding 50px 0 0
+  @media narrow-device-or-window
+    padding-left 0
+    padding-right 0
+  @media short-device-or-window
+    padding-top 50px
+    padding-bottom 0
+    &.no-speech
+      padding-top 0
 
   #mm-button
     position absolute
@@ -206,18 +218,10 @@ body
     height 100%
     position relative
     opacity 0
-    transform translateY(120px)
-    transition 0.3s ease-out
-    -webkit-overflow-scrolling touch
     &.open
       opacity 1
-      transform translateY(80px)
-    &.results
-      transform translateY(0)
 
 #mindmeld-alert
-  position absolute
-  background-color #fff
   border 1px solid #bbb
   border-radius 5px
   background #ffffff
@@ -314,11 +318,21 @@ body
   transition height 0.3s ease-out
   .results &
     height 100%
-  @media mobile
+  @media narrow-device-or-window
     width 100%
     left auto
     margin-left 0
     border-radius 0
+
+.results #mindmeld
+  @media short-device-or-window
+    border-bottom-left-radius 0
+    border-bottom-right-radius 0
+
+.no-speech #mindmeld
+  @media short-device-or-window
+    border-top-left-radius 0
+    border-top-right-radius 0
 
 #history-button
   z-index 1000
@@ -340,13 +354,17 @@ body
   margin-top 9px
   opacity 0.5
   color #797979
-  @media mobile
-    background none
-    height auto
+  @media narrow-device-or-window, short-device-or-window
+    width 30px
+    height 30px
     padding-top 0
+    margin-top 5px
+    background-size 22px 20px
+    span
+      display none
   .no-speech &
-    top 15px
-    left 30px
+    top 7px
+    left 10px
   &:hover
     opacity 1
     text-decoration none
@@ -373,8 +391,44 @@ body
   left 0
   top 0
   width 100%
+  #warningContainer
+    display none
+    text-align center
+    color #c91818
+    background-color #eedada
+    border 1px solid #fdbcbc
+    border-radius 2px
+    width 73%
+    margin 0 auto 5px auto
+    clearfix()
+    position relative
+    bottom 5px
+    @media narrow-device-or-window
+      margin 0 auto 2px auto
+    p#warningMessage
+      float left
+      font-weight 300
+      font-style italic
+      margin 0
+      width 95%
+      @media narrow-device, short-device-or-window, (max-width: 751px)
+        font-size 10px
+      a#supportedBrowserLink
+        text-emphasis none;
+        font-weight 600
+        color #D86B6B
+    div#closeWarning
+      float right
+      width 5%
+      padding-right 5px
+      a#closeWarningButton
+        color #C92727
+        &:hover
+          color #8A1212
+          cursor pointer
+
+
 #history
-  position relative
   background-color #fff
   box-shadow 0 -5px 5px 6px rgba(0,0,0,0.25)
   z-index 100
@@ -394,6 +448,11 @@ body
   .no-speech &
     border-bottom 5px solid #777
 
+.results #history
+  @media short-device-or-window
+    transform translateY(107px)
+
+#history
   #history-data
     max-height 350px
     max-height 100%
@@ -452,10 +511,14 @@ body
                 animation zoomin 0.2s ease-out (0.04s * i) forwards
         &.text-input
           opacity 1
-          padding 10px 30px 30px
+          padding 15px 30px 28px 30px
+          @media short-device-or-window, (max-width: 751px)
+            padding 15px 30px 24px 30px
           form
             padding 0 50px 0 0
-            margin 0 20px
+            margin 0 20px 0 75px
+            @media narrow-device-or-window, short-device-or-window
+              margin 0 20px 0 20px
             position relative
           input
             border 1px solid #bbb
@@ -498,6 +561,7 @@ body
     transition all 0.8s ease-out
     #history-data
       overflow auto
+      -webkit-overflow-scrolling touch
       ul li
         opacity 1.0
 
@@ -505,10 +569,10 @@ body
   padding-top 140px
   .no-speech &
     padding-top 107px
+
   height 510px
   overflow auto
-  .slimScrollDiv
-    background-color #f3f3f3
+  -webkit-overflow-scrolling touch
   #tags
     padding 10px
     text-align center
@@ -528,6 +592,10 @@ body
     .selected
       font-weight bold
       background-color #ddf
+
+.results #results
+  @media short-device-or-window
+    padding-top 107px
 
 /* Isotope */
 .isotope.no-transition,
@@ -561,17 +629,18 @@ body
 
 .editable
   background-color #eee
-  height 36px
-  box-shadow 0 0
-  border 0 none
-  margin auto
-  max-width 950px
   display block
-  text-align center
+  height 36px
+  width 100%
+  max-width 950px
+  margin auto
   margin-bottom 20px
+  padding 0
+  padding-top 7px
+  text-align center
   font-size 20px
   color #333
-  padding 0
-  outline 0 none
-  width 100%
   resize none
+  box-shadow 0 0
+  border 0 none
+  outline 0 none

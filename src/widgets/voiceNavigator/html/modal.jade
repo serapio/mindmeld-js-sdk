@@ -4,8 +4,8 @@ html(lang="en")
     meta(charset="utf-8")
     meta(content="IE=edge,chrome=1", "http-equiv"="X-UA-Compatible")
     title Mindmeld Voice Nav
-    meta(content="MindMeld Voice Navigator", name="description")
-    meta(content="width=device-width", name="viewport")
+    meta(name="description", content="MindMeld Voice Navigator")
+    meta(name="viewport", content="width=device-width, initial-scale=1, maximum-scale=1")
     link(href='//fonts.googleapis.com/css?family=Open+Sans', rel='stylesheet', type='text/css')
     link(id="modal-css", href="./modal.css", rel="stylesheet", type="text/css")
     link(id="cards-css", href="./cards.css", rel="stylesheet", type="text/css")
@@ -38,7 +38,8 @@ html(lang="en")
           .on click to release
 
       #mindmeld
-        a.history#history-button(href="#") Expand History
+        a.history#history-button(href="#")
+          span Expand History
         a#close(href="#") &times;
 
         #history-wrapper
@@ -46,14 +47,19 @@ html(lang="en")
             #history-data
               ul
                 li.on#initialText
-
+              div#warningContainer
+                p#warningMessage
+                  | Your browser does not support speech input. Try using a&nbsp;
+                  a#supportedBrowserLink(href="http://caniuse.com/web-speech", target="_blank") supported browser.
+                div#closeWarning
+                  a#closeWarningButton ×
               textarea.editable
 
         #results
           .inner-content-div
             #tags
             #cards
-               .card.removed.single-column-fix
+              .card.removed.single-column-fix
 
     audio(id="audio-done", src="./done.wav", preload="auto")
     script(src="./modal.js", type="text/javascript")

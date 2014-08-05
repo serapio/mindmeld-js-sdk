@@ -28,14 +28,14 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/mindmeld-2.4.0.js"></script>
+<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/mindmeld-2.5.3.js"></script>
 ```
 
-* Un-minified: [mindmeld-2.4.0.js][versionedSDKDownloadLink]
-* Minified: [mindmeld-2.4.0.min.js][versionedMinifiedSDKDownloadLink]
-* Both + Hello World + Documentation: [mindmeld-js-sdk-2.4.0.zip][versionedSDKZIPDownloadLink]
+* Un-minified: [mindmeld-2.5.3.js][versionedSDKDownloadLink]
+* Minified: [mindmeld-2.5.3.min.js][versionedMinifiedSDKDownloadLink]
+* Both + Hello World + Documentation: [mindmeld-js-sdk-2.5.3.zip][versionedSDKZIPDownloadLink]
 
-### Clone git repository 
+### Clone git repository
 Both files are also available directly from the mindmeld-js-sdk git repository. Simply clone the repo:
 ```bash
 git clone https://github.com/expectlabs/mindmeld-js-sdk.git
@@ -56,19 +56,14 @@ To save the dependency in bower.json, run the above command with `--save`
 
 ## Usage
 
-The MindMeld JavaScript SDK relies on the popular jQuery library. You should first load the jQuery library before
-loading the MindMeld library.
-
 ### Without Bower
 ```html
-<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 <script src="path/to/mindmeld.min.js"></script>
 ```
 
 ### With Bower
 ```html
-<script src="bower_components/jquery/jquery.min.js"></script>
-<script src="bower_components/mindmeld-js-sdk/mindmeld.js"></script>
+<script src="bower_components/mindmeld-js-sdk/dist/sdk/mindmeld.js"></script>
 ```
 
 ## Getting Started
@@ -166,7 +161,7 @@ MM.activeSession.textentries.post(textEntryData);
 ```
 
 ### Example Flow to Get Contextually Relevant Documents to a Conversation
-The following code snippet will subscribe to the documents collection, post a text entry, and receive 
+The following code snippet will subscribe to the documents collection, post a text entry, and receive
 a notification once the MindMeld API has updated documents for the text entry.
 
 ```javascript
@@ -347,6 +342,7 @@ if (MM.support.speechRecognition) { // check for support in the current browser
 * *src/sdk/widget/voiceNavigator/*: Directory containing source files for voice navigator widget
 * *src/docsTemplate/*: Directory containing templates and configuration files for building JS Docs
 * *src/embed.js*: Source for embed script used to asynchronously load widgets
+* *src/tests*: Our jasmine files and tests
 * *dist/*: Directory containing all built, uglified, and production-ready files for JS SDK
 * *dist/sdk/*: Directory containing compiled mindmeld.js, mindmeld.min.js, mindmeld-js-sdk.zip, and examples
 * *dist/widgets/searchWidget/*: Directory containing all files necessary for using autocomplete search widget
@@ -369,7 +365,6 @@ if (MM.support.speechRecognition) { // check for support in the current browser
 [latestSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld.js
 [latestMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld.min.js
 [latestSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld-js-sdk.zip
-[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld-2.4.0.js
-[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld-2.4.0.min.js
-[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld-js-sdk-2.4.0.zip
-
+[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld-2.5.3.js
+[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld-2.5.3.min.js
+[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/mindmeld-js-sdk-2.5.3.zip

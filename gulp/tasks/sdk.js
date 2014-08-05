@@ -1,5 +1,6 @@
+/* jshint node: true */
+
 var gulp = require('gulp');
-require('gulp-grunt')(gulp); // Load Grunt tasks for jsdoc until gulp-jsdoc becomes more legit
 
 var concat      = require('gulp-concat-util');
 var uglify      = require('gulp-uglify');
@@ -10,7 +11,6 @@ var fs          = require('fs');
 
 var replace     = require('gulp-replace');
 var taskListing = require('gulp-task-listing');
-
 
 var rootDirectory = __dirname + '/../../';
 var exampleDirectory = rootDirectory + 'example/';
@@ -33,6 +33,7 @@ var versionedMinifiedMindMeldName = '';
 gulp.task('sdk.concat', function () {
     return gulp.src([
             srcMMDirectory + 'vendor/faye.js',
+            srcMMDirectory + 'vendor/ajax.js',
             srcMMDirectory + 'main.js'
     ])
         .pipe(concat('mindmeld.js'))
@@ -49,13 +50,11 @@ gulp.task('sdk.uglify', ['sdk.concat'], function () {
         .pipe(gulp.dest(distMMDirectory));
 });
 
-gulp.task('sdk.docs', ['grunt-buildJSDocs']);
-
 /**
  * Moves generated JS Doc, mindmeld.js, mindmeld.min.js and
  * HelloWorld page into mindmeld-js-sdk.zip
  */
-gulp.task('sdk.zip', ['sdk.docs', 'sdk.uglify'], function () {
+gulp.task('sdk.zip', ['docs', 'sdk.uglify'], function () {
     return es.merge(
         gulp.src('LICENSE'),
         gulp.src(distDirectory + 'docs/**', {base: distDirectory}),
@@ -118,7 +117,7 @@ gulp.task('sdk.archive.js', ['sdk.set-version', 'sdk.uglify'], function () {
 /**
  * Creates archive of SDK at current version
  */
-gulp.task('sdk.archive', ['sdk.set-version', 'sdk.archive.js', 'sdk.build'], function () {
+gulp.task('sdk.archive', ['sdk.set-version', 'sdk.archive.js', 'sdk.build', 'docs'], function () {
     return es.merge(
         gulp.src('LICENSE', baseDirOption),
 

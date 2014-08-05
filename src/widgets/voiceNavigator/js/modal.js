@@ -111,11 +111,14 @@ var MMVoice = {
         this.$tags.on('click', '.tag', onTagClick);
         this.$historyList.on('click', '.tag', onTagClick);
 
-        // Scrollbars
-        $('.inner-content-div').slimScroll({
-            height: '100%',
-            distance: '6px'
-        });
+        if (!('ontouchstart' in window)) {
+            // Scrollbars for non touch devices
+            var $innerContentDiv = $('.inner-content-div');
+            $innerContentDiv.slimScroll({
+                height: '100%',
+                distance: '6px'
+            });
+        }
 
         // Resize
         self.$window.on('resize', function(){ self.resize(); });
@@ -140,10 +143,10 @@ var MMVoice = {
             if(!history_open) {
                 var scrollHeight = self._historyHeight(self.$historyData[0].scrollHeight);
                 self.$history.css(self._prefix('transform'), 'translateY('+scrollHeight+'px)');
-                self.$historyButton.text('Close History');
+                self.$historyButton.find('span').text('Close History');
             } else {
                 self.$history.css(self._prefix('transform'), '');
-                self.$historyButton.text('Expand History');
+                self.$historyButton.find('span').text('Expand History');
             }
 
             // Snap to the bottom
@@ -166,7 +169,7 @@ var MMVoice = {
             if (action === 'open') {
                 var config = event.data.data;
                 self.$mm_parent.addClass('open');
-                if (MMVoice.is_voice_ready && config.startQuery !== null) { // we have init before
+                if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
                     MMVoice.submitText(config.startQuery);
                     MMVoice._updateUI();
                 }
@@ -208,13 +211,26 @@ var MMVoice = {
                 e.preventDefault();
                 var text = $input.val();
 
-                $input.val("").focus();
+                $input.val("");
                 $input.attr("placeholder", text);
                 self.appendHistory({transcript: text});
+                $input.blur();
 
                 // Submit!
                 self.submitText(text);
             });
+
+            var MM_VOICE_SUPPORT_WARNING_HIDDEN = 'voice_navigator_warning_hidden';
+            var voiceSupportWarningHidden = $.cookie(MM_VOICE_SUPPORT_WARNING_HIDDEN);
+            if (voiceSupportWarningHidden === undefined) {
+                var warningContainer = $('#warningContainer').show();
+                $('a#closeWarningButton').click(
+                    function onCloseClick () {
+                        warningContainer.hide();
+                        $.cookie(MM_VOICE_SUPPORT_WARNING_HIDDEN, true);
+                    }
+                )
+            }
 
             $text_input.append($form);
             $form.append($input);
@@ -332,8 +348,12 @@ var MMVoice = {
     },
 
     _historyHeight : function(scrollHeight) {
-        if(scrollHeight > this._height * 0.8) scrollHeight = this._height * 0.8;
-        if(scrollHeight < 270) scrollHeight = 270;
+        if (scrollHeight > this._height * 0.8) {
+            scrollHeight = this._height * 0.8;
+        }
+        if (scrollHeight < 270) {
+            scrollHeight = 270;
+        }
         return scrollHeight;
     },
 
@@ -428,6 +448,8 @@ var MMVoice = {
 
         var recording = self.confirmedRecording;
         if (recording.textEntryID) {
+            var deletedTextEntryIndex = self._currentTextEntries.indexOf(recording.textEntryID);
+            self._currentTextEntries.splice(deletedTextEntryIndex, 1);
             MM.activeSession.textentries.delete(recording.textEntryID);
         }
         recording.transcript = text;
@@ -440,14 +462,6 @@ var MMVoice = {
             self.onTextEntryPosted(response);
         });
     },
-
-    /*
-     resizeResults: function(size) {
-     this._height = size;
-     this.$results.outerHeight(size);
-     this.$history.outerHeight(this._historyHeight(size));
-     },
-     */
 
     lockWhileRecording : function() {
         this.is_locked = true;
@@ -776,9 +790,9 @@ var MMVoice = {
             // Append to the history
             var $new_history = $('<li>', {
                 data: {
-                    'recording': recording,
+                    'recording': recording
                 },
-                html: this.$input.html(),
+                html: this.$input.html()
             });
 
             this.$input.before($new_history);
@@ -869,29 +883,28 @@ var MMVoice = {
 
     _numColumns : function () {
         var self = this;
-        var cardWidth = 218;
-        var cardPadding = 20;
-        var widthRemaining = self.$cards.width() - cardPadding;
-        var numCols = 0;
-        while (widthRemaining >= 0) {
-            numCols++;
-            widthRemaining -= cardWidth + cardPadding;
+        var cardWidth = self.config.cardWidth;
+        if (cardWidth === undefined) {
+            cardWidth = $('.card:nth-child(2)').width() || 300;
         }
+        var totalWidth = self.$cards.width();
+        var numCols = Math.max(Math.floor(totalWidth / cardWidth), 1);
         return numCols;
     },
 
-    _numDocuments : function () {
+    _numDocumentsToRender : function (resultsLength) {
         var self = this;
         if (typeof self.config.numResults !== 'undefined') {
             return self.config.numResults;
         }
 
         var numCols = self._numColumns();
-        var numDocs = Math.max(numCols * 2, 8);
-        if (numDocs % numCols !== 0) {
-            numDocs += numCols - (numDocs % numCols);
+        var numDocs = Math.max(numCols * 4, 8);
+        if (resultsLength <= numDocs) {
+            return resultsLength;
+        } else {
+            return numDocs;
         }
-        return numDocs;
     },
 
     getDocuments : function() {
@@ -899,6 +912,9 @@ var MMVoice = {
         var self = this;
 
         var queryParams = { limit: self.config.numResults || 14 };
+        if (self.config.highlight !== undefined) {
+            queryParams['highlight'] = JSON.stringify(self.config.highlight);
+        }
         var requestKey = 'default';
         var selectedEntityIDs = Object.keys(MMVoice.selectedEntityMap);
         if (selectedEntityIDs.length > 0) {
@@ -911,7 +927,7 @@ var MMVoice = {
         // Return cached response if it exists and has not expired (expire time of 10 minutes)
         if (self._documentsCache.hasOwnProperty(requestKey) &&
             Date.now() - self._documentsCache[requestKey].requestTime < 600000) {
-            onSuccess(self._documentsCache[requestKey].result, true);
+            onSuccess(JSON.parse(self._documentsCache[requestKey].response), true);
             return;
         }
 
@@ -920,24 +936,22 @@ var MMVoice = {
         }
 
         var requestTime = this._documentLock.lastDocumentsRequest = Date.now();
-        function onSuccess(result, cached) {
+        function onSuccess(response, cached) {
             cached = !!cached;
 
             if (!cached) {
                 self._documentsCache[requestKey] = {
-                    result: result,
+                    response: JSON.stringify(response), // make a copy of the response
                     requestTime: requestTime
                 };
                 UTIL.log("Got documents");
             } else {
                 UTIL.log("Got documents from cache");
             }
-
-            var numDocuments = self._numDocuments();
-            if (result.data.length > numDocuments) {
-                result.data.splice(numDocuments, result.data.length - numDocuments);
-            }
-            MMVoice.showResults(result.data);
+            var documents = response.data;
+            var numDocuments = self._numDocumentsToRender(documents.length);
+            documents.splice(numDocuments);
+            MMVoice.showResults(documents);
         }
 
         function onError(error) {
@@ -1454,4 +1468,4 @@ function startVolumeMonitor() {
 
         return volume / ( to - from );
     }
-};
+}

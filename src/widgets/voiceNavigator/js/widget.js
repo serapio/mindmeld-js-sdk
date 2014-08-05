@@ -38,6 +38,10 @@ var MM = window.MM = window.MM || {};
  * @property {Number} [baseZIndex=100000]          the voice navigator elements will have a Z index between the value
  *                                                 given and 1000 greater than the value. If the voice navigator is hidden
  *                                                 underneath elements on a page, try setting it to something higher.
+ * @property {Object.<string, number>} [highlight] the highlight parameter for {@link VoiceNavigatorConfig} specifies the
+ *                                                 document fields to return snippets showing matching results. The field
+ *                                                 is the same as the field used in the API to show highlighted text in the
+ *                                                 API as documented [here](https://developer.expectlabs.com/docs/endpointSession#getSessionSessionidDocuments).
  *
  */
 

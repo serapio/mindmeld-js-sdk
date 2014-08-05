@@ -1,13 +1,23 @@
-mobile = "only screen and (min-device-width : 320px) and (max-device-width : 480px)"
+@import nib
+
+narrow-device = "only screen and (max-device-width : 600px)"
+narrow-window = "only screen and (max-width : 600px)"
+
+#inner-content-div
+  background #f3f3f3
+  width 100%
 
 #cards
   height 1px
   padding 10px
-  background-color #f9f9f9
-  background #f3f3f3
-  @media mobile
-    width 259px
+  @media narrow-device
     margin auto
+  for i in (1...8)
+    el-width = ((218px + 20) * i) + 20 + 2
+    // ((card width + 20 padding) * i) + outer padding + border
+    el-media = narrow-device + " and (min-width: " + el-width + ")"
+    @media el-media
+      width el-width
   &.loading
     opacity 0.3
   .card
