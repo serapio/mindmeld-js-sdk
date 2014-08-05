@@ -2,7 +2,7 @@
 /* global window, MM, FakeResponses, FakeBaseUrl */
 
 describe('MM Unit', function () {
-  var baseUrl = FakeBaseUrl
+  var baseUrl = FakeBaseUrl;
 
 
   beforeEach(function() {
@@ -42,13 +42,13 @@ describe('MM Unit', function () {
         simple: {
           userid: '11',
           name: 'Jack'
-        },
+        }
       }, function onSuccess (response) {
         expect(response.token).toBeOk();
         expect(MM.token).toEqual(response.token);
         expect(MM.activeUserId).toEqual(fakeAjax.req.data.credentials.simple.userid);
         done();
-      }, function onError (error) {
+      }, function onError () {
         // XXX: Can't find a jasmine.fail
         expect(false).toBe(true);
       });
@@ -73,8 +73,8 @@ describe('MM Unit', function () {
         simple: {
           userid: '11',
           name: 'Jack'
-        },
-      }, function onSuccess (response) {
+        }
+      }, function onSuccess () {
         fail('getToken should not succeed');
       }, function onError (error) {
         expect(error).toBeOk();
@@ -144,6 +144,53 @@ describe('MM Unit', function () {
       });
     });
 
+  });
+
+  describe('getApp', function () {
+
+    var fakeAppData = FakeResponses['getApp'];
+    var APP_ID = fakeAppData['appid'];
+
+    beforeEach(function beforeGetAppTests (done) {
+      MM.init({
+        cleanUrl: baseUrl,
+        appid: APP_ID,
+        onInit: function onMMInit () {
+          MM.token = 'zzzzz';
+          done();
+        }
+      });
+    });
+
+    afterEach(function afterGetAppTests () {
+      MM.token = null;
+    });
+
+
+    it('should return data about the current MindMeld application', function (done) {
+
+      MM.get(null,
+        function onGetAppSuccess (response) {
+          expect(response.data.appid).toBe(APP_ID);
+          done();
+        },
+        function onGetAppError () {
+          fail('Should not have error');
+          done();
+        }
+      );
+
+      var fakeGetAppRequest = jasmine.Ajax.requests.mostRecent();
+      expect(fakeGetAppRequest.url).toBe(baseUrl);
+      expect(fakeGetAppRequest.method).toBe('GET');
+
+      fakeGetAppRequest.response({
+        status: 200,
+        contentType: 'text/html',
+        responseText: JSON.stringify(fakeAppData['response'])
+      });
+
+    });
   });
 
 });
