@@ -103,7 +103,7 @@ var MM = window.MM = window.MM || {};
  var MM = window.MM || {};
      ( function () {
          MM.loader = {
-             rootURL: 'https://developer.expectlabs.com/public/sdks/'
+             rootURL: 'https://developer.expectlabs.com/public/sdks/js/'
          ,   widgets: ['voice']
          };
          MM.widgets = {
@@ -310,7 +310,7 @@ var MM = window.MM = window.MM || {};
      var MM = window.MM || {};
      ( function () {
          MM.loader = {
-             rootURL: 'https://developer.expectlabs.com/public/sdks/'
+             rootURL: 'https://developer.expectlabs.com/public/sdks/js/'
          ,   widgets: ['voice']
          };
          MM.widgets = {
