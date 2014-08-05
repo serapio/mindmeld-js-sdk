@@ -1,6 +1,7 @@
 var UTIL =  require('./util');
 var highlightEntities = require('./entity-highlighting');
 var $ = window.$ = window.jQuery = require('./vendor/jquery-1.11.1');
+require('./vendor/jquery.slimscroll');
 require('./vendor/jquery.cookie-1.4.0');
 var _ = require('lodash/dist/lodash.compat');
 var MM = window.MM = window.MM || {};
@@ -109,6 +110,15 @@ var MMVoice = {
         }
         this.$tags.on('click', '.tag', onTagClick);
         this.$historyList.on('click', '.tag', onTagClick);
+
+        if (!('ontouchstart' in window)) {
+            // Scrollbars for non touch devices
+            var $innerContentDiv = $('.inner-content-div');
+            $innerContentDiv.slimScroll({
+                height: '100%',
+                distance: '6px'
+            });
+        }
 
         // Resize
         self.$window.on('resize', function(){ self.resize(); });
