@@ -13,7 +13,7 @@ var system = require('system');
  * @param timeOutMillis the max amount of time to wait. If not specified, 3 sec is used.
  */
 function waitFor(testFx, onReady, timeOutMillis) {
-    var maxtimeOutMillis = timeOutMillis ? timeOutMillis : 3001, //< Default Max Timeout is 3s
+    var maxtimeOutMillis = timeOutMillis ? timeOutMillis : 15000, //< Default Max Timeout is 3s
         start = new Date().getTime(),
         condition = false,
         interval = setInterval(function() {
@@ -55,7 +55,8 @@ page.open(system.args[1], function(status){
     } else {
         waitFor(function(){
             return page.evaluate(function(){
-                return document.body.querySelector('.symbolSummary .pending') === null
+              var summarySection = document.body.querySelector('.results .summary');
+                return summarySection !== null;
             });
         }, function(){
             var exitCode = page.evaluate(function(){
