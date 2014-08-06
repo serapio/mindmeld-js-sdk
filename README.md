@@ -28,12 +28,12 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/mindmeld-2.5.3.js"></script>
+<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/mindmeld-2.5.4.js"></script>
 ```
 
-* Un-minified: [mindmeld-2.5.3.js][versionedSDKDownloadLink]
-* Minified: [mindmeld-2.5.3.min.js][versionedMinifiedSDKDownloadLink]
-* Both + Hello World + Documentation: [mindmeld-js-sdk-2.5.3.zip][versionedSDKZIPDownloadLink]
+* Un-minified: [mindmeld-2.5.4.js][versionedSDKDownloadLink]
+* Minified: [mindmeld-2.5.4.min.js][versionedMinifiedSDKDownloadLink]
+* Both + Hello World + Documentation: [mindmeld-js-sdk-2.5.4.zip][versionedSDKZIPDownloadLink]
 
 ### Clone git repository
 Both files are also available directly from the mindmeld-js-sdk git repository. Simply clone the repo:
@@ -365,6 +365,6 @@ if (MM.support.speechRecognition) { // check for support in the current browser
 [latestSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/sdk/mindmeld.js
 [latestMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/sdk/mindmeld.min.js
 [latestSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/sdk/mindmeld-js-sdk.zip
-[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.5.3.js
-[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.5.3.min.js
-[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.5.3.zip
+[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.5.4.js
+[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.5.4.min.js
+[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.5.4.zip
