@@ -103,7 +103,7 @@ var MM = window.MM = window.MM || {};
  var MM = window.MM || {};
      ( function () {
          MM.loader = {
-             rootURL: 'https://developer.expectlabs.com/public/sdks/'
+             rootURL: 'https://developer.expectlabs.com/public/sdks/js/'
          ,   widgets: ['voice']
          };
          MM.widgets = {
@@ -310,7 +310,7 @@ var MM = window.MM = window.MM || {};
      var MM = window.MM || {};
      ( function () {
          MM.loader = {
-             rootURL: 'https://developer.expectlabs.com/public/sdks/'
+             rootURL: 'https://developer.expectlabs.com/public/sdks/js/'
          ,   widgets: ['voice']
          };
          MM.widgets = {
@@ -338,7 +338,7 @@ var MM = window.MM = window.MM || {};
  */
 MM.voiceNavigator = MM.voiceNavigator || {};
 MM.loader = MM.loader || {};
-MM.loader.rootURL = MM.loader.rootURL || 'https://developer.expectlabs.com/public/sdks/';
+MM.loader.rootURL = MM.loader.rootURL || 'https://developer.expectlabs.com/public/sdks/js/';
 
 /**
  * The 'div#mindmeld-modal' element which contains all of the voice navigator html
