@@ -28,7 +28,7 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/mindmeld-2.5.3.js"></script>
+<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/mindmeld-2.5.3.js"></script>
 ```
 
 * Un-minified: [mindmeld-2.5.3.js][versionedSDKDownloadLink]

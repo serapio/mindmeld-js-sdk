@@ -50,8 +50,10 @@ gulp.task('docs', function () {
     ' --configure src/docsTemplate/jaguar.conf.json' +
     ' ' + docPaths.join(' ');
 
-  return gulp.src('')
+  gulp.src('')
     .pipe(shell(jsdocCmd));
+  gulp.src('README.md')
+    .pipe(gulp.dest('dist/'));
 });
 
 gulp.task('default', ['build', 'docs']);
