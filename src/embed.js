@@ -109,6 +109,7 @@ var MM = window.MM || {};
 
         voice: function (widgetName) {
             var filesURL = MM.loader.rootURL + 'widgets/voiceNavigator/widget/widget.';
+            MM.widgets.config.voice = MM.widgets.config.voice || {};
             if (!MM.widgets.config.voice.development) {
                 filesURL += 'min.';
             }
