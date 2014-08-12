@@ -118,7 +118,6 @@ var MM = ( function (window, ajax, Faye) {
           f();
       } else {
         window.document.onreadystatechange = function () {
-          console.log('readyState', window.document.readyState);
           if (window.document.readyState === 'interactive') {
             f();
           }
