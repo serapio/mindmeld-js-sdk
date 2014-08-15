@@ -61,9 +61,9 @@ deployment:
     commands:
       - bash deployScripts/deploy_artifact.sh
   feature:
-    branch: feature/voice-navigator
+    branch: 'feature/voice-navigator'
     commands:
-      - bash deployScripts/deploy_artifact.sh"
+      - bash deployScripts/deploy_artifact.sh
   feature:
     branch: /feature\/.*/
     commands:
