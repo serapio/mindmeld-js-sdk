@@ -19,6 +19,8 @@ if [ -z "$CHEF_ENVIRONMENT" ]; then
       CHEF_ENVIRONMENT='west-dev-e'
   elif [ "$CIRCLE_BRANCH" = "master" ]; then
       CHEF_ENVIRONMENT='west-prod-a'
+  elif [ "$CIRCLE_BRANCH" = "feature/voice-navigator" ]; then
+      echo "Using VN build; not setting CHEF_ENVIRONMENT"
   else
       echo "Currently only set up to deploy develop to dev-d, release to dev-e, and master to prod-a."
       exit 1
