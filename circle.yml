@@ -60,7 +60,7 @@ deployment:
     branch: master
     commands:
       - bash deployScripts/deploy_artifact.sh
-  feature:
+  voiceNavigator:
     branch: 'feature/voice-navigator'
     commands:
       - bash deployScripts/deploy_artifact.sh
