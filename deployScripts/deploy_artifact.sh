@@ -30,7 +30,7 @@ fi
 
 #Set specific params from the circle params
 REPO=$CIRCLE_PROJECT_REPONAME
-if [ "$CIRCLE_BRANCH" = "feature/voiceNavigator" ]; then
+if [ "$CIRCLE_BRANCH" = "feature/voice-navigator" ]; then
   REPO="$CIRCLE_PROJECT_REPONAME"-voice-navigator
 fi
 
@@ -47,7 +47,7 @@ $SCRIPT_DIR/git-archive-all --prefix=$PREFIX --extra='dist/docs/'  --extra='dist
 echo $GIT_COMMIT > "$tempDir/$tarSha"
 $S3CMD put "$tempDir/$tarFile" "s3://elabs-pkg/releases/$tarFile"
 $S3CMD put "$tempDir/$tarSha" "s3://elabs-pkg/releases/$tarSha"
-if [ "$CIRCLE_BRANCH" = "feature/voiceNavigator" ]; then
+if [ "$CIRCLE_BRANCH" = "feature/voice-navigator" ]; then
   # voiceNavigator we need to put in all environments -- this branch is 'master' for VN.
   for chefEnv in 'west-dev-d' 'west-dev-e' 'west-prod-a'; do
     $S3CMD cp "s3://elabs-pkg/releases/$tarFile" "s3://elabs-pkg/env/${chefEnv}/${REPO}.tgz"
