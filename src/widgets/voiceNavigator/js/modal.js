@@ -159,18 +159,19 @@ var MMVoice = {
         $(window).on('message', function(e) {
             var event = e.originalEvent;
             var action = event.data.action;
+            var data = event.data.data;
             if (event.data.source !== 'mindmeld') {
                 return;
             }
 
             switch (action) {
                 case 'config':
-                    self.config = event.data.data;
+                    self.config = data;
                     self.onConfig();
                     break;
 
                 case 'open':
-                    var config = event.data.data;
+                    var config = data;;
                     self.$mm_parent.addClass('open');
                     if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
                         MMVoice.submitText(config.startQuery);
@@ -190,10 +191,9 @@ var MMVoice = {
                     break;
 
                 case 'setLocation':
-                    console.log('modal calling setLocation');
                     MMVoice.callOnVoiceReady(
-                        function () {
-                            console.log('setting location to: ' + JSON.stringify(event.data.data));
+                        function setLocationOnReady () {
+                            MM.activeUser.setLocation(data.latitude, data.longitude);
                         }
                     );
                     break;
