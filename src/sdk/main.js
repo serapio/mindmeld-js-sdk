@@ -1413,10 +1413,12 @@ var MM = ( function (window, ajax, Faye) {
          * @param {?NamedEventCallBack} updateHandler callback for when this {@link Model}'s collection updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {function=} getQueryParams user-defined function that returns custom query parameters
+         * when automatically calling this model's get() onUpdate
          * @memberOf Model
          * @instance
          */
-        _onUpdate: function (updateHandler, onSuccess, onError) {
+        _onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
             this.updateHandler = updateHandler;
             if (this.updateEventName && this.channelType) {
                 var eventConfig = {
@@ -1427,7 +1429,11 @@ var MM = ( function (window, ajax, Faye) {
                 if (updateHandler) {
                     var self = this;
                     eventConfig.handler = function () { // Closures strike again!
-                        self.get();
+                        var customQueryParams = null;
+                        if (_isFunction(getQueryParams)) {
+                           customQueryParams = getQueryParams();
+                        }
+                        self.get(customQueryParams);
                     };
                     MM.Internal.EventHandler.subscribe(eventConfig, onSuccess, onError);
                 }
