@@ -19,6 +19,7 @@ var MMVoice = {
     is_results : false,
 
     is_voice_ready  : false,
+    onVoiceReadyCallbacks: [],
 
     config: {},
 
@@ -158,26 +159,44 @@ var MMVoice = {
         $(window).on('message', function(e) {
             var event = e.originalEvent;
             var action = event.data.action;
+            var data = event.data.data;
             if (event.data.source !== 'mindmeld') {
                 return;
             }
 
-            if (action === 'config') {
-                self.config = event.data.data;
-                self.onConfig();
-            }
-            if (action === 'open') {
-                var config = event.data.data;
-                self.$mm_parent.addClass('open');
-                if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
-                    MMVoice.submitText(config.startQuery);
-                    MMVoice._updateUI();
-                }
-                else if (self.config.startQuery === null && self.config.listeningMode) {
-                    self._do_on_voice_ready(function() {
-                        MMVoice.listen(self.config.listeningMode === 'continuous');
-                    });
-                }
+            switch (action) {
+                case 'config':
+                    self.config = data;
+                    self.onConfig();
+                    break;
+
+                case 'open':
+                    var config = data;;
+                    self.$mm_parent.addClass('open');
+                    if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
+                        MMVoice.submitText(config.startQuery);
+                        MMVoice._updateUI();
+                    }
+                    else if (self.config.startQuery === null && self.config.listeningMode) {
+                        MMVoice.callOnVoiceReady(
+                            function startListeningOnReady () {
+                                MMVoice.listen(self.config.listeningMode === 'continuous');
+                            }
+                        );
+                    }
+                    break;
+
+                case 'close':
+                    self.close();
+                    break;
+
+                case 'setLocation':
+                    MMVoice.callOnVoiceReady(
+                        function setLocationOnReady () {
+                            MM.activeUser.setLocation(data.latitude, data.longitude);
+                        }
+                    );
+                    break;
             }
         });
 
@@ -299,12 +318,20 @@ var MMVoice = {
         }, 500);
     },
 
-    _do_on_voice_ready : function(fn) {
-        var self = this;
-        if(self.is_voice_ready) {
-            fn();
+    setReady: function () {
+        MMVoice.is_voice_ready = true;
+        MMVoice.onVoiceReadyCallbacks.forEach(
+            function runCallback (callback) {
+                callback();
+            }
+        );
+    },
+
+    callOnVoiceReady: function (callback) {
+        if (MMVoice.is_voice_ready) {
+            callback();
         } else {
-            self.do_on_voice_ready_fn = fn;
+            MMVoice.onVoiceReadyCallbacks.push(callback);
         }
     },
 
@@ -1128,13 +1155,6 @@ var MMVoice = {
             }
         }
 
-        if('is_voice_ready' in updates) {
-            if(self.do_on_voice_ready_fn) {
-                self.do_on_voice_ready_fn();
-                delete self.do_on_voice_ready_fn;
-            }
-        }
-
         if('results_length' in updates) {
             if(updates.results_length >= 0 && !self.is_results) {
                 self.$body.addClass('results');
@@ -1354,7 +1374,7 @@ MMVoice.onConfig = function() {
         subscribeToTextEntries();
         subscribeToEntities();
         setupSessionListener();
-        MMVoice.is_voice_ready = true;
+        MMVoice.setReady();
         MMVoice._updateUI();
     }
 
