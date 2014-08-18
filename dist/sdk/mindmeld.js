@@ -3028,7 +3028,6 @@ var MM = ( function (window, ajax, Faye) {
           f();
       } else {
         window.document.onreadystatechange = function () {
-          console.log('readyState', window.document.readyState);
           if (window.document.readyState === 'interactive') {
             f();
           }
@@ -4753,6 +4752,37 @@ var MM = ( function (window, ajax, Faye) {
          */
         post: function (userInfo, onSuccess, onFail) {
             this.makeModelRequest('POST', this.path(), userInfo, onSuccess, onFail);
+        },
+        /**
+         * Set the user's location. This is a shortcut for setting a user's latitude and longitude
+         * without having to create a params object when using {@link MM.activeUser.post}.
+         *
+         * @param {number} latitude new latitude of active user
+         * @param {number} longitude new latitude of active user
+         * @param {APISuccessCallback=} onSuccess callback for when updating user info was successful
+         * @param {APIErrorCallback=} onFail callback for when updating user info failed
+         * @memberOf MM.activeUser
+         * @instance
+         *
+         * @example
+         *
+         function setLocationExample () {
+            MM.activeUser.setLocation(22, 88, onSetLocation);
+         }
+
+         function onSetLocation (response) {
+            // User location updated
+         }
+         */
+        setLocation: function (latitude, longitude, onSuccess, onFail) {
+            var newUserInfo = {
+                location: {
+                    latitude: latitude,
+                    longitude: longitude
+                }
+            };
+
+            MM.activeUser.post(newUserInfo, onSuccess, onFail);
         },
         /**
          * Publish a new, custom event on the active user's channel
