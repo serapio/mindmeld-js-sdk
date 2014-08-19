@@ -1060,6 +1060,19 @@ var MM = ( function (window, ajax, Faye) {
          */
 
         /**
+         * A QueryParamGetter is user-defined function that return a {@link QueryParameters} object. It is used
+         * when setting up onUpdate() handlers for collections with push updates (e.g., {@link MM.activeUser.sessions},
+         * {@link MM.activeSession.textentries}, or {@link MM.activeSession.documents}). When a push event is fired for
+         * the collection, the SDK automatically makes a get() request to update the collection. A {@link QueryParamGetter}
+         * is used to specify the parameters used in that automatic get() request.
+         *
+         * @typedef {function} QueryParamGetter
+         *
+         * @returns {QueryParameters} A {@link QueryParameters} object used to make a get() request after a
+         * collection's push event fires
+         */
+
+        /**
          * A QueryParameter Object has one or more fields that allow you to narrow down the list of
          * items returned from a collection. A QueryParameter object looks like the following:
          *
@@ -2082,6 +2095,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the active user's session list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeUser.sessions
          * @instance
          *
@@ -2090,13 +2105,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function sessionsOnUpdateExample () {
             // set the onUpdate handler for the sessions list
-            MM.activeUser.sessions.onUpdate(onSessionsUpdate, onSubscribedToSessionsUpdates);
+            MM.activeUser.sessions.onUpdate(
+                onSessionsUpdate,
+                onSubscribedToSessionsUpdates,
+                onSubscribeToSessionUpdatesError,
+                getSessionListParams
+            );
          }
          function onSubscribedToSessionsUpdates () {
             // successfully subscribed to updates to the user's sessions list
-
             // now, create a new session
             createNewSession();
+         }
+         function onSubscribeToSessionUpdatesError () {
+            console.log('error subscribing to session list updates');
+         }
+         function getSessionListParams () {
+            // When the session list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onSessionsUpdate () {
             // there was an update to the sessions list
@@ -2117,8 +2145,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeUser.sessions.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler, onSuccess, onError, getQueryParams);
         },
         /**
          * Get the list of sessions that can be accessed by the specified user. A request made with a user token is permitted
