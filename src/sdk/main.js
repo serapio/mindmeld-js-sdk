@@ -3453,6 +3453,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's activity list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.activities
          * @instance
          *
@@ -3461,13 +3463,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function activitiesOnUpdateExample () {
             // set the onUpdate handler for the activities list
-            MM.activeSession.activities.onUpdate(onActivitiesUpdate, onSubscribedToActivitiesUpdates);
+            MM.activeSession.activities.onUpdate(
+                onActivitiesUpdate,
+                onSubscribedToActivitiesUpdates,
+                onSubscribeToActivityUpdatesError,
+                getActivitiesParams
+            );
          }
          function onSubscribedToActivitiesUpdates () {
             // successfully subscribed to updates to the session's activities list
-
             // now, create a new activity
             createNewActivity();
+         }
+         function onSubscribeToActivityUpdatesError () {
+            console.log('error subscribing to activity list updates');
+         }
+         function getActivitiesParams () {
+            // When the activity list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onActivitiesUpdate () {
             // there was an update to the activities list
@@ -3488,8 +3503,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.activities.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get and search through the activity stream for the specified session. The activity stream is designed to
