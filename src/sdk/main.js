@@ -2278,6 +2278,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's text entry list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.textentries
          * @instance
          *
@@ -2286,13 +2288,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function textEntriesOnUpdateExample () {
             // set the onUpdate handler for the text entries list
-            MM.activeSession.textentries.onUpdate(onTextEntriesUpdate, onSubscribedToTextEntriesUpdates);
+            MM.activeSession.textentries.onUpdate(
+                onTextEntriesUpdate,
+                onSubscribedToTextEntriesUpdates,
+                onSubscribeToTextEntryUpdatesError,
+                getTextEntryListParams
+            );
          }
          function onSubscribedToTextEntriesUpdates () {
             // successfully subscribed to updates to the session's textentries list
-
             // now, create a new text entry
             createNewTextEntry();
+         }
+         function onSubscribeToTextEntryUpdatesError () {
+            console.log('error subscribing to textentries list updates');
+         }
+         function getTextEntryListParams () {
+            // When the textentries list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onTextEntriesUpdate () {
             // there was an update to the textentries list
@@ -2315,8 +2330,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.textentries.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the history of text entries that are associated with the specified session.
@@ -2472,6 +2487,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's entity list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.entities
          * @instance
          *
@@ -2480,13 +2497,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function entitiesOnUpdateExample () {
             // set the onUpdate handler for the entities list
-            MM.activeSession.entities.onUpdate(onEntitiesUpdate, onSubscribedToEntitiesUpdates);
+            MM.activeSession.entities.onUpdate(
+                onEntitiesUpdate,
+                onSubscribedToEntitiesUpdates,
+                onSubscribeToEntitiesUpdatesError,
+                getEntityListParams
+            );
          }
          function onSubscribedToEntitiesUpdates () {
             // successfully subscribed to updates to the session's entities list
-
             // now, create a new entity
             createEntity();
+         }
+         function onSubscribeToEntitiesUpdatesError () {
+            console.log('error subscribing to entity list updates');
+         }
+         function getEntityListParams () {
+            // When the entity list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onEntitiesUpdate () {
             // there was an update to the entities list
@@ -2508,8 +2538,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.entities.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the history of entities that are associated with the specified session. Each
@@ -2770,22 +2800,35 @@ var MM = ( function (window, ajax, Faye) {
          * @memberOf MM.activeSession.documents
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @instance
          *
          * @example
          *
          function documentsOnUpdateExample () {
             // set the onUpdate handler for the documents list
-            MM.activeSession.documents.onUpdate(onDocumentsUpdate,
-                                    onSubscribedToDocumentsUpdates);
+            MM.activeSession.documents.onUpdate(
+                onDocumentsUpdate,
+                onSubscribedToDocumentsUpdates,
+                onSubscribeToDocumentsUpdatesError,
+                getDocumentsListParams
+            );
          }
          function onSubscribedToDocumentsUpdates () {
             // successfully subscribed to updates to the session's document list
-
             // now, post a text entry
             createTextEntry();
          }
-
+         function onSubscribeToDocumentsUpdatesError () {
+            console.log('error subscribing to document list updates');
+         }
+         function getDocumentsListParams () {
+            // When the document list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
+         }
          function onDocumentsUpdate () {
             // there was an update to the documents list
             var documents = MM.activeSession.documents.json();
@@ -2801,8 +2844,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.textentries.post(textEntryData);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get and search across all documents indexed for your application. In addition to providing
@@ -3129,6 +3172,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's live users list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.liveusers
          * @instance
          *
@@ -3137,13 +3182,27 @@ var MM = ( function (window, ajax, Faye) {
          *
          function liveUsersOnUpdateExample () {
             // set the onUpdate handler for the liveusers list
-            MM.activeSession.liveusers.onUpdate(onLiveUsersUpdate, onSubscribedToLiveUsersUpdates);
+            MM.activeSession.liveusers.onUpdate(
+                onLiveUsersUpdate,
+                onSubscribedToLiveUsersUpdates,
+                onSubscribeToLiveUserUpdatesError,
+                getLiveUserListParams
+            );
          }
          function onSubscribedToLiveUsersUpdates () {
             // successfully subscribed to updates to the session's liveusers list
             console.log('subscribed');
             // now, add a live user
             addLiveUser();
+         }
+         function onSubscribeToLiveUserUpdatesError () {
+            console.log('error subscribing to live user list updates');
+         }
+         function getLiveUserListParams () {
+            // When the live user list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onLiveUsersUpdate () {
             // there was an update to the liveusers list
@@ -3164,8 +3223,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.liveusers.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the list of users that are currently active users of the specified session. A request with a
@@ -3287,6 +3346,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's invited users list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.invitedusers
          * @instance
          *
@@ -3295,12 +3356,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function invitedUsersOnUpdateExample () {
             // set the onUpdate handler for the invitedusers list
-            MM.activeSession.invitedusers.onUpdate(onInvitedUsersUpdate, onSubscribedToInvitedUsersUpdates);
+            MM.activeSession.invitedusers.onUpdate(
+                onInvitedUsersUpdate,
+                onSubscribedToInvitedUsersUpdates,
+                onSubscribeToInvitedUserUpdatesError,
+                getInvitedUserListParams
+            );
          }
          function onSubscribedToInvitedUsersUpdates () {
             // successfully subscribed to updates to the session's invitedusers list
             // now, invite a new user
             inviteNewUser();
+         }
+         function onSubscribeToInvitedUserUpdatesError () {
+            console.log('error subscribing to invited user list updates');
+         }
+         function getInvitedUserListParams () {
+            // When the invited user list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onInvitedUsersUpdate () {
             // there was an update to the invitedusers list
@@ -3322,8 +3397,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.invitedusers.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the list of users that have been added to the invitedusers collection for this session. A request
