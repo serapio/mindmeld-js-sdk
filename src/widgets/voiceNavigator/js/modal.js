@@ -9,6 +9,16 @@ require('../../../../dist/sdk/mindmeld');
 var imagesLoaded = require('./vendor/imagesloaded.pkgd');
 var Isotope = require('./vendor/isotope.pkgd');
 
+var errorMessages = {
+    'not-allowed': 'Microphone access was denied. Please grant access and try again.',
+    'service-not-allowed': 'Microphone access was denied. Please grant access and try again.',
+    'no-speech': 'We did not hear you. Please try again.',
+    'network': 'There is a problem with your network connection.',
+    'audio-capture': 'No microphone was detected. Try adjusting your browser settings.',
+    'bad-grammar': 'Sorry, an unknown error occurred.',
+    'language-not-supported': 'Sorry, the specified language is not supported.'
+};
+
 /* Manage the state of the UI */
 var MMVoice = {
     is_init : false,
@@ -35,6 +45,8 @@ var MMVoice = {
     _textEntryMap: {},
     _currentTextEntries: [],
     _height : 0,
+
+    _listenerError: false,
 
     $body : $(),
 
@@ -1040,6 +1052,7 @@ var MMVoice = {
             MMVoice._updateUI();
         },
         onStart: function(event) {
+            MMVoice._listenerError = false;
             UTIL.log("Listener: onStart");
             if (MMVoice.is_first_start) {
                 MMVoice.makeNewRecordings();
@@ -1052,24 +1065,24 @@ var MMVoice = {
         },
         onEnd: function(event) {
             UTIL.log("Listener: onEnd");
-            var self = this;
-            var pendingTranscript = MMVoice.pendingRecording.transcript;
+            var self = MMVoice;
+            var pendingTranscript = self.pendingRecording.transcript;
             if (pendingTranscript.length > 0) {
                 MMVoice.makeNewRecordings(pendingTranscript);
             } else {
-                MMVoice.$cards.removeClass('loading');
+                self.$cards.removeClass('loading');
             }
-            if (MMVoice.is_locked) {
-                if (MMVoice._lockWhileRecording) {
-                    MMVoice.lockWhileRecording();
+            if (self.is_locked) {
+                if (self._lockWhileRecording) {
+                    self.lockWhileRecording();
                 }
                 MM.activeSession.listener.start();
             } else {
                 MMVoice.status = false;
 
-                var fullText = MMVoice.confirmedRecording.transcript + MMVoice.pendingRecording.transcript;
-                if(!fullText.length) {
-                    MMVoice.lettering(MMVoice.$input, 'Whoops, we didn\'t get that...', 'mm-prompt mm-prompt-error');
+                var fullText = self.confirmedRecording.transcript + MMVoice.pendingRecording.transcript;
+                if(!fullText.length && !self._listenerError) {
+                    self.lettering(self.$input, errorMessages['no-speech'], 'mm-prompt mm-prompt-error');
                 }
 
                 UTIL.log('full text', fullText);
@@ -1086,20 +1099,15 @@ var MMVoice = {
             }
             UTIL.log("Listener: onError - ", event.error, event.message);
             switch (event.error) {
-                case 'not-allowed':
-                case 'service-not-allowed':
-                    // TODO: do something here
-                    break;
-
-                case 'language-not-supported':
-                // TODO: handle this when we allow setting language
-
-                // Ignore the rest for now
-                case 'bad-grammar':
+                case 'no-speech':
+                case 'audio-capture': // can't detect microphone
                 case 'network':
-                case "no-speech":
-                case 'audio-capture':
+                case 'not-allowed': // microphone access denied
                 case 'service-not-allowed':
+                case 'bad-grammar': // ?
+                case 'language-not-supported':
+                    MMVoice.lettering(MMVoice.$input, errorMessages[event.error], 'mm-prompt mm-prompt-error');
+                    MMVoice._listenerError = event.error;
                     break;
                 default:
                     break;
