@@ -224,6 +224,45 @@ describe('API', function () {
       testPubsub(data, done);
     });
 
+    it('should use custom get parameters when a collection updates', function (done) {
+      var customParameterFunctionCalled = false;
+      MM.activeUser.sessions.onUpdate(
+        function onSessionsUpdate () {
+          var sessions = MM.activeUser.sessions.json();
+          expect(sessions.length).toBe(1);
+          expect(customParameterFunctionCalled).toBe(true);
+          done();
+        },
+        function onSubscribeSuccess () {
+          // create new session
+          var newSessionData = {
+            name: 'test session name',
+            privacymode: 'inviteonly'
+          };
+          MM.activeUser.sessions.post(
+            newSessionData,
+            function onSessionCreated (response) {
+              expect(response).toBeSuccess();
+            },
+            function onSessionError (error) {
+              fail('error creating session: ' + JSON.stringify(error));
+            }
+          );
+
+        },
+        function onSubscribeError () {
+          fail('error subscribing to session list updates');
+        },
+        function getSessionListParams () {
+          customParameterFunctionCalled = true;
+          return {
+            limit: 1
+          };
+        }
+      );
+
+    });
+
   });
 
 });

@@ -19,6 +19,8 @@ if [ -z "$CHEF_ENVIRONMENT" ]; then
       CHEF_ENVIRONMENT='west-dev-e'
   elif [ "$CIRCLE_BRANCH" = "master" ]; then
       CHEF_ENVIRONMENT='west-prod-a'
+  elif [ "$CIRCLE_BRANCH" = "feature/voice-navigator" ]; then
+      echo "Using VN build; not setting CHEF_ENVIRONMENT"
   else
       echo "Currently only set up to deploy develop to dev-d, release to dev-e, and master to prod-a."
       exit 1
@@ -30,7 +32,7 @@ fi
 
 #Set specific params from the circle params
 REPO=$CIRCLE_PROJECT_REPONAME
-if [ "$CIRCLE_BRANCH" = "feature/voiceNavigator" ]; then
+if [ "$CIRCLE_BRANCH" = "feature/voice-navigator" ]; then
   REPO="$CIRCLE_PROJECT_REPONAME"-voice-navigator
 fi
 
@@ -47,6 +49,14 @@ $SCRIPT_DIR/git-archive-all --prefix=$PREFIX --extra='dist/docs/'  --extra='dist
 echo $GIT_COMMIT > "$tempDir/$tarSha"
 $S3CMD put "$tempDir/$tarFile" "s3://elabs-pkg/releases/$tarFile"
 $S3CMD put "$tempDir/$tarSha" "s3://elabs-pkg/releases/$tarSha"
-$S3CMD cp "s3://elabs-pkg/releases/$tarFile" "s3://elabs-pkg/env/${CHEF_ENVIRONMENT}/${REPO}.tgz"
-$S3CMD cp "s3://elabs-pkg/releases/$tarSha" "s3://elabs-pkg/env/${CHEF_ENVIRONMENT}/${REPO}.sha1"
+if [ "$CIRCLE_BRANCH" = "feature/voice-navigator" ]; then
+  # voiceNavigator we need to put in all environments -- this branch is 'master' for VN.
+  for chefEnv in 'west-dev-d' 'west-dev-e' 'west-prod-a'; do
+    $S3CMD cp "s3://elabs-pkg/releases/$tarFile" "s3://elabs-pkg/env/${chefEnv}/${REPO}.tgz"
+    $S3CMD cp "s3://elabs-pkg/releases/$tarSha" "s3://elabs-pkg/env/${chefEnv}/${REPO}.sha1"
+  done
+else
+  $S3CMD cp "s3://elabs-pkg/releases/$tarFile" "s3://elabs-pkg/env/${CHEF_ENVIRONMENT}/${REPO}.tgz"
+  $S3CMD cp "s3://elabs-pkg/releases/$tarSha" "s3://elabs-pkg/env/${CHEF_ENVIRONMENT}/${REPO}.sha1"
+fi
 rm -rf $tempDir

@@ -10,6 +10,19 @@ var MM = ( function (window, ajax, Faye) {
 
     var MM = window.MM = window.MM || {};
 
+    /**
+     * MindMeld SDK Version
+     *
+     * @type {string}
+     * @static
+     * @private
+     */
+    Object.defineProperty(MM, 'version', {
+        value: '2.5.6',
+        writable: false
+    });
+    
+
     var _isFunction = function(f) {
         return 'function' === typeof f;
     };
@@ -118,26 +131,12 @@ var MM = ( function (window, ajax, Faye) {
           f();
       } else {
         window.document.onreadystatechange = function () {
-          console.log('readyState', window.document.readyState);
           if (window.document.readyState === 'interactive') {
             f();
           }
         };
       }
     };
-
-
-    /**
-     * MindMeld SDK Version
-     *
-     * @type {string}
-     * @static
-     * @private
-     */
-    Object.defineProperty(MM, 'version', {
-        value: '2.5.5',
-        writable: false
-    });
 
     /**
      *
@@ -1061,6 +1060,19 @@ var MM = ( function (window, ajax, Faye) {
          */
 
         /**
+         * A QueryParamGetter is user-defined function that return a {@link QueryParameters} object. It is used
+         * when setting up onUpdate() handlers for collections with push updates (e.g., {@link MM.activeUser.sessions},
+         * {@link MM.activeSession.textentries}, or {@link MM.activeSession.documents}). When a push event is fired for
+         * the collection, the SDK automatically makes a get() request to update the collection. A {@link QueryParamGetter}
+         * is used to specify the parameters used in that automatic get() request.
+         *
+         * @typedef {function} QueryParamGetter
+         *
+         * @returns {QueryParameters} A {@link QueryParameters} object used to make a get() request after a
+         * collection's push event fires
+         */
+
+        /**
          * A QueryParameter Object has one or more fields that allow you to narrow down the list of
          * items returned from a collection. A QueryParameter object looks like the following:
          *
@@ -1414,10 +1426,12 @@ var MM = ( function (window, ajax, Faye) {
          * @param {?NamedEventCallBack} updateHandler callback for when this {@link Model}'s collection updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {function=} getQueryParams user-defined function that returns custom query parameters
+         * when automatically calling this model's get() onUpdate
          * @memberOf Model
          * @instance
          */
-        _onUpdate: function (updateHandler, onSuccess, onError) {
+        _onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
             this.updateHandler = updateHandler;
             if (this.updateEventName && this.channelType) {
                 var eventConfig = {
@@ -1428,7 +1442,11 @@ var MM = ( function (window, ajax, Faye) {
                 if (updateHandler) {
                     var self = this;
                     eventConfig.handler = function () { // Closures strike again!
-                        self.get();
+                        var customQueryParams = null;
+                        if (_isFunction(getQueryParams)) {
+                           customQueryParams = getQueryParams();
+                        }
+                        self.get(customQueryParams);
                     };
                     MM.Internal.EventHandler.subscribe(eventConfig, onSuccess, onError);
                 }
@@ -1845,6 +1863,37 @@ var MM = ( function (window, ajax, Faye) {
             this.makeModelRequest('POST', this.path(), userInfo, onSuccess, onFail);
         },
         /**
+         * Set the user's location. This is a shortcut for setting a user's latitude and longitude
+         * without having to create a params object when using {@link MM.activeUser.post}.
+         *
+         * @param {number} latitude new latitude of active user
+         * @param {number} longitude new latitude of active user
+         * @param {APISuccessCallback=} onSuccess callback for when updating user info was successful
+         * @param {APIErrorCallback=} onFail callback for when updating user info failed
+         * @memberOf MM.activeUser
+         * @instance
+         *
+         * @example
+         *
+         function setLocationExample () {
+            MM.activeUser.setLocation(22, 88, onSetLocation);
+         }
+
+         function onSetLocation (response) {
+            // User location updated
+         }
+         */
+        setLocation: function (latitude, longitude, onSuccess, onFail) {
+            var newUserInfo = {
+                location: {
+                    latitude: latitude,
+                    longitude: longitude
+                }
+            };
+
+            MM.activeUser.post(newUserInfo, onSuccess, onFail);
+        },
+        /**
          * Publish a new, custom event on the active user's channel
          *
          * @param {string} event event name
@@ -2046,6 +2095,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the active user's session list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeUser.sessions
          * @instance
          *
@@ -2054,13 +2105,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function sessionsOnUpdateExample () {
             // set the onUpdate handler for the sessions list
-            MM.activeUser.sessions.onUpdate(onSessionsUpdate, onSubscribedToSessionsUpdates);
+            MM.activeUser.sessions.onUpdate(
+                onSessionsUpdate,
+                onSubscribedToSessionsUpdates,
+                onSubscribeToSessionUpdatesError,
+                getSessionListParams
+            );
          }
          function onSubscribedToSessionsUpdates () {
             // successfully subscribed to updates to the user's sessions list
-
             // now, create a new session
             createNewSession();
+         }
+         function onSubscribeToSessionUpdatesError () {
+            console.log('error subscribing to session list updates');
+         }
+         function getSessionListParams () {
+            // When the session list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onSessionsUpdate () {
             // there was an update to the sessions list
@@ -2081,8 +2145,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeUser.sessions.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler, onSuccess, onError, getQueryParams);
         },
         /**
          * Get the list of sessions that can be accessed by the specified user. A request made with a user token is permitted
@@ -2214,6 +2278,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's text entry list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.textentries
          * @instance
          *
@@ -2222,13 +2288,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function textEntriesOnUpdateExample () {
             // set the onUpdate handler for the text entries list
-            MM.activeSession.textentries.onUpdate(onTextEntriesUpdate, onSubscribedToTextEntriesUpdates);
+            MM.activeSession.textentries.onUpdate(
+                onTextEntriesUpdate,
+                onSubscribedToTextEntriesUpdates,
+                onSubscribeToTextEntryUpdatesError,
+                getTextEntryListParams
+            );
          }
          function onSubscribedToTextEntriesUpdates () {
             // successfully subscribed to updates to the session's textentries list
-
             // now, create a new text entry
             createNewTextEntry();
+         }
+         function onSubscribeToTextEntryUpdatesError () {
+            console.log('error subscribing to textentries list updates');
+         }
+         function getTextEntryListParams () {
+            // When the textentries list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onTextEntriesUpdate () {
             // there was an update to the textentries list
@@ -2251,8 +2330,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.textentries.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the history of text entries that are associated with the specified session.
@@ -2408,6 +2487,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's entity list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.entities
          * @instance
          *
@@ -2416,13 +2497,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function entitiesOnUpdateExample () {
             // set the onUpdate handler for the entities list
-            MM.activeSession.entities.onUpdate(onEntitiesUpdate, onSubscribedToEntitiesUpdates);
+            MM.activeSession.entities.onUpdate(
+                onEntitiesUpdate,
+                onSubscribedToEntitiesUpdates,
+                onSubscribeToEntitiesUpdatesError,
+                getEntityListParams
+            );
          }
          function onSubscribedToEntitiesUpdates () {
             // successfully subscribed to updates to the session's entities list
-
             // now, create a new entity
             createEntity();
+         }
+         function onSubscribeToEntitiesUpdatesError () {
+            console.log('error subscribing to entity list updates');
+         }
+         function getEntityListParams () {
+            // When the entity list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onEntitiesUpdate () {
             // there was an update to the entities list
@@ -2444,8 +2538,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.entities.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the history of entities that are associated with the specified session. Each
@@ -2706,22 +2800,35 @@ var MM = ( function (window, ajax, Faye) {
          * @memberOf MM.activeSession.documents
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @instance
          *
          * @example
          *
          function documentsOnUpdateExample () {
             // set the onUpdate handler for the documents list
-            MM.activeSession.documents.onUpdate(onDocumentsUpdate,
-                                    onSubscribedToDocumentsUpdates);
+            MM.activeSession.documents.onUpdate(
+                onDocumentsUpdate,
+                onSubscribedToDocumentsUpdates,
+                onSubscribeToDocumentsUpdatesError,
+                getDocumentsListParams
+            );
          }
          function onSubscribedToDocumentsUpdates () {
             // successfully subscribed to updates to the session's document list
-
             // now, post a text entry
             createTextEntry();
          }
-
+         function onSubscribeToDocumentsUpdatesError () {
+            console.log('error subscribing to document list updates');
+         }
+         function getDocumentsListParams () {
+            // When the document list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
+         }
          function onDocumentsUpdate () {
             // there was an update to the documents list
             var documents = MM.activeSession.documents.json();
@@ -2737,8 +2844,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.textentries.post(textEntryData);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get and search across all documents indexed for your application. In addition to providing
@@ -3065,6 +3172,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's live users list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.liveusers
          * @instance
          *
@@ -3073,13 +3182,27 @@ var MM = ( function (window, ajax, Faye) {
          *
          function liveUsersOnUpdateExample () {
             // set the onUpdate handler for the liveusers list
-            MM.activeSession.liveusers.onUpdate(onLiveUsersUpdate, onSubscribedToLiveUsersUpdates);
+            MM.activeSession.liveusers.onUpdate(
+                onLiveUsersUpdate,
+                onSubscribedToLiveUsersUpdates,
+                onSubscribeToLiveUserUpdatesError,
+                getLiveUserListParams
+            );
          }
          function onSubscribedToLiveUsersUpdates () {
             // successfully subscribed to updates to the session's liveusers list
             console.log('subscribed');
             // now, add a live user
             addLiveUser();
+         }
+         function onSubscribeToLiveUserUpdatesError () {
+            console.log('error subscribing to live user list updates');
+         }
+         function getLiveUserListParams () {
+            // When the live user list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onLiveUsersUpdate () {
             // there was an update to the liveusers list
@@ -3100,8 +3223,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.liveusers.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the list of users that are currently active users of the specified session. A request with a
@@ -3223,6 +3346,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's invited users list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.invitedusers
          * @instance
          *
@@ -3231,12 +3356,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function invitedUsersOnUpdateExample () {
             // set the onUpdate handler for the invitedusers list
-            MM.activeSession.invitedusers.onUpdate(onInvitedUsersUpdate, onSubscribedToInvitedUsersUpdates);
+            MM.activeSession.invitedusers.onUpdate(
+                onInvitedUsersUpdate,
+                onSubscribedToInvitedUsersUpdates,
+                onSubscribeToInvitedUserUpdatesError,
+                getInvitedUserListParams
+            );
          }
          function onSubscribedToInvitedUsersUpdates () {
             // successfully subscribed to updates to the session's invitedusers list
             // now, invite a new user
             inviteNewUser();
+         }
+         function onSubscribeToInvitedUserUpdatesError () {
+            console.log('error subscribing to invited user list updates');
+         }
+         function getInvitedUserListParams () {
+            // When the invited user list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onInvitedUsersUpdate () {
             // there was an update to the invitedusers list
@@ -3258,8 +3397,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.invitedusers.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get the list of users that have been added to the invitedusers collection for this session. A request
@@ -3389,6 +3528,8 @@ var MM = ( function (window, ajax, Faye) {
          * @param {APISuccessCallback=} updateHandler callback for when the activeSession's activity list updates
          * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
          * @param {function=} onError callback for when subscription to onUpdate event fails
+         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
+         * in get() request when collection updates
          * @memberOf MM.activeSession.activities
          * @instance
          *
@@ -3397,13 +3538,26 @@ var MM = ( function (window, ajax, Faye) {
          *
          function activitiesOnUpdateExample () {
             // set the onUpdate handler for the activities list
-            MM.activeSession.activities.onUpdate(onActivitiesUpdate, onSubscribedToActivitiesUpdates);
+            MM.activeSession.activities.onUpdate(
+                onActivitiesUpdate,
+                onSubscribedToActivitiesUpdates,
+                onSubscribeToActivityUpdatesError,
+                getActivitiesParams
+            );
          }
          function onSubscribedToActivitiesUpdates () {
             // successfully subscribed to updates to the session's activities list
-
             // now, create a new activity
             createNewActivity();
+         }
+         function onSubscribeToActivityUpdatesError () {
+            console.log('error subscribing to activity list updates');
+         }
+         function getActivitiesParams () {
+            // When the activity list updates, only fetch 5 objects
+            return {
+                limit: 5
+            };
          }
          function onActivitiesUpdate () {
             // there was an update to the activities list
@@ -3424,8 +3578,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.activities.onUpdate(null);
          }
          */
-        onUpdate: function (updateHandler, onSuccess, onError) {
-            this._onUpdate(updateHandler,  onSuccess, onError);
+        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
+            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
         },
         /**
          * Get and search through the activity stream for the specified session. The activity stream is designed to

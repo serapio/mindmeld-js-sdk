@@ -9,6 +9,16 @@ require('../../../../dist/sdk/mindmeld');
 var imagesLoaded = require('./vendor/imagesloaded.pkgd');
 var Isotope = require('./vendor/isotope.pkgd');
 
+var errorMessages = {
+    'not-allowed': 'Microphone access was denied. Please grant access and try again.',
+    'service-not-allowed': 'Microphone access was denied. Please grant access and try again.',
+    'no-speech': 'We did not hear you. Please try again.',
+    'network': 'There is a problem with your network connection.',
+    'audio-capture': 'No microphone was detected. Try adjusting your browser settings.',
+    'bad-grammar': 'Sorry, an unknown error occurred.',
+    'language-not-supported': 'Sorry, the specified language is not supported.'
+};
+
 /* Manage the state of the UI */
 var MMVoice = {
     is_init : false,
@@ -19,6 +29,7 @@ var MMVoice = {
     is_results : false,
 
     is_voice_ready  : false,
+    onVoiceReadyCallbacks: [],
 
     config: {},
 
@@ -34,6 +45,8 @@ var MMVoice = {
     _textEntryMap: {},
     _currentTextEntries: [],
     _height : 0,
+
+    _listenerError: false,
 
     $body : $(),
 
@@ -158,26 +171,44 @@ var MMVoice = {
         $(window).on('message', function(e) {
             var event = e.originalEvent;
             var action = event.data.action;
+            var data = event.data.data;
             if (event.data.source !== 'mindmeld') {
                 return;
             }
 
-            if (action === 'config') {
-                self.config = event.data.data;
-                self.onConfig();
-            }
-            if (action === 'open') {
-                var config = event.data.data;
-                self.$mm_parent.addClass('open');
-                if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
-                    MMVoice.submitText(config.startQuery);
-                    MMVoice._updateUI();
-                }
-                else if (self.config.startQuery === null && self.config.listeningMode) {
-                    self._do_on_voice_ready(function() {
-                        MMVoice.listen(self.config.listeningMode === 'continuous');
-                    });
-                }
+            switch (action) {
+                case 'config':
+                    self.config = data;
+                    self.onConfig();
+                    break;
+
+                case 'open':
+                    var config = data;;
+                    self.$mm_parent.addClass('open');
+                    if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
+                        MMVoice.submitText(config.startQuery);
+                        MMVoice._updateUI();
+                    }
+                    else if (self.config.startQuery === null && self.config.listeningMode) {
+                        MMVoice.callOnVoiceReady(
+                            function startListeningOnReady () {
+                                MMVoice.listen(self.config.listeningMode === 'continuous');
+                            }
+                        );
+                    }
+                    break;
+
+                case 'close':
+                    self.close();
+                    break;
+
+                case 'setLocation':
+                    MMVoice.callOnVoiceReady(
+                        function setLocationOnReady () {
+                            MM.activeUser.setLocation(data.latitude, data.longitude);
+                        }
+                    );
+                    break;
             }
         });
 
@@ -299,12 +330,20 @@ var MMVoice = {
         }, 500);
     },
 
-    _do_on_voice_ready : function(fn) {
-        var self = this;
-        if(self.is_voice_ready) {
-            fn();
+    setReady: function () {
+        MMVoice.is_voice_ready = true;
+        MMVoice.onVoiceReadyCallbacks.forEach(
+            function runCallback (callback) {
+                callback();
+            }
+        );
+    },
+
+    callOnVoiceReady: function (callback) {
+        if (MMVoice.is_voice_ready) {
+            callback();
         } else {
-            self.do_on_voice_ready_fn = fn;
+            MMVoice.onVoiceReadyCallbacks.push(callback);
         }
     },
 
@@ -1013,6 +1052,7 @@ var MMVoice = {
             MMVoice._updateUI();
         },
         onStart: function(event) {
+            MMVoice._listenerError = false;
             UTIL.log("Listener: onStart");
             if (MMVoice.is_first_start) {
                 MMVoice.makeNewRecordings();
@@ -1025,24 +1065,24 @@ var MMVoice = {
         },
         onEnd: function(event) {
             UTIL.log("Listener: onEnd");
-            var self = this;
-            var pendingTranscript = MMVoice.pendingRecording.transcript;
+            var self = MMVoice;
+            var pendingTranscript = self.pendingRecording.transcript;
             if (pendingTranscript.length > 0) {
                 MMVoice.makeNewRecordings(pendingTranscript);
             } else {
-                MMVoice.$cards.removeClass('loading');
+                self.$cards.removeClass('loading');
             }
-            if (MMVoice.is_locked) {
-                if (MMVoice._lockWhileRecording) {
-                    MMVoice.lockWhileRecording();
+            if (self.is_locked) {
+                if (self._lockWhileRecording) {
+                    self.lockWhileRecording();
                 }
                 MM.activeSession.listener.start();
             } else {
                 MMVoice.status = false;
 
-                var fullText = MMVoice.confirmedRecording.transcript + MMVoice.pendingRecording.transcript;
-                if(!fullText.length) {
-                    MMVoice.lettering(MMVoice.$input, 'Whoops, we didn\'t get that...', 'mm-prompt mm-prompt-error');
+                var fullText = self.confirmedRecording.transcript + MMVoice.pendingRecording.transcript;
+                if(!fullText.length && !self._listenerError) {
+                    self.lettering(self.$input, errorMessages['no-speech'], 'mm-prompt mm-prompt-error');
                 }
 
                 UTIL.log('full text', fullText);
@@ -1059,20 +1099,15 @@ var MMVoice = {
             }
             UTIL.log("Listener: onError - ", event.error, event.message);
             switch (event.error) {
-                case 'not-allowed':
-                case 'service-not-allowed':
-                    // TODO: do something here
-                    break;
-
-                case 'language-not-supported':
-                // TODO: handle this when we allow setting language
-
-                // Ignore the rest for now
-                case 'bad-grammar':
+                case 'no-speech':
+                case 'audio-capture': // can't detect microphone
                 case 'network':
-                case "no-speech":
-                case 'audio-capture':
+                case 'not-allowed': // microphone access denied
                 case 'service-not-allowed':
+                case 'bad-grammar': // ?
+                case 'language-not-supported':
+                    MMVoice.lettering(MMVoice.$input, errorMessages[event.error], 'mm-prompt mm-prompt-error');
+                    MMVoice._listenerError = event.error;
                     break;
                 default:
                     break;
@@ -1125,13 +1160,6 @@ var MMVoice = {
             }
             if(updates.recordings_length >= 1) {
                 self.$mm_button.addClass('shadow');
-            }
-        }
-
-        if('is_voice_ready' in updates) {
-            if(self.do_on_voice_ready_fn) {
-                self.do_on_voice_ready_fn();
-                delete self.do_on_voice_ready_fn;
             }
         }
 
@@ -1354,7 +1382,7 @@ MMVoice.onConfig = function() {
         subscribeToTextEntries();
         subscribeToEntities();
         setupSessionListener();
-        MMVoice.is_voice_ready = true;
+        MMVoice.setReady();
         MMVoice._updateUI();
     }
 

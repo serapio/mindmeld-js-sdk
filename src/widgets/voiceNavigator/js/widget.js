@@ -361,7 +361,9 @@ var $mm_iframe = false;
  * @private
  */
 var isInitialized = false;
-var onInit = function () {};
+var modalLoaded = false;
+var onInitCallbacks = [];
+var onModalLoadedCallbacks = [];
 
 function init() {
     // Add the #mindmeld-modal div to the page
@@ -414,7 +416,19 @@ function init() {
 
 function setInitialized() {
     isInitialized = true;
-    onInit();
+    onInitCallbacks.forEach(
+        function runCallback (callback) {
+            callback();
+        }
+    );
+}
+
+function callOnModalLoaded (callback) {
+    if (! modalLoaded) {
+        onModalLoadedCallbacks.push(callback);
+    } else {
+        callback();
+    }
 }
 
 function postMessage(action, data) {
@@ -508,8 +522,14 @@ MM.voiceNavigator.showModal = function(options) {
             $mm_iframe = UTIL.el(iframe);
 
             UTIL.el(iframe).on('load', function() {
+                modalLoaded = true;
                 postMessage('config', MM.voiceNavigator.config);
                 postMessage('open');
+                onModalLoadedCallbacks.forEach(
+                    function runCallback (callback) {
+                        callback();
+                    }
+                );
             });
 
             $mm.el().appendChild(iframe);
@@ -520,16 +540,47 @@ MM.voiceNavigator.showModal = function(options) {
         $mm.addClass('on');
     }
     else {
-        // Set onInit() callback to open modal
-        onInit = function () { MM.voiceNavigator.showModal(options); };
+        // Open modal on init
+        onInitCallbacks.push(
+            function showModalOnInit () {
+                MM.voiceNavigator.showModal(options);
+            }
+        );
     }
-}
+};
 
 /**
  * Closes the voice navigator modal window
  */
 MM.voiceNavigator.hideModal = function () {
     postMessage('close');
+};
+
+
+/**
+ * Sets the voice navigator's user's location
+ *
+ * @param {number} latitude new latitude for user location
+ * @param {number} longitude new longitude for user location
+ */
+MM.voiceNavigator.setUserLocation = function (latitude, longitude) {
+    if (isInitialized) {
+        callOnModalLoaded(
+            function setLocationOnModalLoaded () {
+                var location = {
+                    latitude: latitude,
+                    longitude: longitude
+                };
+                postMessage('setLocation', location);
+            }
+        );
+    } else {
+        onInitCallbacks.push(
+            function setLocationOnInit () {
+                MM.voiceNavigator.setUserLocation(latitude, longitude);
+            }
+        );
+    }
 };
 
 // schedule initialization of voice navigator

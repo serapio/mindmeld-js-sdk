@@ -240,7 +240,6 @@ body
     width 55px
     background-color #9c9c9c
     height 55px
-    margin-top 25px
     border-radius 100px
     text-align center
     color #fff
@@ -248,7 +247,6 @@ body
     font-size 29px
     border 3px solid #fff
     box-shadow 0 0 0 5px #9c9c9c
-    margin-bottom 15px
     animation mm-pulse 0.7s infinite
     float left
     margin 13px 16px
@@ -259,7 +257,6 @@ body
   .mm-p
     font-family Helvetica, Arial, sans-serif
     color #333
-    margin 20px 10px
     font-size 13px
     margin 24px 10px 25px 95px
     a
@@ -506,9 +503,9 @@ body
               color rgb(162, 74, 74)
             span
               opacity 0
-            for i in (1..50)
+            for i in (1..200)
               span:nth-child({i})
-                animation zoomin 0.2s ease-out (0.04s * i) forwards
+                animation zoomin 0.2s ease-out (0.02s * i) forwards
         &.text-input
           opacity 1
           padding 15px 30px 28px 30px
