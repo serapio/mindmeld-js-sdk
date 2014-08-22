@@ -1041,7 +1041,7 @@ var MMVoice = {
         MMVoice.getDocuments();
     },
 
-    _listenerConfig : {
+    _listenerConfig: {
         onResult: function(result /*, resultIndex, results, event  <-- unused */) {
             UTIL.log("Listener: onResult", result);
             if (result.final) {
@@ -1100,14 +1100,20 @@ var MMVoice = {
             UTIL.log("Listener: onError - ", event.error, event.message);
             switch (event.error) {
                 case 'no-speech':
+                    if (MM.activeSession.listener.continuous) {
+                        break;
+                    }
                 case 'audio-capture': // can't detect microphone
                 case 'network':
                 case 'not-allowed': // microphone access denied
-                case 'service-not-allowed':
+                case 'service-not-allowed': // microphone access denied
                 case 'bad-grammar': // ?
                 case 'language-not-supported':
                     MMVoice.lettering(MMVoice.$input, errorMessages[event.error], 'mm-prompt mm-prompt-error');
                     MMVoice._listenerError = event.error;
+                    if (MM.activeSession.listener.continuous) {
+                        MMVoice.stopListening();
+                    }
                     break;
                 default:
                     break;
