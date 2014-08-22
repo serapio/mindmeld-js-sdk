@@ -10,6 +10,19 @@ var MM = ( function (window, ajax, Faye) {
 
     var MM = window.MM = window.MM || {};
 
+    /**
+     * MindMeld SDK Version
+     *
+     * @type {string}
+     * @static
+     * @private
+     */
+    Object.defineProperty(MM, 'version', {
+        value: '2.5.6',
+        writable: false
+    });
+    
+
     var _isFunction = function(f) {
         return 'function' === typeof f;
     };
@@ -124,19 +137,6 @@ var MM = ( function (window, ajax, Faye) {
         };
       }
     };
-
-
-    /**
-     * MindMeld SDK Version
-     *
-     * @type {string}
-     * @static
-     * @private
-     */
-    Object.defineProperty(MM, 'version', {
-        value: '2.5.5',
-        writable: false
-    });
 
     /**
      *
