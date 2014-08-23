@@ -3723,10 +3723,10 @@ var MM = ( function (window, ajax, Faye) {
                     // notify handler
                     MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
                 },
-                onStart: function(event) {
+                onStart: function (event) {
                     MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
                 },
-                onEnd: function(event) {
+                onEnd: function (event) {
                     // Add last result if it was not final
                     var results = this.results;
                     var lastResult = null;
@@ -4159,6 +4159,10 @@ var MM = ( function (window, ajax, Faye) {
              *                                               the browser. For Chrome, no official list of supported languages exists.
              *                                               There is however, a good unofficial list in this question on
              *                                               [Stack Overflow](http://stackoverflow.com/questions/14257598/what-are-language-codes-for-voice-recognition-languages-in-chromes-implementati).
+             * @property {boolean} [earlyFinalResults=true]  If true, the listener will return final results after shorter gaps in speech.
+             *                                               In some cases, a browser's speech service can take over 10 seconds to finalize
+             *                                               a result. The earlyFinalResults reduces the time between results.
+             *                                               This is enabled by defualt.
              * @property {ListenerResultCallback} [onResult] the callback that will process listener results. This property must be
              *                                               provided when creating a new {@link MM.Listener}.
              * @property {function} [onStart=null]           the event handler which is called when a listening session begins.
@@ -4194,20 +4198,21 @@ var MM = ( function (window, ajax, Faye) {
              *            locally hosted JavaScript and HTML. Speech recognition is only supported when your JavaScript and
              *            HTML are served from a web server.
              *
-             * @property {boolean} listening      indicates whether or not the listener is active. Readonly.
-             * @property {Array} results          array of {@link ListenerResult} objects received during the current or most
-             *                                    recent listening session. Readonly.
-             * @property {boolean} interimResults indicates whether or not interimResults are enabled. Defaults to false.
-             * @property {boolean} continuous     indicates whether or not continuous recognition is enabled. Defaults to false.
-             * @property {string} lang            the 'Simple language sub tag' or 'Language-Region tag' of the [BCP 47](http://tools.ietf.org/html/bcp47)
-             *                                    code for the language the listener should recognize (e.g. 'ko' for Korean, 'en-US'
-             *                                    for American English, and 'de-DE' for German). When set to the empty string "" or
-             *                                    unspecified, the listener attempts to use the lang attribute of the root html
-             *                                    element (document.documentElement.lang). A "language-not-supported" error will
-             *                                    be thrown for unsupported languages. Language support depends on the browser. For
-             *                                    Chrome, no official list of supported languages exists. There is however, a good
-             *                                    unofficial list in this question on
-             *                                    [Stack Overflow](http://stackoverflow.com/questions/14257598/what-are-language-codes-for-voice-recognition-languages-in-chromes-implementati).
+             * @property {boolean} listening         indicates whether or not the listener is active. Readonly.
+             * @property {Array} results             array of {@link ListenerResult} objects received during the current or most
+             *                                       recent listening session. Readonly.
+             * @property {boolean} interimResults    indicates whether or not interim results are enabled. Defaults to false.
+             * @property {boolean} continuous        indicates whether or not continuous recognition is enabled. Defaults to false.
+             * @property {string} lang               the 'Simple language sub tag' or 'Language-Region tag' of the [BCP 47](http://tools.ietf.org/html/bcp47)
+             *                                       code for the language the listener should recognize (e.g. 'ko' for Korean, 'en-US'
+             *                                       for American English, and 'de-DE' for German). When set to the empty string "" or
+             *                                       unspecified, the listener attempts to use the lang attribute of the root html
+             *                                       element (document.documentElement.lang). A "language-not-supported" error will
+             *                                       be thrown for unsupported languages. Language support depends on the browser. For
+             *                                       Chrome, no official list of supported languages exists. There is however, a good
+             *                                       unofficial list in this question on
+             *                                       [Stack Overflow](http://stackoverflow.com/questions/14257598/what-are-language-codes-for-voice-recognition-languages-in-chromes-implementati).
+             * @property {boolean} earlyFinalResults indicates whether or not early final results will be sent. Defaults to true.
              *
              * @example
              function postTextEntry(text) {
@@ -4258,6 +4263,10 @@ var MM = ( function (window, ajax, Faye) {
              }
              */
             constructor: function(config) {
+                if (!config.hasOwnProperty('earlyFinalResults')) {
+                    config.earlyFinalResults = true; // on by default
+                }
+
                 this.setConfig(config);
             },
             /**
@@ -4276,7 +4285,9 @@ var MM = ( function (window, ajax, Faye) {
                     onTextEntryPosted: '_onTextEntryPosted',
                     continuous: 'continuous',
                     interimResults: 'interimResults',
-                    lang: 'lang'
+                    lang: 'lang',
+                    earlyFinalResults: 'earlyFinalResults',
+                    onTrueFinalResult: '_onTrueFinalResult' // undocumented
                 };
 
                 for (var configProperty in configProperties) { // only look at safe properties
@@ -4313,12 +4324,39 @@ var MM = ( function (window, ajax, Faye) {
                     return;
                 }
 
+                // This timeout prevents a the listener from falling into a broken state
+                // abort if the recognition fails to call onEnd (chrome bug hack)
                 var abortTimeout = 0;
                 function setAbortTimeout() {
                     window.clearTimeout(abortTimeout);
                     abortTimeout = window.setTimeout(function() {
                         recognizer.abort();
-                    }, 2000); // abort if the recognition fails to call onEnd (chrome bug hack)
+                    }, 2000);
+                }
+
+                // This timeout returns a 'final' result after a certain period. Without this, an interim result could
+                // take as long as 15 seconds to become 'final'. Results after the forced final result are ignored until
+                // the speech service sends a 'final' result.
+                var earlyFinalResultTimeout = 0;
+                var resultFinalized = false;
+                function setEarlyFinalResultTimeout(event) {
+                    if (!listener.earlyFinalResults) {
+                        return;
+                    }
+                    window.clearTimeout(earlyFinalResultTimeout);
+                    earlyFinalResultTimeout = window.setTimeout(function() {
+                        var results = listener._results;
+                        var lastResult = null;
+                        var resultIndex = results.length - 1;
+                        if (resultIndex >= 0) {
+                            lastResult = results[resultIndex];
+                            if (!lastResult.final) {
+                                resultFinalized = lastResult.final = true;
+                                lastResult.early = true;
+                                MM.Util.testAndCallThis(listener._onResult, listener, lastResult, resultIndex, results, event);
+                            }
+                        }
+                    }, 1500); // produce synthetic final result when the recognition takes too long
                 }
 
                 var recognizer = this._recognizer;
@@ -4332,28 +4370,44 @@ var MM = ( function (window, ajax, Faye) {
                         var resultIndex = event.resultIndex;
                         var results = listener._results;
 
+                        // Only fire callback if the result is not finalized
+                        var shouldFireCallback = !resultFinalized;
+
                         for (var i = event.resultIndex; i < event.results.length; ++i) {
                             var transcript = event.results[i][0].transcript;
 
                             if (event.results[i].isFinal) {
+                                window.clearTimeout(earlyFinalResultTimeout);
                                 result.final = true;
                                 result.transcript = transcript;
+                                resultFinalized = false;
                                 break;
                             } else {
                                 result.transcript += transcript; // collapse multiple pending results into one
                             }
                         }
-                        results[resultIndex] = result;
 
                         if (abortTimeout != 0) {
                             setAbortTimeout();
                         }
 
-                        MM.Util.testAndCallThis(listener._onResult, listener, result, resultIndex, results, event);
+                        if (shouldFireCallback) {
+                            results[resultIndex] = result;
+                            if (!result.final) {
+                                setEarlyFinalResultTimeout(event);
+                            }
+
+                            MM.Util.testAndCallThis(listener._onResult, listener, result, resultIndex, results, event);
+                        } else {
+                            if (result.final) {
+                                MM.Util.testAndCallThis(listener._onTrueFinalResult, listener, result, resultIndex, results, event);
+                            }
+                        }
                     };
                     recognizer.onstart = function(event) {
                         listener._listening = true;
                         listener._lastStartTime = Date.now();
+                        resultFinalized = false;
                         MM.Util.testAndCallThis(listener._onStart, listener, event);
                     };
                     recognizer.onend = function(event) {

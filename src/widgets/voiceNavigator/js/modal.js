@@ -46,8 +46,6 @@ var MMVoice = {
     _currentTextEntries: [],
     _height : 0,
 
-    _listenerError: false,
-
     $body : $(),
 
     $window : $(),
@@ -89,9 +87,7 @@ var MMVoice = {
         };
     },
 
-    init : function() {
-        var self = this;
-
+    setupElementReferences : function() {
         this.$body = $('body');
 
         this.$window = $(window);
@@ -113,6 +109,12 @@ var MMVoice = {
         this.$historyButton = $('#history-button');
 
         this.$editable = $('.editable');
+    },
+
+    init : function() {
+        var self = this;
+
+        this.setupElementReferences();
 
         this.makeNewRecordings();
 
@@ -1041,10 +1043,25 @@ var MMVoice = {
         MMVoice.getDocuments();
     },
 
+    _listenerFinalResultTime: false,
+    _listenerError: false,
+
     _listenerConfig: {
+        onTrueFinalResult: function(result, resultIndex, results) {
+            var timeDelta = Date.now() - MMVoice._listenerFinalResultTime;
+            UTIL.log("Listener: true final result ", timeDelta / 1000.0, results[resultIndex].transcript, result.transcript);
+            if (window.mixpanel) {
+                window.mixpanel.track('voice-navigator-final-result', {
+                    timeDelta: timeDelta,
+                    originalTranscript: results[resultIndex].transcript,
+                    finalTranscript: result.transcript
+                });
+            }
+        },
         onResult: function(result /*, resultIndex, results, event  <-- unused */) {
             UTIL.log("Listener: onResult", result);
             if (result.final) {
+                MMVoice._listenerFinalResultTime = Date.now();
                 MMVoice.makeNewRecordings(result.transcript);
             } else {
                 MMVoice.pendingRecording.transcript = result.transcript;
@@ -1052,6 +1069,7 @@ var MMVoice = {
             MMVoice._updateUI();
         },
         onStart: function(event) {
+            MMVoice._listenerFinalResultTime = false;
             MMVoice._listenerError = false;
             UTIL.log("Listener: onStart");
             if (MMVoice.is_first_start) {
