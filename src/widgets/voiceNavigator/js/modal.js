@@ -149,6 +149,7 @@ var MMVoice = {
         if (window.mixpanel && window.location.hostname.indexOf('expectlabs.com') >= 0) {
             this._useMixPanel = true;
             window.mixpanel.track('modal-init');
+            window.mixpanel.track_links('#cards .card', 'card-clicked');
         }
 
         // Resize
