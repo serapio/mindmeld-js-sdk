@@ -193,4 +193,15 @@ describe('MM Unit', function () {
     });
   });
 
+  describe('event dispatcher', function () {
+    it('should let you subscribe to and publish an event without arguments', function (done) {
+      var onTestEventCallback = jasmine.createSpy();
+      MM.eventDispatcher.subscribe('testEvent',
+        onTestEventCallback
+      );
+      MM.eventDispatcher.publish('testEvent');
+      expect(onTestEventCallback).toHaveBeenCalled();
+    });
+  });
+
 });

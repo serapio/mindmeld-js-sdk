@@ -32,9 +32,10 @@ var versionedMinifiedMindMeldName = '';
  */
 gulp.task('sdk.concat', function () {
     return gulp.src([
-            srcMMDirectory + 'vendor/faye.js',
-            srcMMDirectory + 'vendor/ajax.js',
-            srcMMDirectory + 'main.js'
+        srcMMDirectory + 'vendor/faye.js',
+        srcMMDirectory + 'vendor/ajax.js',
+        srcMMDirectory + 'main.js',
+        srcMMDirectory + 'components/eventDispatcher.js'
     ])
         .pipe(concat('mindmeld.js'))
         .pipe(gulp.dest(distMMDirectory));
