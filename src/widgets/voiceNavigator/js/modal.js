@@ -46,8 +46,6 @@ var MMVoice = {
     _currentTextEntries: [],
     _height : 0,
 
-    _listenerError: false,
-
     $body : $(),
 
     $window : $(),
@@ -71,6 +69,8 @@ var MMVoice = {
 
     $input : $(),
 
+    _useMixPanel: false,
+
     // TODO: figure out a better name for this
     makeNewRecordings : function(confirmedTranscript) {
         var previousTranscript = this.confirmedRecording.transcript || '';
@@ -89,9 +89,7 @@ var MMVoice = {
         };
     },
 
-    init : function() {
-        var self = this;
-
+    setupElementReferences : function() {
         this.$body = $('body');
 
         this.$window = $(window);
@@ -113,24 +111,45 @@ var MMVoice = {
         this.$historyButton = $('#history-button');
 
         this.$editable = $('.editable');
+    },
+
+    init : function() {
+        var self = this;
+
+        this.setupElementReferences();
 
         this.makeNewRecordings();
 
         // Make tags clickable
         function onTagClick() {
             var entityID = $(this).data('entityId');
+            if (MMVoice._useMixPanel) {
+                var location = $(this).is('#history ul .tag') ? 'transcript' :
+                    $(this).is('#tags .tag') ? 'tags' : 'unknown';
+                window.mixpanel.track('entity-click', { 'entityid': entityID, location: location });
+            }
             self.toggleEntitySelected(entityID);
         }
         this.$tags.on('click', '.tag', onTagClick);
         this.$historyList.on('click', '.tag', onTagClick);
 
         if (!('ontouchstart' in window)) {
+            if (MMVoice._useMixPanel) {
+                window.mixpanel.track('touch-screen');
+            }
             // Scrollbars for non touch devices
             var $innerContentDiv = $('.inner-content-div');
             $innerContentDiv.slimScroll({
                 height: '100%',
                 distance: '6px'
             });
+        }
+
+        // Mixpanel
+        if (window.mixpanel && window.location.hostname.indexOf('expectlabs.com') >= 0) {
+            this._useMixPanel = true;
+            window.mixpanel.track('modal-init');
+            window.mixpanel.track_links('#cards .card', 'card-clicked');
         }
 
         // Resize
@@ -142,12 +161,21 @@ var MMVoice = {
         // Alert dismiss
         self.$mm_alert_dismiss.click(function(e) {
             e.preventDefault();
+
+            if (self._useMixPanel) {
+                window.mixpanel.track('microphone-alert-dismissed');
+            }
+
             self.$mm_alert.removeClass('on');
         });
 
         // History button
         self.$historyButton.click(function(e) {
             e.preventDefault();
+
+            if (self._useMixPanel) {
+                window.mixpanel.track('history-toggled');
+            }
 
             // Toggle the open/closed-ness of history
             var history_open = self.$history.hasClass('open');
@@ -183,7 +211,11 @@ var MMVoice = {
                     break;
 
                 case 'open':
-                    var config = data;;
+                    if (MMVoice._useMixPanel) {
+                        window.mixpanel.track('open');
+                    }
+
+                    var config = data;
                     self.$mm_parent.addClass('open');
                     if (MMVoice.is_voice_ready && config && config.startQuery !== null) { // we have init before
                         MMVoice.submitText(config.startQuery);
@@ -199,10 +231,17 @@ var MMVoice = {
                     break;
 
                 case 'close':
+                    if (MMVoice._useMixPanel) {
+                        window.mixpanel.track('close');
+                    }
+
                     self.close();
                     break;
 
                 case 'setLocation':
+                    if (MMVoice._useMixPanel) {
+                        window.mixpanel.track('set-location');
+                    }
                     MMVoice.callOnVoiceReady(
                         function setLocationOnReady () {
                             MM.activeUser.setLocation(data.latitude, data.longitude);
@@ -283,7 +322,7 @@ var MMVoice = {
             button_status.mousedown = true;
             button_status.just_locked = false;
             setTimeout(function() {
-                if(button_status.mousedown) {
+                if (button_status.mousedown) {
                     button_status.locked = true;
                     button_status.just_locked = true;
                     self.listen(true);
@@ -353,6 +392,7 @@ var MMVoice = {
         var self = this;
         var statusIsPending = (self.status === 'pending');
         var statusIsListening= (self.status === 'listening');
+
         if (!lock) {
             if (statusIsPending || statusIsListening) {
                 self.stopListening();
@@ -485,6 +525,10 @@ var MMVoice = {
         var self = this;
         self.status = false;
 
+        if (self._useMixPanel) {
+            window.mixpanel.track('text-submitted', { transcript: text });
+        }
+
         var recording = self.confirmedRecording;
         if (recording.textEntryID) {
             var deletedTextEntryIndex = self._currentTextEntries.indexOf(recording.textEntryID);
@@ -509,10 +553,16 @@ var MMVoice = {
     },
 
     startListening : function(is_locked) {
-        this.is_locked = !!is_locked;
-        this.status = 'pending';
-        this.is_first_start = true;
-        this._currentTextEntries = [];
+        var self = this;
+
+        if (self._useMixPanel) {
+            window.mixpanel.track('listener-start', { continuous: is_locked });
+        }
+
+        self.is_locked = !!is_locked;
+        self.status = 'pending';
+        self.is_first_start = true;
+        self._currentTextEntries = [];
         MM.activeSession.setListenerConfig({ 'continuous': this.is_locked });
         MM.activeSession.listener.start();
 
@@ -521,6 +571,9 @@ var MMVoice = {
 
     stopListening : function() {
         if(MM.support.speechRecognition) {
+            if (self._useMixPanel) {
+                window.mixpanel.track('listener-stop');
+            }
             MM.activeSession.listener.cancel();
             this.is_locked = false;
         }
@@ -1041,10 +1094,27 @@ var MMVoice = {
         MMVoice.getDocuments();
     },
 
-    _listenerConfig : {
+    _listenerFinalResultTime: false,
+    _listenerError: false,
+
+    _listenerConfig: {
+        onTrueFinalResult: function(result, resultIndex, results) {
+            var timeDelta = Date.now() - MMVoice._listenerFinalResultTime;
+            if (MMVoice._useMixPanel) {
+                window.mixpanel.track('listener-true-final-result', {
+                    timeDelta: timeDelta,
+                    originalTranscript: results[resultIndex].transcript,
+                    finalTranscript: result.transcript
+                });
+            }
+        },
         onResult: function(result /*, resultIndex, results, event  <-- unused */) {
             UTIL.log("Listener: onResult", result);
             if (result.final) {
+                if (MMVoice._useMixPanel) {
+                    window.mixpanel.track('speech-submitted', { transcript: result.transcript });
+                }
+                MMVoice._listenerFinalResultTime = Date.now();
                 MMVoice.makeNewRecordings(result.transcript);
             } else {
                 MMVoice.pendingRecording.transcript = result.transcript;
@@ -1052,6 +1122,7 @@ var MMVoice = {
             MMVoice._updateUI();
         },
         onStart: function(event) {
+            MMVoice._listenerFinalResultTime = false;
             MMVoice._listenerError = false;
             UTIL.log("Listener: onStart");
             if (MMVoice.is_first_start) {
@@ -1100,14 +1171,23 @@ var MMVoice = {
             UTIL.log("Listener: onError - ", event.error, event.message);
             switch (event.error) {
                 case 'no-speech':
+                    if (MM.activeSession.listener.continuous) {
+                        break;
+                    }
                 case 'audio-capture': // can't detect microphone
                 case 'network':
                 case 'not-allowed': // microphone access denied
-                case 'service-not-allowed':
+                case 'service-not-allowed': // microphone access denied
                 case 'bad-grammar': // ?
                 case 'language-not-supported':
+                    if (MMVoice._useMixPanel) {
+                        window.mixpanel.track('listener-error', { error: event.error });
+                    }
                     MMVoice.lettering(MMVoice.$input, errorMessages[event.error], 'mm-prompt mm-prompt-error');
                     MMVoice._listenerError = event.error;
+                    if (MM.activeSession.listener.continuous) {
+                        MMVoice.stopListening();
+                    }
                     break;
                 default:
                     break;
