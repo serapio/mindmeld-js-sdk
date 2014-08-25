@@ -44,7 +44,12 @@ gulp.task('build', ['sdk.build', 'sw.build', 'vn.build', 'tests.build']);
 gulp.task('docs', function () {
   // We do it this slightly hacky way, because you need to jsdoc all the files at once,
   // otherwise index.html keeps getting overwritten.
-  var docPaths = ['src/sdk/main.js', 'README.md', 'src/widgets/voiceNavigator/js/widget.js'];
+  var docPaths = [
+      'src/sdk/main.js',
+      'src/sdk/components/eventDispatcher.js',
+      'README.md',
+      'src/widgets/voiceNavigator/js/widget.js'
+  ];
   var jsdocCmd = './node_modules/.bin/jsdoc --destination dist/docs/' +
     ' --template src/docsTemplate/jaguarjs-doc/' +
     ' --configure src/docsTemplate/jaguar.conf.json' +
