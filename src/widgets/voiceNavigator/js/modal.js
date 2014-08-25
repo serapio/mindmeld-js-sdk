@@ -1522,7 +1522,9 @@ function startVolumeMonitor() {
             navigator.msGetUserMedia);
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-        a.context = new AudioContext();
+        if (!a.context) {
+            a.context = new AudioContext();
+        }
         a.analyzer = a.context.createAnalyser();
         a.analyzer.smoothingTimeConstant = 0.18;
         a.analyzer.fftSize = 256;
