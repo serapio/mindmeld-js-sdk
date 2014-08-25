@@ -3,22 +3,16 @@
 
     var subscriptions = {};
 
-
-    /**
-     * subscriptions: {
-     *  'event: [
-     *      fn() {}
-     *  ]
-     * }
-     *
-     * @type {{subscribe: subscribe, publish: publish}}
-     */
     MM.eventDispatcher = {
         subscribe: function subscribe (eventName, callback, context) {
             if (! subscriptions[eventName]) {
                 subscriptions[eventName] = [];
             }
-            subscriptions[eventName].push(callback);
+            var subscription = {
+                callback: callback,
+                context: context
+            };
+            subscriptions[eventName].push(subscription);
         },
 
         publish: function publish (eventName) {
@@ -26,13 +20,11 @@
             if (subscribers !== undefined) {
                 var args = Array.prototype.slice.call(arguments, 1);
                 subscribers.forEach(
-                    function invokeCallback (callback) {
-//                        callback.apply(this, )
+                    function invokeCallback (subscription) {
+                        subscription.callback.apply(subscription.context, args);
                     }
                 )
             }
         }
-
     };
-
 }(MM));
