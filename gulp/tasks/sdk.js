@@ -35,7 +35,7 @@ gulp.task('sdk.concat', function () {
         srcMMDirectory + 'vendor/faye.js',
         srcMMDirectory + 'vendor/ajax.js',
         srcMMDirectory + 'main.js',
-        srcMMDirectory + 'components/eventDispatcher.js'
+        srcMMDirectory + 'components/*.js'
     ])
         .pipe(concat('mindmeld.js'))
         .pipe(gulp.dest(distMMDirectory));
