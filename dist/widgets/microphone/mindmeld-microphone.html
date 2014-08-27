@@ -1,8 +1,34 @@
 <template id="mindmeld-microphone">
+    <!-- inject:css -->
     <style>h2 {
   color: red; }
 </style>
+    <!-- endinject -->
     <h2>Hello microphone component</h2>
 </template>
-<script>"use strict";!function(){var e=document,o=document._currentScript||document.currentScript,t=o.ownerDocument,c=Object.create(HTMLElement.prototype);c.createdCallback=function(){var e=t.querySelector("#mindmeld-microphone"),o=e.content.cloneNode(!0),c=this.createShadowRoot();c.appendChild(o)},c.foo=function(){console.log("called foo")},e.registerElement("mindmeld-microphone",{prototype:c})}(MM);
-//# sourceMappingURL=mindmeld-microphone.min.js.map</script>
+<!-- inject:js -->
+<script>'use strict';
+(function (MM) {
+    var importerDocument = document;
+    var currentScript = document._currentScript || document.currentScript;
+    var componentDocument = currentScript.ownerDocument;
+
+    var mindmeldMicrophone = Object.create(HTMLElement.prototype);
+
+    mindmeldMicrophone.createdCallback = function () {
+        var template = componentDocument.querySelector('#mindmeld-microphone');
+        var clone = template.content.cloneNode(true);
+        var shadow = this.createShadowRoot();
+        shadow.appendChild(clone);
+    };
+
+    mindmeldMicrophone.foo = function () {
+        console.log('called foo');
+    };
+
+    importerDocument.registerElement('mindmeld-microphone', {
+        prototype: mindmeldMicrophone
+    });
+
+}(MM));</script>
+<!-- endinject -->

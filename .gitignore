@@ -27,5 +27,7 @@ searchWidget/css/*.map
 
 # Microphone
 dist/widgets/microphone/mindmeld-microphone.css
+dist/widgets/microphone/mindmeld-microphone.min.css
+dist/widgets/microphone/mindmeld-microphone.js
 dist/widgets/microphone/mindmeld-microphone.min.js
 dist/widgets/microphone/mindmeld-microphone.min.js.map
