@@ -119,3 +119,15 @@ gulp.task('mic.vulcanize.min', ['mic.html.min', 'mic.vulcanize.unminified'], fun
 // Main gulp task used to completely build the
 // mindmeld microphone web component
 gulp.task('mic.build', ['mic.vulcanize']);
+
+// Watch for changes in source files and automatically build everything
+gulp.task('mic.watch', ['mic.vulcanize'], function () {
+   gulp.watch([
+       paths.html,
+       paths.js,
+       paths.styles
+   ],
+   [
+       'mic.vulcanize'
+   ]);
+});
