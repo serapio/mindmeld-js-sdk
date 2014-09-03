@@ -1,6 +1,56 @@
 <template id="mindmeld-microphone">
     <!-- inject:css -->
-    <style>.mindmeld-microphone .icon-container {
+    <style>@-webkit-keyframes mic-listening-pulse {
+  0% {
+    background-color: #2fbbfb; }
+
+  50% {
+    background-color: #0488c0; }
+
+  100% {
+    background-color: #2fbbfb; } }
+
+@-moz-keyframes mic-listening-pulse {
+  0% {
+    background-color: #2fbbfb; }
+
+  50% {
+    background-color: #0488c0; }
+
+  100% {
+    background-color: #2fbbfb; } }
+
+@-ms-keyframes mic-listening-pulse {
+  0% {
+    background-color: #2fbbfb; }
+
+  50% {
+    background-color: #0488c0; }
+
+  100% {
+    background-color: #2fbbfb; } }
+
+@-o-keyframes mic-listening-pulse {
+  0% {
+    background-color: #2fbbfb; }
+
+  50% {
+    background-color: #0488c0; }
+
+  100% {
+    background-color: #2fbbfb; } }
+
+@keyframes mic-listening-pulse {
+  0% {
+    background-color: #2fbbfb; }
+
+  50% {
+    background-color: #0488c0; }
+
+  100% {
+    background-color: #2fbbfb; } }
+
+.mindmeld-microphone .icon-container {
   border-radius: 60px;
   background-color: #2fbbfb;
   width: 60px;
@@ -36,7 +86,12 @@
     cursor: pointer;
     background-color: #05abf2; }
 .mindmeld-microphone.listening .icon-container {
-  box-shadow: 0 0 0 8px #333 inset; }
+  box-shadow: 0 0 0 8px #333 inset;
+  -webkit-animation: mic-listening-pulse 1.5s infinite;
+  -moz-animation: mic-listening-pulse 1.5s infinite;
+  -ms-animation: mic-listening-pulse 1.5s infinite;
+  -o-animation: mic-listening-pulse 1.5s infinite;
+  animation: mic-listening-pulse 1.5s infinite; }
 .mindmeld-microphone.listening.lock .icon-container .mic-icon {
   opacity: 0; }
 .mindmeld-microphone.listening.lock .icon-container .lock-icon {
