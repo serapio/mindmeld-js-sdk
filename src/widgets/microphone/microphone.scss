@@ -1,267 +1,94 @@
 
-// Mic Styling Globals
-$buttonBGColor: #ca6b37;
-$baseSpacing: 4px;
-$bigSpacing: 2 * $baseSpacing;
-$buttonSize: 60px;
-$microphoneSVGSize: 36px;
 
-@mixin linear-gradient($fromColor, $toColor) {
-  background-color: $toColor; /* Fallback Color */
-  background-image: -webkit-linear-gradient(top, $fromColor, $toColor); /* Chrome 10+, Saf5.1+, iOS 5+ */
-  background-image:    -moz-linear-gradient(top, $fromColor, $toColor); /* FF3.6 */
-  background-image:     -ms-linear-gradient(top, $fromColor, $toColor); /* IE10 */
-  background-image:      -o-linear-gradient(top, $fromColor, $toColor); /* Opera 11.10+ */
-  background-image:         linear-gradient(top, $fromColor, $toColor);
-}
+$iconSize: 32px;
+$microphoneSize: 60px;
+$backgroundColor: #2fbbfb;
+$disabledBackground: #aaa;
+$iconColor: white;
 
-@mixin animation($name, $duration, $easing, $count) {
-  -webkit-animation: $name $duration $easing $count;
-  -moz-animation: $name $duration $easing $count;
-  -o-animation: $name $duration $easing $count;
-  -ms-animation: $name $duration $easing $count;
-  animation: $name $duration $easing $count;
-}
-
-@mixin animation2($name, $duration, $easing) {
-  -webkit-animation: $name $duration $easing;
-  -moz-animation: $name $duration $easing;
-  -o-animation: $name $duration $easing;
-  -ms-animation: $name $duration $easing;
-  animation: $name $duration $easing;
-
-}
-
-@mixin box-shadow($top, $left, $blur, $color, $inset:"") {
-  -webkit-box-shadow:$top $left $blur $color #{$inset};
-  -moz-box-shadow:$top $left $blur $color #{$inset};
-  box-shadow:$top $left $blur $color #{$inset};
-}
-
-@-webkit-keyframes bubbles {
-  0% {
-    background-position: 0 0, 30px -150px;
-  }
-  50% {
-    background-position: 0 -150px, 30px 0;
-  }
-  100% {
-    background-position: 0 0, 30px -150px;
-  }
-}
-
-@keyframes bubbles {
-  0% {
-    background-position: 0 0, 30px -150px;
-  }
-  50% {
-    background-position: 0 -150px, 30px 0;
-  }
-  100% {
-    background-position: 0 0, 30px -150px;
-  }
-}
-
-
-@-webkit-keyframes microphone-button-background-active-anim {
-  0% {
-    background-color: $buttonBGColor;
-  }
-  50% {
-    background-color: darken($buttonBGColor, 15%);
-  }
-  100% {
-    background-color: $buttonBGColor;
-  }
-}
-
-@keyframes microphone-button-background-active-anim {
-  0% {
-    background-color: $buttonBGColor;
-  }
-  50% {
-    background-color: darken($buttonBGColor, 15%);
-  }
-  100% {
-    background-color: $buttonBGColor;
-  }
+@mixin transition($args...) {
+  -webkit-transition: $args;
+  -moz-transition: $args;
+  -ms-transition: $args;
+  -o-transition: $args;
+  transition: $args;
 }
 
 .mindmeld-microphone {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 80px;
-  width: 80px;
 
+  .icon-container {
+    border-radius: $microphoneSize;
+    background-color: $backgroundColor;
+    width: $microphoneSize;
+    height: $microphoneSize;
+    @include transition(background-color 0.5s ease-in-out, box-shadow 0.3s ease-out);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3) inset;
 
-
-
-
-  .microphone-button-border {
-    border: 1px solid darken($buttonBGColor, 20%);
-  }
-
-  #microphone-pulser {
-    transition: 0.15s ease-out;
-    width: $buttonSize;
-    height: $buttonSize;
-    border-radius: $buttonSize;
-    margin: $bigSpacing;
-    position: absolute;
-    top: 0;
-    left: 0;
-    -webkit-transform: scale(0.9);
-    transform: scale(0.9);
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: 99;
-  }
-
-  #microphone-button {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: #fff;
-    border-radius: $buttonSize;
-    width: $buttonSize;
-    height: $buttonSize;
-    margin: $bigSpacing;
-    transition: box-shadow 0.3s ease-out;
-
-    &.shadow {
-      //TODO: Use mixin
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+    .icon {
+      width: $iconSize;
+      height: $iconSize;
+      fill: $iconColor;
+      display: block;
+      margin: 0 auto;
+      position: relative;
+      @include transition(opacity 0.3s ease-out);
     }
 
-    a {
-      z-index: 100;
-      width: $buttonSize;
-      height: $buttonSize;
-      transition: box-shadow 0.2s ease-out;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.3) inset, 0 0 5px rgba(255,255,255,0.5) inset;
-      border: 0 none;
-      border-radius: $buttonSize;
-      display: block;
-      position: relative;
+    .mic-icon {
+      opacity: 1;
+      top: 25%;
+    }
+
+    .mute-icon {
+      opacity: 0;
+      top: -28%;
+    }
+    .lock-icon {
+      opacity: 0;
+      top: -85%;
+    }
+
+    &:hover {
       cursor: pointer;
+      background-color: darken($backgroundColor, 10%);
+    }
+  }
 
-      #icon-microphone, #icon-mute, #icon-lock {
-        display: block;
-        position: absolute;
-        top: ($buttonSize - $microphoneSVGSize)/2;
-        left: ($buttonSize - $microphoneSVGSize)/2;
-        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-        opacity: 1;
-        transform: scale(1);
+  &.listening {
+    .icon-container {
+          box-shadow: 0 0 0 8px #333 inset;
+    }
+  }
 
-        svg {
-          fill: #fff;
-          width: $microphoneSVGSize;
-          height: $microphoneSVGSize;
-        }
-
-      }
-
-      #icon-lock {
-        //margin-top: 2px;
-        pointer-events: none;
+  &.listening.lock {
+    .icon-container {
+      .mic-icon {
         opacity: 0;
-        transform: scale(0.5);
-
-        //svg {
-        //height: 36px;
-        //}
       }
 
-      #icon-mute {
-        display: none;
+      .lock-icon {
+        opacity: 1;
+      }
+    }
+  }
+
+  &.disabled {
+    .icon-container {
+      background-color: $disabledBackground;
+
+      .mic-icon {
+        opacity: 0;
+      }
+
+      .mute-icon {
+        opacity: 1;
       }
 
       &:hover {
-        text-decoration: none;
-      }
-
-    }
-
-    &.status-pending {
-      a, a:hover, a:active, a:focus {
-        background: #AAA;
         cursor: default;
       }
-      #icon-microphone {
-        display: none;
-      }
-      #icon-mute {
-        display: block;
-      }
-    }
-
-    &.status-listening {
-      a, a:hover, a:active, a:focus {
-        box-shadow: 0 0 0 8px #333 inset, 0 0 5px rgba(255,255,255,0.5) inset;
-        @include animation2(microphone-button-background-active-anim, 1.5s, infinite);
-      }
-      .bubbles {
-        position: absolute;
-        @include animation(bubbles, 7.5s, linear, infinite);
-        background-image: url('button_bg.png'), url('button_bg.png');
-        background-position: 0 0, 30px -150px;
-        -webkit-background-size: 100px auto;
-        -moz-background-size: 100px auto;
-        background-size: 100px auto;
-        top: 8px;
-        left: 8px;
-        border-radius: 100px;
-        width: 60px;
-        height: 60px;
-      }
-      #icon-mute {
-        display: none;
-      }
-      &.lock {
-        #icon-microphone {
-          opacity: 0;
-          transform: scale(0.5);
-        }
-        #icon-lock {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-    }
-
-    &.status-listening {
-      .microphone-pattern {
-        transform: scale(1.25);
-      }
-    }
-
-    .microphone-longhold {
-      color: #ccc;
-      position: absolute;
-      bottom: -16px;
-      width: 110px;
-      text-align: center;
-      left: 50%;
-      margin-left: -55px;
-      font-size: 13px;
-      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-      opacity: 0;
-      //pointer-events: none;
-      .on {
-        display: none;
-      }
-    }
-
-  }
-
-  #microphone-button-icon {
-    background: $buttonBGColor;
-    &:hover {
-      background-color: darken($buttonBGColor, 10%);
-    }
-    &:active {
-      @include linear-gradient(darken($buttonBGColor, 30%), $buttonBGColor);
     }
   }
+
 }
+
