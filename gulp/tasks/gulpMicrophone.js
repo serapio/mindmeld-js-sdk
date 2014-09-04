@@ -23,7 +23,10 @@ var srcDirectory = rootDirectory + 'src/widgets/microphone/';
 
 var paths = {
     html: srcDirectory + 'microphone.html',
-    js: [srcDirectory + '*.js'],
+    js: [
+        srcDirectory + 'volumeMonitor.js',
+        srcDirectory + 'microphone.js'
+    ],
     styles: [srcDirectory + '*.scss']
 };
 
