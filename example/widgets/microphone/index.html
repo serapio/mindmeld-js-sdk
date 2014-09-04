@@ -33,8 +33,13 @@
             console.log('MM token and session ready');
             var microphone = document.getElementById('exampleMic');
             microphone.initialize();
-//            microphone.start();
+            MM.eventDispatcher.subscribe('microphoneResult', onMicResult);
         }
+
+        function onMicResult (result, resultIndex, results, event) {
+            console.log('mic result: ' + result.transcript);
+        }
+
 
 
 

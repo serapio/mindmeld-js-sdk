@@ -36,6 +36,7 @@
         initMMListener();
         initVolumeMonitor();
         initClickHandlers();
+        initUIHandlers();
         console.log('mic init');
     };
 
@@ -81,7 +82,53 @@
     }
 
     function initClickHandlers () {
-//        containerElement.
+        var holdTimeout = null;
+        var holdDuration = 1000;
+
+        containerElement.addEventListener('mousedown', function onMouseDown () {
+            console.log('mouse down');
+            if (listener.listening) {
+                mindmeldMicrophone.stop();
+            } else {
+                holdTimeout = setTimeout(
+                    function startContinuousOnHold () {
+                        mindmeldMicrophone.start(true); // start mic in continuous mode
+                        console.log('start in cont mode');
+                        holdTimeout = null;
+                    },
+                    holdDuration
+                )
+            }
+        });
+
+        containerElement.addEventListener('mouseup', function onMouseUp () {
+            if (holdTimeout !== null) {
+                // We have not reached the hold timeout yet, start mic in normal mode
+                clearTimeout(holdTimeout);
+                holdTimeout = null;
+                mindmeldMicrophone.start();
+                console.log('start in normal das mode');
+            }
+        });
+
+        containerElement.addEventListener('mouseout', function onMouseOut () {
+            clearTimeout(holdTimeout);
+            holdTimeout = null;
+        });
+    }
+
+    function initUIHandlers () {
+        MM.eventDispatcher.subscribe('microphoneStart', function onMicrophoneStart () {
+            containerElement.classList.add('listening');
+            if (listener.continuous) {
+                containerElement.classList.add('lock');
+            }
+        });
+
+        MM.eventDispatcher.subscribe('microphoneEnd', function onMicrophoneEnd () {
+            containerElement.classList.remove('listening');
+            containerElement.classList.remove('lock');
+        });
     }
 
 
@@ -105,11 +152,9 @@
     };
 
 
-
+    // Register mindmeld-microphone as a web component!
     importerDocument.registerElement('mindmeld-microphone', {
         prototype: mindmeldMicrophone
     });
-
-
 
 }(MM));
