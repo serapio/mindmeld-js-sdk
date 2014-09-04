@@ -28,7 +28,7 @@
         if (! MM.support.speechRecognition) {
             containerElement.classList.add('disabled');
             var errorMessage = 'This browser does not support speech recognition';
-            MM.eventDispatcher.publish('microphoneError', errorMessage);
+            mindmeldMicrophone.publishEvent('error', errorMessage);
             return;
         }
 
@@ -36,11 +36,11 @@
         initVolumeMonitor();
         initClickHandlers();
         initUIHandlers();
-        MM.eventDispatcher.publish('microphoneInit');
+        mindmeldMicrophone.publishEvent('init');
     };
 
     // Sets the listener config for MM.activeSession's Listener. The mindmeld-microphone's
-    // event handlers publish the Listener events like onResult and onEnd via MM.eventDispatcher
+    // event handlers publish the Listener events like onResult and onEnd
     function initMMListener () {
         listener = MM.activeSession.listener;
         var listenerConfig = {
@@ -48,19 +48,19 @@
             interimResults: true,
 
             onResult: function (result, resultIndex, results, event) {
-                MM.eventDispatcher.publish('microphoneResult', result, resultIndex, results, event);
+                mindmeldMicrophone.publishEvent('result', result, resultIndex, results, event);
             },
 
             onStart: function (event) {
-                MM.eventDispatcher.publish('microphoneStart', event);
+                mindmeldMicrophone.publishEvent('start', event);
             },
 
             onEnd: function (event) {
-                MM.eventDispatcher.publish('microphoneEnd', event);
+                mindmeldMicrophone.publishEvent('end', event);
             },
 
             onError: function (error) {
-                MM.eventDispatcher.publish('microphoneError', error);
+                mindmeldMicrophone.publishEvent('error');
             }
         };
 
@@ -71,12 +71,21 @@
     // as the volume changes
     function initVolumeMonitor () {
         var volumePulser = containerElement.querySelector('.volume-pulser');
-        volumeMonitor = new window.VolumeMonitor(listener);
+
+        volumeMonitor = new window.VolumeMonitor(
+            listener,
+            function volumeMonitorErrorHandler (error) {
+                mindmeldMicrophone.publishEvent('error', error);
+            }
+        );
+
+        // Animate volume pulser by scaling a background circle based on volume
         volumeMonitor.onVolumeChange = function changed (volume) {
             var scale = ((volume / 100) * 0.5) + 1.0;
             volumePulser.style.transform = 'scale(' + scale + ')';
         };
 
+        // Hide volume pulser on stop
         volumeMonitor.onStop = function onVolumeMonitorStopped () {
             volumePulser.style.transform = 'scale(0.9)';
         }
@@ -120,14 +129,14 @@
     // Subscribes to microphone start/stop events to add CSS classes
     // indicating listening, lock, or waiting state
     function initUIHandlers () {
-        MM.eventDispatcher.subscribe('microphoneStart', function onMicrophoneStart () {
+        mindmeldMicrophone.on('start', function onMicrophoneStart () {
             containerElement.classList.add('listening');
             if (listener.continuous) {
                 containerElement.classList.add('lock');
             }
         });
 
-        MM.eventDispatcher.subscribe('microphoneEnd', function onMicrophoneEnd () {
+        mindmeldMicrophone.on('end', function onMicrophoneEnd () {
             containerElement.classList.remove('listening');
             containerElement.classList.remove('lock');
         });
@@ -151,6 +160,34 @@
     // Stops recording
     mindmeldMicrophone.stop = function stop () {
         listener.stop();
+    };
+
+    // Event Dispatcher
+    var subscriptions = {};
+
+    // Subscribe to microphone events
+    mindmeldMicrophone.on = function on (eventName, callback, context) {
+        if (! subscriptions[eventName]) {
+            subscriptions[eventName] = [];
+        }
+        var subscription = {
+            callback: callback,
+            context: context
+        };
+        subscriptions[eventName].push(subscription);
+    };
+
+    // Publish microphone events to subscribers
+    mindmeldMicrophone.publishEvent = function publishEvent (eventName) {
+        var subscribers = subscriptions[eventName];
+        if (subscribers !== undefined) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            subscribers.forEach(
+                function invokeCallback (subscription) {
+                    subscription.callback.apply(subscription.context, args);
+                }
+            )
+        }
     };
 
 

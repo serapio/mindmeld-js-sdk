@@ -14,6 +14,8 @@
         'use strict';
 
         document.addEventListener('DOMContentLoaded', function exampleMindmeldMicrophone () {
+            var microphone = document.getElementById('exampleMic');
+
             // initialize MM
             var config = {
                 appid: '7d6d5d9a76691f2dee36dcc28b77ed83a8ba1e1e',
@@ -35,24 +37,23 @@
                 console.log('MM token and session ready');
 
                 subscribeToMicEvents();
-                var microphone = document.getElementById('exampleMic');
                 microphone.initialize();
             }
 
             function subscribeToMicEvents () {
-                MM.eventDispatcher.subscribe('microphoneInit',
+                microphone.on('init',
                     function onMicInit () {
                         console.log('mic init');
                     }
                 );
 
-                MM.eventDispatcher.subscribe('microphoneResult',
+                microphone.on('result',
                     function onMicResult (result, resultIndex, results, event) {
                         console.log('mic result: ' + result.transcript);
                     }
                 );
 
-                MM.eventDispatcher.subscribe('microphoneError',
+                microphone.on('error',
                     function onMicError (error) {
                         console.error('mic error: ' + error);
                     }

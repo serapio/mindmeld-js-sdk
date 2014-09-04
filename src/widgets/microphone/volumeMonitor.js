@@ -9,21 +9,21 @@
     var AudioContext = window.AudioContext || window.webkitAudioContext;
     var Uint8Array = window.Uint8Array;
 
-    var VolumeMonitor = function (listener) {
+    var VolumeMonitor = function (listener, onError) {
         this.listener = listener;
+        this.onError = onError;
         this.stream = null;
         this.context = null;
         this.analyzer = null;
         this.frequencies = null;
         this.times = null;
         this.audioStarted = false;
-    }
+    };
 
     VolumeMonitor.prototype.start = function () {
         var self = this;
 
         if (!this.audioStarted) {
-            console.log('ZZZ: start audio anew');
             this.context = new AudioContext();
             this.analyzer = this.context.createAnalyser();
             this.analyzer.smoothingTimeConstant = 0.18;
@@ -33,7 +33,7 @@
             this.times = new Uint8Array(this.analyzer.frequencyBinCount);
 
             window.navigator.getUserMedia({ audio: true }, microphoneReady, function (err) {
-                console.error("The following error occurred: " + err);
+                self.onError('The following error occurred: ' + err);
             });
 
             this.audioStarted = true;
