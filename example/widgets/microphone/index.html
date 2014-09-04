@@ -6,11 +6,63 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/polymer/0.3.4/platform.js"></script>
     <script src="../../../dist/sdk/mindmeld.js"></script>
     <link rel="import" href="../../../dist/widgets/microphone/mindmeld-microphone.html">
-    <!--Minified version below-->
-    <!--<link rel="import" href="../../../dist/widgets/microphone/mindmeld-microphone.min.html">-->
 </head>
 <body>
-    <h1>This page uses a mindmeld-microphone web component</h1>
-    <mindmeld-microphone></mindmeld-microphone>
+    <h2>The MindMeld Microphone Widget</h2>
+    <mindmeld-microphone id="exampleMic"></mindmeld-microphone>
+    <script>
+        'use strict';
+        // initialize MM
+        var config = {
+            appid: '7d6d5d9a76691f2dee36dcc28b77ed83a8ba1e1e',
+            onInit: onMMInit
+        };
+        MM.init(config);
+
+        function onMMInit () {
+            MM.setToken('8c79855564e9ac48da1b95c825af1c61148b8a26', onTokenSet);
+        }
+
+        function onTokenSet () {
+            MM.setActiveUserID('6153');
+            MM.setActiveSessionID('182935');
+            onMMReady();
+        }
+
+        function onMMReady () {
+            console.log('MM token and session ready');
+            var microphone = document.getElementById('exampleMic');
+            microphone.initialize();
+        }
+
+
+
+        // Unused helper functions
+
+        function getToken () {
+            var simpleUserCredentials = {
+                appsecret: '25ba4e936667fe4268fc7b9e3f5a7cf6bf9f6699',
+                simple: {
+                    userid: 'einstein80',
+                    name: 'Albert Einstein'
+                }
+            };
+            MM.getToken(simpleUserCredentials, onTokenSet);
+        }
+
+        function createSession () {
+            var newSessionData = {
+                name: 'new session name',
+                privacymode: 'inviteonly'
+            };
+            MM.activeUser.sessions.post(newSessionData,
+                function onSessionCreated (response) {
+                    console.log('session created: ', response);
+                    MM.setActiveSessionID(response.data.sessionid);
+                }
+            );
+        }
+
+    </script>
 </body>
 </html>

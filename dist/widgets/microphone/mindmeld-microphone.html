@@ -84,7 +84,7 @@
     top: -85%; }
   .mindmeld-microphone .icon-container:hover {
     cursor: pointer;
-    background-color: #05abf2; }
+    background-color: #0488c0; }
 .mindmeld-microphone.listening .icon-container {
   box-shadow: 0 0 0 8px #333 inset;
   -webkit-animation: mic-listening-pulse 1.5s infinite;
@@ -130,21 +130,33 @@
     var componentDocument = currentScript.ownerDocument;
 
     var mindmeldMicrophone = Object.create(HTMLElement.prototype);
+    var containerElement;
 
     mindmeldMicrophone.createdCallback = function () {
         var template = componentDocument.querySelector('#mindmeld-microphone');
         var clone = template.content.cloneNode(true);
         var shadow = this.createShadowRoot();
         shadow.appendChild(clone);
+        containerElement = shadow.querySelector('.mindmeld-microphone');
     };
 
-    mindmeldMicrophone.foo = function () {
-        console.log('called foo');
+    mindmeldMicrophone.initialize = function initialize () {
+        if (! MM.support.speechRecognition) {
+            console.log('This browser does not support speech recognition');
+            containerElement.classList.add('disabled');
+            return;
+        }
+
+        var listenerConfig = {
+
+        };
     };
 
     importerDocument.registerElement('mindmeld-microphone', {
         prototype: mindmeldMicrophone
     });
+
+
 
 }(MM));</script>
 <!-- endinject -->
