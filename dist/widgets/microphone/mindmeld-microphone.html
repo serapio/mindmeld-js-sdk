@@ -104,9 +104,22 @@
     opacity: 1; }
   .mindmeld-microphone.disabled .icon-container:hover {
     cursor: default; }
+.mindmeld-microphone .volume-pulser {
+  width: 60px;
+  height: 60px;
+  border-radius: 60px;
+  background-color: rgba(0, 0, 0, 0.4);
+  transform: scale(0.9);
+  position: relative;
+  bottom: 60px;
+  z-index: -1;
+  -webkit-transition: 0.15s ease-out;
+  -moz-transition: 0.15s ease-out;
+  -ms-transition: 0.15s ease-out;
+  -o-transition: 0.15s ease-out;
+  transition: 0.15s ease-out; }
 </style>
     <!-- endinject -->
-
     <div class="mindmeld-microphone">
         <div class="icon-container">
             <svg class="mic-icon icon" x="0px" y="0px" viewbox="0 0 32 32">
@@ -119,8 +132,8 @@
                 <path d="M78.466,41.435h-3.21V21.018C75.256,9.428,64.15,0,50.5,0S25.744,9.428,25.744,21.018h0.001v20.417h-3.21  c-4.394,0-7.989,3.595-7.989,7.989v42.587c0,4.395,3.595,7.989,7.989,7.989h55.931c4.395,0,7.989-3.595,7.989-7.989V49.424  C86.455,45.03,82.86,41.435,78.466,41.435z M57.465,85.805H43.536l2.812-15.02c-2.337-1.41-3.905-3.968-3.905-6.896  c0-4.449,3.608-8.058,8.057-8.058c4.451,0,8.056,3.608,8.056,8.058c0,2.929-1.568,5.486-3.904,6.896L57.465,85.805z M64.646,41.435  H36.354V21.018h0c0-5.642,6.478-10.408,14.146-10.408c7.668,0,14.146,4.767,14.146,10.408V41.435z"/>
             </svg>
         </div>
+        <div class="volume-pulser"></div>
     </div>
-
 </template>
 <!-- inject:js -->
 <script>'use strict';
@@ -245,7 +258,6 @@
             containerElement.classList.add('disabled');
             var errorMessage = 'This browser does not support speech recognition';
             MM.eventDispatcher.publish('microphoneError', errorMessage);
-            console.log(errorMessage);
             return;
         }
 
@@ -253,7 +265,7 @@
         initVolumeMonitor();
         initClickHandlers();
         initUIHandlers();
-        console.log('mic init');
+        MM.eventDispatcher.publish('microphoneInit');
     };
 
     // Sets the listener config for MM.activeSession's Listener. The mindmeld-microphone's
@@ -287,29 +299,31 @@
     // Initializes the volume monitor used to animate the microphone
     // as the volume changes
     function initVolumeMonitor () {
+        var volumePulser = containerElement.querySelector('.volume-pulser');
         volumeMonitor = new window.VolumeMonitor(listener);
         volumeMonitor.onVolumeChange = function changed (volume) {
-            console.log(volume);
+            var scale = ((volume / 100) * 0.5) + 1.0;
+            volumePulser.style.transform = 'scale(' + scale + ')';
         };
 
         volumeMonitor.onStop = function onVolumeMonitorStopped () {
-            console.log('volume monitor stopped');
+            volumePulser.style.transform = 'scale(0.9)';
         }
     }
 
+    // Initializes mouse click handlers to start/stop the microphone
     function initClickHandlers () {
         var holdTimeout = null;
         var holdDuration = 1000;
 
-        containerElement.addEventListener('mousedown', function onMouseDown () {
-            console.log('mouse down');
+        var micButton = containerElement.querySelector('.icon-container');
+        micButton.addEventListener('mousedown', function onMouseDown () {
             if (listener.listening) {
                 mindmeldMicrophone.stop();
             } else {
                 holdTimeout = setTimeout(
                     function startContinuousOnHold () {
                         mindmeldMicrophone.start(true); // start mic in continuous mode
-                        console.log('start in cont mode');
                         holdTimeout = null;
                     },
                     holdDuration
@@ -317,22 +331,23 @@
             }
         });
 
-        containerElement.addEventListener('mouseup', function onMouseUp () {
+        micButton.addEventListener('mouseup', function onMouseUp () {
             if (holdTimeout !== null) {
                 // We have not reached the hold timeout yet, start mic in normal mode
                 clearTimeout(holdTimeout);
                 holdTimeout = null;
                 mindmeldMicrophone.start();
-                console.log('start in normal das mode');
             }
         });
 
-        containerElement.addEventListener('mouseout', function onMouseOut () {
+        micButton.addEventListener('mouseout', function onMouseOut () {
             clearTimeout(holdTimeout);
             holdTimeout = null;
         });
     }
 
+    // Subscribes to microphone start/stop events to add CSS classes
+    // indicating listening, lock, or waiting state
     function initUIHandlers () {
         MM.eventDispatcher.subscribe('microphoneStart', function onMicrophoneStart () {
             containerElement.classList.add('listening');

@@ -131,5 +131,17 @@ $iconColor: white;
     }
   }
 
+  .volume-pulser {
+    width: $microphoneSize;
+    height: $microphoneSize;
+    border-radius: $microphoneSize;
+    background-color: rgba(0, 0, 0, 0.4);
+    transform: scale(0.9);
+    position: relative;
+    bottom: $microphoneSize;
+    z-index: -1;
+    @include transition(0.15s ease-out);
+  }
+
 }
 
