@@ -1,3 +1,7 @@
+/**
+ * Adds the MindMeldMicrophone object to the global namespace.
+ */
+
 'use strict';
 (function microphone (MM) {
 
@@ -69,7 +73,6 @@
 
         // Animate volume pulser by scaling a background circle based on volume
         volumeMonitor.onVolumeChange = function changed (volume) {
-            console.log(volume);
             var scale = ((volume / 100) * 0.5) + 1.0;
             volumePulser.style.transform = 'scale(' + scale + ')';
         };
@@ -180,8 +183,8 @@
     };
 
 }(MM));
-'use strict';
 
+// Volume Monitor
 (function volumeMonitor () {
 
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||

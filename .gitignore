@@ -26,7 +26,7 @@ searchWidget/.sass-cache
 searchWidget/css/*.map
 
 # Microphone Widget
-dist/widgets/microphone/mindmeld-microphone.min.js.map
+dist/widgets/microphone/mindmeldMicrophone.min.js.map
 
 # Microphone Component
 dist/widgets/microphoneComponent/mindmeld-microphone.css

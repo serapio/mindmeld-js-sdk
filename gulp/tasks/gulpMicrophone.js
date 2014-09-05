@@ -21,20 +21,21 @@ var srcDirectory = rootDirectory + relativeSrcDirectory;
 
 var paths = {
     js: [
-        srcDirectory + 'microphone.js',
-        srcDirectory + 'volumeMonitor.js'
+        srcDirectory + 'mindMeldMicrophone.js'
     ],
-    styles: [srcDirectory + '*.scss']
+    styles: [
+        srcDirectory + 'mindmeldMicrophone.scss'
+    ]
 };
 
 // Compile and minify SCSS
 gulp.task('mic.css', function () {
     return gulp.src(paths.styles)
         .pipe(sass())
-        .pipe(rename('mindmeld-microphone.css'))
+        .pipe(rename('mindmeldMicrophone.css'))
         .pipe(gulp.dest(distDirectory))
         .pipe(minifyCSS())
-        .pipe(rename('mindmeld-microphone.min.css'))
+        .pipe(rename('mindmeldMicrophone.min.css'))
         .pipe(gulp.dest(distDirectory));
 });
 
@@ -42,12 +43,12 @@ gulp.task('mic.css', function () {
 gulp.task('mic.js', function () {
     return gulp.src(paths.js)
         .pipe(sourcemaps.init())
-            .pipe(concat('mindmeld-microphone.js'))
+            .pipe(concat('mindMeldMicrophone.js'))
             .pipe(gulp.dest(distDirectory))
             .pipe(uglify(), {
                 mangle: true
             })
-            .pipe(rename('mindmeld-microphone.min.js'))
+            .pipe(rename('mindMeldMicrophone.min.js'))
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(distDirectory));
 });
