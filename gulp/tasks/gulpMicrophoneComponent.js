@@ -7,7 +7,6 @@
 // gulp plugins
 var gulp = require('gulp');
 var sass = require('gulp-sass');
-var minifyCSS = require('gulp-minify-css');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
@@ -18,80 +17,72 @@ var es = require('event-stream');
 
 // Paths
 var rootDirectory = __dirname + '/../../';
-var relativeDistDirectory = 'dist/widgets/microphoneComponent/';
-var relativeSrcDirectory = 'src/widgets/microphoneComponent/';
+var relativeDistDirectory = 'dist/widgets/microphone/';
+var relativeSrcDirectory = 'src/widgets/microphone/';
 var distDirectory = rootDirectory + relativeDistDirectory;
 var srcDirectory = rootDirectory + relativeSrcDirectory;
 
 var paths = {
-    html: srcDirectory + 'microphone.html',
+    html: srcDirectory + 'component/microphone-template.html',
     js: [
         srcDirectory + 'microphone.js',
-        srcDirectory + 'volumeMonitor.js'
+        srcDirectory + 'volumeMonitor.js',
+        srcDirectory + 'component/microphone-component.js'
     ],
-    styles: [srcDirectory + '*.scss']
+    styles: [
+        srcDirectory + 'mindmeldMicrophone.scss'
+    ]
 };
-
-// Compile and minify SCSS
-gulp.task('micComponent.css', function () {
-    return gulp.src(paths.styles)
-        .pipe(sass())
-        .pipe(rename('mindmeld-microphone.css'))
-        .pipe(gulp.dest(distDirectory))
-        .pipe(minifyCSS())
-        .pipe(rename('mindmeld-microphone.min.css'))
-        .pipe(gulp.dest(distDirectory));
-});
 
 // Concat and minify JS
 gulp.task('micComponent.js', function () {
     return gulp.src(paths.js)
         .pipe(sourcemaps.init())
-            .pipe(concat('mindmeld-microphone.js'))
-            .pipe(gulp.dest(distDirectory))
+            .pipe(concat('mindmeld-microphone-component.js'))
+            .pipe(gulp.dest(distDirectory + 'component'))
             .pipe(uglify(), {
                 mangle: true
             })
-            .pipe(rename('mindmeld-microphone.min.js'))
+            .pipe(rename('mindmeld-microphone-component.min.js'))
         .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(distDirectory));
+        .pipe(gulp.dest(distDirectory + 'component'));
 });
 
 
 // Create mindmeld-microphone.html and inject unminified JS and CSS
-gulp.task('micComponent.html.unminified', ['micComponent.css', 'micComponent.js'], function () {
+gulp.task('micComponent.html', ['mic.css', 'micComponent.js'], function () {
     var injectSources = gulp.src([
-        distDirectory + 'mindmeld-microphone.js',
-        distDirectory + 'mindmeld-microphone.css'
+        distDirectory + 'component/mindmeld-microphone-component.js',
+        distDirectory + 'mindmeldMicrophone.css'
     ], {
         read: false
     });
 
     return gulp.src(paths.html)
         .pipe(inject(injectSources, {
-            ignorePath: relativeDistDirectory,
-            addRootSlash: false
+            addRootSlash: false,
+            relative: true
         }))
-        .pipe(rename('mindmeld-microphone.html'))
-        .pipe(gulp.dest(distDirectory));
+        .pipe(rename('mindmeld-microphone-component.html'))
+        .pipe(gulp.dest(distDirectory + 'component/'));
 });
 
 // Create mindmeld-microphone.min.html and inject minified JS and CSS
-gulp.task('micComponent.html.min', ['micComponent.css', 'micComponent.js'], function () {
+gulp.task('micComponent.html.min', ['mic.css', 'micComponent.js'], function () {
     var injectSources = gulp.src([
-            distDirectory + 'mindmeld-microphone.min.js',
-            distDirectory + 'mindmeld-microphone.min.css'
+        distDirectory + 'component/mindmeld-microphone-component.min.js',
+        distDirectory + 'mindmeldMicrophone.min.css'
     ], {
         read: false
     });
 
     return gulp.src(paths.html)
         .pipe(inject(injectSources, {
-            ignorePath: relativeDistDirectory,
-            addRootSlash: false
+            addRootSlash: false,
+            relative: true
         }))
-        .pipe(rename('mindmeld-microphone.min.html'))
-        .pipe(gulp.dest(distDirectory));
+        .pipe(rename('mindmeld-microphone-component.min.html'))
+        .pipe(gulp.dest(distDirectory + 'component/'));
 });
 
 
@@ -101,13 +92,13 @@ gulp.task('micComponent.vulcanize', ['micComponent.vulcanize.unminified', 'micCo
 
 
 // Vulcanize mindmeld-microphone.html
-gulp.task('micComponent.vulcanize.unminified', ['micComponent.html.unminified'], function () {
-    return gulp.src(distDirectory + 'mindmeld-microphone.html')
+gulp.task('micComponent.vulcanize.unminified', ['micComponent.html'], function () {
+    return gulp.src(distDirectory + 'component/mindmeld-microphone-component.html')
         // Weird, but necessary to specify dest in vulcanize gulp task.
         // vulcanize REPLACES mindmeld-microphone.html with
         // an inlined version
-        .pipe(vulcanize({dest: distDirectory, inline: true}))
-        .pipe(gulp.dest(distDirectory));
+        .pipe(vulcanize({dest: distDirectory + 'component/', inline: true}))
+        .pipe(gulp.dest(distDirectory + 'component/'));
 });
 
 // Vulcanize mindmeld-microphone.min.html. A weird bug in vulcanize
@@ -115,9 +106,9 @@ gulp.task('micComponent.vulcanize.unminified', ['micComponent.html.unminified'],
 // same time so we wait for the unminified version to finish before
 // starting the minified version here
 gulp.task('micComponent.vulcanize.min', ['micComponent.html.min', 'micComponent.vulcanize.unminified'], function () {
-  return gulp.src(distDirectory + 'mindmeld-microphone.min.html')
-    .pipe(vulcanize({dest: distDirectory, inline: true}))
-    .pipe(gulp.dest(distDirectory));
+  return gulp.src(distDirectory + 'component/mindmeld-microphone-component.min.html')
+    .pipe(vulcanize({dest: distDirectory + 'component/', inline: true}))
+    .pipe(gulp.dest(distDirectory + 'component/'));
 });
 
 

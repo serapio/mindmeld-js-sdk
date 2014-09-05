@@ -28,6 +28,12 @@ searchWidget/css/*.map
 # Microphone Widget
 dist/widgets/microphone/mindmeldMicrophone.min.js.map
 
+# Microphone Web Component
+dist/widgets/microphone/component/mindmeld-microphone-component.js
+dist/widgets/microphone/component/mindmeld-microphone-component.min.js
+dist/widgets/microphone/component/mindmeld-microphone-component.min.js.map
+
+
 # Microphone Component
 dist/widgets/microphoneComponent/mindmeld-microphone.css
 dist/widgets/microphoneComponent/mindmeld-microphone.min.css
