@@ -25,6 +25,9 @@ var paths = {
     ],
     styles: [
         srcDirectory + 'mindmeldMicrophone.scss'
+    ],
+    html: [
+        srcDirectory + 'mindmeldMicrophone.html'
     ]
 };
 
@@ -53,14 +56,20 @@ gulp.task('mic.js', function () {
         .pipe(gulp.dest(distDirectory));
 });
 
+// Copy HTML
+gulp.task('mic.html', function () {
+    return gulp.src(paths.html)
+        .pipe(gulp.dest(distDirectory));
+});
 
 
 // Main gulp task used to completely build the
 // MindMeldMicrophone files
-gulp.task('mic.build', ['mic.js', 'mic.css']);
+gulp.task('mic.build', ['mic.js', 'mic.css', 'mic.html']);
 
 // Watch for changes in source files and automatically build
 gulp.task('mic.watch', ['mic.build'], function () {
     gulp.watch([paths.js], ['mic.js']);
     gulp.watch([paths.styles], ['mic.css']);
+    gulp.watch([paths.html], ['mic.html']);
 });
