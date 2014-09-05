@@ -53,7 +53,8 @@
                 console.log('MM token and session ready');
 
                 subscribeToMicEvents();
-                MindMeldMicrophone.initialize();
+                var microphoneElement = document.querySelector('.mindmeld-microphone');
+                MindMeldMicrophone.initialize(microphoneElement);
             }
 
             function subscribeToMicEvents () {

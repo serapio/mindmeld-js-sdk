@@ -26,8 +26,8 @@
     // sets up the MM.activeSession's Listener, initializes
     // the volume monitor, and initializes mindmeld-microphone's
     // click handlers
-    MindMeldMicrophone.initialize = function initialize () {
-        containerElement = document.querySelector('.mindmeld-microphone');
+    MindMeldMicrophone.initialize = function initialize (element) {
+        containerElement = element;
         if (! MM.support.speechRecognition) {
             containerElement.classList.add('disabled');
             var errorMessage = 'This browser does not support speech recognition';

@@ -1,3 +1,8 @@
+/**
+ * microphone-component.js uses MindMeldMicrophone to create a web component, <mindmeld-microphone>,
+ * that wraps all the functionality in MindMeldMicrophone.
+ */
+
 'use strict';
 
 (function microphone (MindMeldMicrophone) {
@@ -44,6 +49,5 @@
     importerDocument.registerElement('mindmeld-microphone', {
         prototype: mindmeldMicrophone
     });
-
 
 }(MindMeldMicrophone));
