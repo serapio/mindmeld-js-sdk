@@ -1,5 +1,16 @@
 /**
- * Adds the MindMeldMicrophone object to the global namespace.
+ * Adds the MindMeldMicrophone singleton object to the global namespace. The MindMeldMicrophone
+ * exposes the following methods:
+ * - initialize(): sets the listener config for MM.Listener, registers click handlers, and sets up volume monitor
+ * - start(): starts recording
+ * - stop(): stops recording
+ * - listening(): returns a boolean indicating whether the mic is listening
+ * - on(event, callback, context): register for a MindMeldMicrophone event. Events exposed:
+ *  - 'init': fired after initialize() finishes
+ *  - 'result': there is a speech-to-text result
+ *  - 'start': the microphone starts recording
+ *  - 'stop': the microphone stops recording
+ *  - 'error': there was an error with the microphone
  */
 
 'use strict';
@@ -52,7 +63,7 @@
             },
 
             onError: function (error) {
-                MindMeldMicrophone.publishEvent('error');
+                MindMeldMicrophone.publishEvent('error', error);
             }
         };
 
@@ -64,23 +75,25 @@
     function initVolumeMonitor () {
         var volumePulser = containerElement.querySelector('.volume-pulser');
 
-        volumeMonitor = new window.VolumeMonitor(
-            listener,
-            function volumeMonitorErrorHandler (error) {
+        volumeMonitor = new window.VolumeMonitor({
+            listener: listener,
+
+            // Animate volume pulser by scaling a background circle based on volume
+            onVolumeChange: function onVolumeChanged (volume) {
+                var scale = ((volume / 100) * 0.5) + 1.0;
+                volumePulser.style.transform = 'scale(' + scale + ')';
+            },
+
+            // Hide volume pulser on stop
+            onStop: function onVolumeMonitorStopped () {
+                volumePulser.style.transform = 'scale(0.9)';
+            },
+
+            // Public microphone error event when there is a volume monitor error
+            onError: function onVolumeMonitorError (error) {
                 MindMeldMicrophone.publishEvent('error', error);
             }
-        );
-
-        // Animate volume pulser by scaling a background circle based on volume
-        volumeMonitor.onVolumeChange = function changed (volume) {
-            var scale = ((volume / 100) * 0.5) + 1.0;
-            volumePulser.style.transform = 'scale(' + scale + ')';
-        };
-
-        // Hide volume pulser on stop
-        volumeMonitor.onStop = function onVolumeMonitorStopped () {
-            volumePulser.style.transform = 'scale(0.9)';
-        }
+        });
     }
 
     // Initializes mouse click handlers to start/stop the microphone
@@ -194,9 +207,12 @@
     var AudioContext = window.AudioContext || window.webkitAudioContext;
     var Uint8Array = window.Uint8Array;
 
-    var VolumeMonitor = function (listener, onError) {
-        this.listener = listener;
-        this.onError = onError;
+    var VolumeMonitor = function (config) {
+        this.listener = config.listener;
+        this.onError = config.onError;
+        this.onVolumeChange = config.onVolumeChange;
+        this.onStop = config.onStop;
+
         this.stream = null;
         this.context = null;
         this.analyzer = null;
