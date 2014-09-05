@@ -21,7 +21,8 @@ var srcDirectory = rootDirectory + relativeSrcDirectory;
 
 var paths = {
     js: [
-        srcDirectory + 'mindMeldMicrophone.js'
+        srcDirectory + 'microphone.js',
+        srcDirectory + 'volumeMonitor.js'
     ],
     styles: [
         srcDirectory + 'mindmeldMicrophone.scss'

@@ -198,6 +198,8 @@
 }(MM));
 
 // Volume Monitor
+
+'use strict';
 (function volumeMonitor () {
 
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
