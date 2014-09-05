@@ -26,8 +26,8 @@ var srcDirectory = rootDirectory + relativeSrcDirectory;
 var paths = {
     html: srcDirectory + 'microphone.html',
     js: [
-        srcDirectory + 'volumeMonitor.js',
-        srcDirectory + 'microphone.js'
+        srcDirectory + 'microphone.js',
+        srcDirectory + 'volumeMonitor.js'
     ],
     styles: [srcDirectory + '*.scss']
 };
