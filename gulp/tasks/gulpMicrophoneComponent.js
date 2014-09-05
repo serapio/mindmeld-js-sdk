@@ -33,7 +33,7 @@ var paths = {
 };
 
 // Compile and minify SCSS
-gulp.task('mic.css', function () {
+gulp.task('micComponent.css', function () {
     return gulp.src(paths.styles)
         .pipe(sass())
         .pipe(rename('mindmeld-microphone.css'))
@@ -44,7 +44,7 @@ gulp.task('mic.css', function () {
 });
 
 // Concat and minify JS
-gulp.task('mic.js', function () {
+gulp.task('micComponent.js', function () {
     return gulp.src(paths.js)
         .pipe(sourcemaps.init())
             .pipe(concat('mindmeld-microphone.js'))
@@ -59,7 +59,7 @@ gulp.task('mic.js', function () {
 
 
 // Create mindmeld-microphone.html and inject unminified JS and CSS
-gulp.task('mic.html.unminified', ['mic.css', 'mic.js'], function () {
+gulp.task('micComponent.html.unminified', ['micComponent.css', 'micComponent.js'], function () {
     var injectSources = gulp.src([
         distDirectory + 'mindmeld-microphone.js',
         distDirectory + 'mindmeld-microphone.css'
@@ -77,7 +77,7 @@ gulp.task('mic.html.unminified', ['mic.css', 'mic.js'], function () {
 });
 
 // Create mindmeld-microphone.min.html and inject minified JS and CSS
-gulp.task('mic.html.min', ['mic.css', 'mic.js'], function () {
+gulp.task('micComponent.html.min', ['micComponent.css', 'micComponent.js'], function () {
     var injectSources = gulp.src([
             distDirectory + 'mindmeld-microphone.min.js',
             distDirectory + 'mindmeld-microphone.min.css'
@@ -97,11 +97,11 @@ gulp.task('mic.html.min', ['mic.css', 'mic.js'], function () {
 
 // Vulcanize inlines references to external scripts & stylesheets
 // so that our web component is just a single, baller HTML file
-gulp.task('mic.vulcanize', ['mic.vulcanize.unminified', 'mic.vulcanize.min']);
+gulp.task('micComponent.vulcanize', ['micComponent.vulcanize.unminified', 'micComponent.vulcanize.min']);
 
 
 // Vulcanize mindmeld-microphone.html
-gulp.task('mic.vulcanize.unminified', ['mic.html.unminified'], function () {
+gulp.task('micComponent.vulcanize.unminified', ['micComponent.html.unminified'], function () {
     return gulp.src(distDirectory + 'mindmeld-microphone.html')
         // Weird, but necessary to specify dest in vulcanize gulp task.
         // vulcanize REPLACES mindmeld-microphone.html with
@@ -114,7 +114,7 @@ gulp.task('mic.vulcanize.unminified', ['mic.html.unminified'], function () {
 // prevents two separate vulcanize processes from running at the
 // same time so we wait for the unminified version to finish before
 // starting the minified version here
-gulp.task('mic.vulcanize.min', ['mic.html.min', 'mic.vulcanize.unminified'], function () {
+gulp.task('micComponent.vulcanize.min', ['micComponent.html.min', 'micComponent.vulcanize.unminified'], function () {
   return gulp.src(distDirectory + 'mindmeld-microphone.min.html')
     .pipe(vulcanize({dest: distDirectory, inline: true}))
     .pipe(gulp.dest(distDirectory));
@@ -123,16 +123,16 @@ gulp.task('mic.vulcanize.min', ['mic.html.min', 'mic.vulcanize.unminified'], fun
 
 // Main gulp task used to completely build the
 // mindmeld microphone web component
-gulp.task('mic.build', ['mic.vulcanize']);
+gulp.task('micComponent.build', ['micComponent.vulcanize']);
 
 // Watch for changes in source files and automatically build everything
-gulp.task('mic.watch', ['mic.vulcanize'], function () {
+gulp.task('micComponent.watch', ['micComponent.vulcanize'], function () {
    gulp.watch([
        paths.html,
        paths.js,
        paths.styles
    ],
    [
-       'mic.vulcanize'
+       'micComponent.vulcanize'
    ]);
 });

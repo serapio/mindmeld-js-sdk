@@ -31,10 +31,17 @@ gulp.task('buildVoiceNavigator', ['vn.build']);
 
 // --------------------------------------------------------------------- //
 
-// -------------------------- Microphone -------------------------- //
-require('./gulp/tasks/gulpMicrophoneComponent');
+// -------------------------- Microphone Widget -------------------------- //
+require('./gulp/tasks/gulpMicrophone');
 
 gulp.task('buildMicrophone', ['mic.build']);
+
+// --------------------------------------------------------------------- //
+
+// -------------------------- Microphone Component -------------------------- //
+require('./gulp/tasks/gulpMicrophoneComponent');
+
+gulp.task('buildMicrophoneComponent', ['micComponent.build']);
 
 // --------------------------------------------------------------------- //
 
