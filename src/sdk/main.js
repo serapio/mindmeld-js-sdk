@@ -3693,6 +3693,7 @@ var MM = ( function (window, ajax, Faye) {
         constructor: function () {
             MM.models.ActiveSession.superclass.constructor.apply(this, arguments);
             var session = this;
+            var interimTextEntry = null;
 
             /**
              * A session's listener is automatically configured to post text entries with type 'speech' and weight of 1.0
@@ -3716,10 +3717,8 @@ var MM = ( function (window, ajax, Faye) {
             var listener = this.listener = new MM.Listener({
                 interimResults: true,
                 onResult: function(result, resultIndex, results, event) {
-                    // post a text entry for finalized results
-                    if (result.final) {
-                        postListenerResult(result.transcript);
-                    }
+                    // post a text entry for interim and finalized results
+                    postListenerResult(result);
                     // notify handler
                     MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
                 },
@@ -3733,7 +3732,7 @@ var MM = ( function (window, ajax, Faye) {
                     if (results.length > 0) {
                         lastResult = results[results.length - 1];
                         if (!lastResult.final) {
-                            postListenerResult(lastResult.transcript);
+                            postListenerResult(lastResult);
                         }
                     }
                     MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
@@ -3753,19 +3752,41 @@ var MM = ( function (window, ajax, Faye) {
                 }
                 return language;
             }
-            function postListenerResult (transcript) {
+            function postListenerResult (result) {
                 var textEntryData = {
-                    text: transcript,
+                    text: result.transcript,
                     type: 'speech',
-                    weight: 1.0
+                    weight: 1.0,
+                    status: result.final ? 'final' : 'interim'
                 };
                 var lang = getEffectiveLang();
                 if (lang.length) {
                     textEntryData.language = MM.Listener.convertLanguageToISO6392(lang);
                 }
-                session.textentries.post(textEntryData, function(response) {
-                    MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
-                });
+                if (interimTextEntry === null) {
+                    session.textentries.post(textEntryData, function(response) {
+                        console.log('new text entry posted: ' + textEntryData.text + ' (' +
+                            response.data.textentryid + ', ' + textEntryData.status + ')');
+                        MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
+                        if (!result.final) {
+                            interimTextEntry = textEntryData;
+                            interimTextEntry.textentryid = response.data.textentryid;
+                        }
+                    });
+                } else {
+                    session.textentries.makeModelRequest('POST', 'textentry/' + interimTextEntry.textentryid,
+                        textEntryData, function(response) {
+                            console.log('text entry update posted: ' + textEntryData.text + ' (' +
+                                response.data.textentryid + ', ' + textEntryData.status + ')');
+                            MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
+                            if (!result.final) {
+                                interimTextEntry = textEntryData;
+                                interimTextEntry.textentryid = response.data.textentryid;
+                            } else {
+                                interimTextEntry = null;
+                            }
+                        });
+                }
             }
             _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
         },
