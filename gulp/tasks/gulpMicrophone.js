@@ -18,8 +18,10 @@ var es = require('event-stream');
 
 // Paths
 var rootDirectory = __dirname + '/../../';
-var distDirectory = rootDirectory + 'dist/widgets/microphoneComponent/';
-var srcDirectory = rootDirectory + 'src/widgets/microphoneComponent/';
+var relativeDistDirectory = 'dist/widgets/microphoneComponent/';
+var relativeSrcDirectory = 'src/widgets/microphoneComponent/';
+var distDirectory = rootDirectory + relativeDistDirectory;
+var srcDirectory = rootDirectory + relativeSrcDirectory;
 
 var paths = {
     html: srcDirectory + 'microphone.html',
@@ -67,7 +69,7 @@ gulp.task('mic.html.unminified', ['mic.css', 'mic.js'], function () {
 
     return gulp.src(paths.html)
         .pipe(inject(injectSources, {
-            ignorePath: 'dist/widgets/microphone/',
+            ignorePath: relativeDistDirectory,
             addRootSlash: false
         }))
         .pipe(rename('mindmeld-microphone.html'))
@@ -85,7 +87,7 @@ gulp.task('mic.html.min', ['mic.css', 'mic.js'], function () {
 
     return gulp.src(paths.html)
         .pipe(inject(injectSources, {
-            ignorePath: 'dist/widgets/microphone/',
+            ignorePath: relativeDistDirectory,
             addRootSlash: false
         }))
         .pipe(rename('mindmeld-microphone.min.html'))
