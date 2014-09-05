@@ -18,8 +18,8 @@ var es = require('event-stream');
 
 // Paths
 var rootDirectory = __dirname + '/../../';
-var distDirectory = rootDirectory + 'dist/widgets/microphone/';
-var srcDirectory = rootDirectory + 'src/widgets/microphone/';
+var distDirectory = rootDirectory + 'dist/widgets/microphoneComponent/';
+var srcDirectory = rootDirectory + 'src/widgets/microphoneComponent/';
 
 var paths = {
     html: srcDirectory + 'microphone.html',
