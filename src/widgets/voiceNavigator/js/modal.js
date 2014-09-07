@@ -580,8 +580,9 @@ var MMVoice = {
         this._updateUI();
     },
 
-    showResults : function(data) {
+    showResults : function(data, facets) {
         this.results_length = data.length;
+//        this._showFacets(facets);
         this._updateCards(data);
         this._updateUI();
     },
@@ -697,6 +698,31 @@ var MMVoice = {
         return entities;
     },
 
+    _showFacets : function(facets) {
+        var self = this;
+        self.$tags.empty();
+
+//        $.each(facets, function(k, facet) {
+//            var $a = $('<a>', {
+//                href: '#',
+//                class: 'tag',
+//                text: facet
+//            });
+//            self.$tags.append($a);
+//        });
+        self.$tags.append($('<div>', {class: 'label', text:'Filters:'}));
+        $.each(facets, function(k, facet) {
+            var $a = $('<div>', {
+                class: 'atag',
+                text: facet
+            });
+            self.$tags.append($a);
+        });
+
+        self.$tags.toggle(facets.length > 0);
+    },
+
+
     _isotope_config : {
         itemSelector: '.card',
         sortBy: 'sort',
@@ -707,15 +733,20 @@ var MMVoice = {
         }
     },
 
-    _createCard : function(doc) {
+    _createCard : function(doc, $existingCard) {
         var self = this;
-        var $card = $('<a>', {
-            class: 'card new',
-            id: 'doc_' + doc.documentid,
-            href: doc.originurl,
-            target: self.config.cardLinkBehavior || '_parent'
-        });
-        $card.attr('data-document-id', doc.documentid);
+        if (typeof $existingCard !== 'undefined') {
+            var $card = $existingCard;
+        } else {
+            var $card = $('<div>', {
+                class: 'card new',
+                id: 'doc_' + doc.documentid,
+                href: doc.originurl,
+                target: self.config.cardLinkBehavior || '_parent'
+            });
+            $card.attr('data-document-id', doc.documentid);
+        }
+
 
         if (self.config.cardLayout === 'custom') {
             var html = self.cardTemplate(doc);
@@ -826,7 +857,9 @@ var MMVoice = {
         $.each(data, function(k, doc) {
             // Card exists, so update sort order and keep it
             if ($('#doc_' + doc.documentid).length) {
-                $('#doc_' + doc.documentid).removeClass('to-delete').attr('data-sort', k);
+                var $card = $('#doc_' + doc.documentid);
+                $card.removeClass('to-delete').attr('data-sort', k);
+                self._createCard(doc, $card);
                 return true;
             }
 
@@ -842,6 +875,21 @@ var MMVoice = {
         var $newCards = $.makeArray(newCards);
 
         self.$cards.append( $newCards );
+
+        // make card heights the same
+        var maxHeight = 0;
+        $('.card:not(.removed)', this.$cards).each(function() {
+            var height = $('.yelp-card', this).height();
+            console.log('height: '+height);
+            if (height > maxHeight) {
+                maxHeight = height;
+            }
+        })
+        $('.card:not(.removed)', this.$cards).each(function() {
+            console.log(maxHeight - $('.yelp-card', this).height());
+            $('.height-adjust', this).height(maxHeight - $('.yelp-card', this).height());
+        });
+
         if (!self.$cards.hasClass('isotope')) {
             // No isotope instance yet; create it.
             self.$cards.addClass('isotope');
@@ -1043,7 +1091,7 @@ var MMVoice = {
             var documents = response.data;
             var numDocuments = self._numDocumentsToRender(documents.length);
             documents.splice(numDocuments);
-            MMVoice.showResults(documents);
+            MMVoice.showResults(documents, response.facetsextracted);
         }
 
         function onError(error) {
@@ -1490,10 +1538,10 @@ MMVoice.onConfig = function() {
             UTIL.log("Error subscribing to entities:  (Type " + error.code +
                 " - " + error.type + "): " + error.message);
         }
-        MM.activeSession.entities.onUpdate(function(result) {
-            UTIL.log('Received entities update');
-            MMVoice.setEntities(result.data);
-        }, onSuccess, onError);
+//        MM.activeSession.entities.onUpdate(function(result) {
+//            UTIL.log('Received entities update');
+//            MMVoice.setEntities(result.data);
+//        }, onSuccess, onError);
     }
 
     function setupSessionListener() {
