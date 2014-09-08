@@ -6604,6 +6604,8 @@ var MM = ( function (window, ajax, Faye) {
             MM.models.ActiveSession.superclass.constructor.apply(this, arguments);
             var session = this;
             var interimTextEntry = null;
+            var listenerSessionId = 0;
+            var listenerResultId = 0;
 
             /**
              * A session's listener is automatically configured to post text entries with type 'speech' and weight of 1.0
@@ -6627,12 +6629,14 @@ var MM = ( function (window, ajax, Faye) {
             var listener = this.listener = new MM.Listener({
                 interimResults: true,
                 onResult: function(result, resultIndex, results, event) {
-                    // post a text entry for interim and finalized results
                     postListenerResult(result);
                     // notify handler
                     MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
                 },
                 onStart: function (event) {
+                    listenerSessionId++;
+                    listenerResultId = 0;
+                    interimTextEntry = null;
                     MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
                 },
                 onEnd: function (event) {
@@ -6642,6 +6646,7 @@ var MM = ( function (window, ajax, Faye) {
                     if (results.length > 0) {
                         lastResult = results[results.length - 1];
                         if (!lastResult.final) {
+                            lastResult.final = true;
                             postListenerResult(lastResult);
                         }
                     }
@@ -6656,14 +6661,16 @@ var MM = ( function (window, ajax, Faye) {
                 var language = '';
                 if (listener.lang !== '') {
                     language = listener.lang;
-                } else if (typeof window.document !== 'undefined' && window.document.documentElement !== null && window.document.documentElement.lang !== '') {
+                } else if (typeof window.document !== 'undefined' && window.document.documentElement !== null &&
+                    window.document.documentElement.lang !== '') {
                     // attempt to retrieve from html element
                     language = window.document.documentElement.lang;
                 }
                 return language;
             }
+
             function postListenerResult (result) {
-                var textEntryData = {
+                var postedTextEntry = {
                     text: result.transcript,
                     type: 'speech',
                     weight: 1.0,
@@ -6671,31 +6678,57 @@ var MM = ( function (window, ajax, Faye) {
                 };
                 var lang = getEffectiveLang();
                 if (lang.length) {
-                    textEntryData.language = MM.Listener.convertLanguageToISO6392(lang);
+                    postedTextEntry.language = MM.Listener.convertLanguageToISO6392(lang);
                 }
-                if (interimTextEntry === null) {
-                    session.textentries.post(textEntryData, function(response) {
-                        console.log('new text entry posted: ' + textEntryData.text + ' (' +
-                            response.data.textentryid + ', ' + textEntryData.status + ')');
-                        MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
-                        if (!result.final) {
-                            interimTextEntry = textEntryData;
-                            interimTextEntry.textentryid = response.data.textentryid;
+                // These parameters are for tracking listener results on the client-side. These will be ignored
+                // by the API.
+                postedTextEntry.listenerResultId = listenerResultId++;
+                postedTextEntry.listenerSessionId = listenerSessionId;
+
+                if (interimTextEntry === null || interimTextEntry.listenerSessionId < listenerSessionId) {
+                    // If no interim result was posted in this listener session or a new listener session has started,
+                    // post a new textentry.
+                    interimTextEntry = postedTextEntry;
+                    console.log('posting new text entry: ' + postedTextEntry.text + ' (' + postedTextEntry.status + ')');
+                    session.textentries.post(postedTextEntry, onResponse);
+                } else if (interimTextEntry.listenerSessionId == listenerSessionId && interimTextEntry.text != postedTextEntry.text) {
+                    // If interim result was posted in the this listener session, update the previously posted textentry.
+                    // Post only if the result text is different from the previous interim result.
+                    postedTextEntry.textentryid = interimTextEntry.textentryid;
+                    interimTextEntry = postedTextEntry;
+                    if (postedTextEntry.textentryid) {
+                        // if we got the textentry id from the API
+                        console.log('posting update to text entry: ' + postedTextEntry.text + ' (' +
+                            postedTextEntry.textentryid + ', ' + postedTextEntry.status + ')');
+                        session.textentries.makeModelRequest('POST', 'textentry/' + postedTextEntry.textentryid, postedTextEntry,
+                            onResponse);
+                    } // else don't post until we get the textentry id from the API
+                } //else (interimTextEntry.listenerSessionId > listenerSessionId)
+                  // shouldn't happen
+
+                function onResponse(result) {
+                    if (interimTextEntry === null ||
+                        interimTextEntry.listenerSessionId != postedTextEntry.listenerSessionId) {
+                        // if a new listener session has started, this response doesn't matter anymore
+                        return;
+                    }
+
+                    if (postedTextEntry.status == 'final') {
+                        // if we posted a final listener result, reset
+                        interimTextEntry = null;
+                    } else {
+                        interimTextEntry.textentryid = result.data.textentryid;
+                        if (interimTextEntry.listenerResultId > postedTextEntry.listenerResultId) {
+                            // if there's unposted interim result, post it.
+                            postedTextEntry = interimTextEntry;
+                            console.log('posting update to text entry: ' + postedTextEntry.text + ' (' +
+                                postedTextEntry.textentryid + ', ' + postedTextEntry.status + ')');
+                            session.textentries.makeModelRequest('POST', 'textentry/' + postedTextEntry.textentryid,
+                                postedTextEntry, onResponse);
                         }
-                    });
-                } else {
-                    session.textentries.makeModelRequest('POST', 'textentry/' + interimTextEntry.textentryid,
-                        textEntryData, function(response) {
-                            console.log('text entry update posted: ' + textEntryData.text + ' (' +
-                                response.data.textentryid + ', ' + textEntryData.status + ')');
-                            MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
-                            if (!result.final) {
-                                interimTextEntry = textEntryData;
-                                interimTextEntry.textentryid = response.data.textentryid;
-                            } else {
-                                interimTextEntry = null;
-                            }
-                        });
+                    }
+
+                    MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, result);
                 }
             }
             _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
