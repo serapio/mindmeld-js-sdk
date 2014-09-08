@@ -1,4 +1,4 @@
-/* global window, ajax, Faye */
+/* global ajax, Faye */
 
 /**
  * MM is the primary interface to all MindMeld JavaScript SDK functionality. Call {@link MM#init} before anything
@@ -21,7 +21,6 @@ var MM = ( function (window, ajax, Faye) {
         value: '2.5.7',
         writable: false
     });
-    
 
     var _isFunction = function(f) {
         return 'function' === typeof f;
@@ -36,12 +35,12 @@ var MM = ( function (window, ajax, Faye) {
         // - Any object or value whose internal [[Class]] property is not "[object Object]"
         // - DOM nodes
         // - window
-        if ( typeof obj !== "object" || obj.nodeType || _isWindow( obj ) ) {
+        if ( typeof obj !== 'object' || obj.nodeType || _isWindow( obj ) ) {
             return false;
         }
 
         if ( obj.constructor &&
-            !hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
+            !hasOwn.call( obj.constructor.prototype, 'isPrototypeOf' ) ) {
             return false;
         }
 
@@ -58,7 +57,7 @@ var MM = ( function (window, ajax, Faye) {
             deep = false;
 
         // Handle a deep copy situation
-        if ( typeof target === "boolean" ) {
+        if ( typeof target === 'boolean' ) {
             deep = target;
 
             // skip the boolean and the target
@@ -67,7 +66,7 @@ var MM = ( function (window, ajax, Faye) {
         }
 
         // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== "object" && ! _isFunction(target) ) {
+        if ( typeof target !== 'object' && ! _isFunction(target) ) {
             target = {};
         }
 
@@ -94,7 +93,7 @@ var MM = ( function (window, ajax, Faye) {
                     if ( deep && copy && ( _isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
                         if ( copyIsArray ) {
                             copyIsArray = false;
-                            clone = src && jQuery.isArray(src) ? src : [];
+                            clone = src && Array.isArray(src) ? src : [];
 
                         } else {
                             clone = src && _isPlainObject(src) ? src : {};
