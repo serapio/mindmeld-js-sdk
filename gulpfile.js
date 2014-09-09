@@ -1,4 +1,4 @@
-/* jshint node: true */
+/* jshint node: true, browser: false */
 
 var gulp = require('gulp');
 var taskListing = require('gulp-task-listing');

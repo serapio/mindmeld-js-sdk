@@ -1,4 +1,4 @@
-/* jshint node: true */
+/* jshint node: true, browser: false */
 
 var gulp = require('gulp');
 
@@ -34,8 +34,9 @@ gulp.task('sdk.concat', function () {
     return gulp.src([
         srcMMDirectory + 'vendor/faye.js',
         srcMMDirectory + 'vendor/ajax.js',
+        srcMMDirectory + 'vendor/mdnCookies.js',
         srcMMDirectory + 'main.js',
-        srcMMDirectory + 'components/*.js'
+        srcMMDirectory + 'components/*.js',
     ])
         .pipe(concat('mindmeld.js'))
         .pipe(gulp.dest(distMMDirectory));

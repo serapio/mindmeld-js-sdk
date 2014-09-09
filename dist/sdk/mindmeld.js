@@ -2908,7 +2908,70 @@ window.ajax = ajax;
 
 })();
 
-/* global window, ajax, Faye */
+/*\
+|*|
+|*|  :: cookies.js ::
+|*|
+|*|  A complete cookies reader/writer framework with full unicode support.
+|*|
+|*|  revision #1
+|*|
+|*|  https://developer.mozilla.org/en-US/docs/Web/API/document.cookie
+|*|
+|*|  This framework is released under the GNU Public License, version 3 or later.
+|*|  http://www.gnu.org/licenses/gpl-3.0-standalone.html
+|*|
+|*|  Syntaxes:
+|*|
+|*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
+|*|  * docCookies.getItem(name)
+|*|  * docCookies.removeItem(name[, path[, domain]])
+|*|  * docCookies.hasItem(name)
+|*|  * docCookies.keys()
+|*|
+\*/
+
+window.docCookies = {
+  getItem: function (sKey) {
+    if (!sKey) { return null; }
+    return decodeURIComponent(document.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
+  },
+  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
+    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return false; }
+    var sExpires = '';
+    if (vEnd) {
+      switch (vEnd.constructor) {
+        case Number:
+          sExpires = vEnd === Infinity ? '; expires=Fri, 31 Dec 9999 23:59:59 GMT' : '; max-age=' + vEnd;
+          break;
+        case String:
+          sExpires = '; expires=' + vEnd;
+          break;
+        case Date:
+          sExpires = '; expires=' + vEnd.toUTCString();
+          break;
+      }
+    }
+    document.cookie = encodeURIComponent(sKey) + '=' + encodeURIComponent(sValue) + sExpires + (sDomain ? '; domain=' + sDomain : '') + (sPath ? '; path=' + sPath : '') + (bSecure ? '; secure' : '');
+    return true;
+  },
+  removeItem: function (sKey, sPath, sDomain) {
+    if (!this.hasItem(sKey)) { return false; }
+    document.cookie = encodeURIComponent(sKey) + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' + (sDomain ? '; domain=' + sDomain : '') + (sPath ? '; path=' + sPath : '');
+    return true;
+  },
+  hasItem: function (sKey) {
+    if (!sKey) { return false; }
+    return (new RegExp('(?:^|;\\s*)' + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=')).test(document.cookie);
+  },
+  keys: function () {
+    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, '').split(/\s*(?:\=[^;]*)?;\s*/);
+    for (var nLen = aKeys.length, nIdx = 0; nIdx < nLen; nIdx++) { aKeys[nIdx] = decodeURIComponent(aKeys[nIdx]); }
+    return aKeys;
+  }
+};
+
+/* global ajax, Faye, docCookies */
 
 /**
  * MM is the primary interface to all MindMeld JavaScript SDK functionality. Call {@link MM#init} before anything
@@ -2931,7 +2994,6 @@ var MM = ( function (window, ajax, Faye) {
         value: '2.5.7',
         writable: false
     });
-    
 
     var _isFunction = function(f) {
         return 'function' === typeof f;
@@ -2946,12 +3008,12 @@ var MM = ( function (window, ajax, Faye) {
         // - Any object or value whose internal [[Class]] property is not "[object Object]"
         // - DOM nodes
         // - window
-        if ( typeof obj !== "object" || obj.nodeType || _isWindow( obj ) ) {
+        if ( typeof obj !== 'object' || obj.nodeType || _isWindow( obj ) ) {
             return false;
         }
 
         if ( obj.constructor &&
-            !hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
+            !hasOwn.call( obj.constructor.prototype, 'isPrototypeOf' ) ) {
             return false;
         }
 
@@ -2968,7 +3030,7 @@ var MM = ( function (window, ajax, Faye) {
             deep = false;
 
         // Handle a deep copy situation
-        if ( typeof target === "boolean" ) {
+        if ( typeof target === 'boolean' ) {
             deep = target;
 
             // skip the boolean and the target
@@ -2977,7 +3039,7 @@ var MM = ( function (window, ajax, Faye) {
         }
 
         // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== "object" && ! _isFunction(target) ) {
+        if ( typeof target !== 'object' && ! _isFunction(target) ) {
             target = {};
         }
 
@@ -3004,7 +3066,7 @@ var MM = ( function (window, ajax, Faye) {
                     if ( deep && copy && ( _isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
                         if ( copyIsArray ) {
                             copyIsArray = false;
-                            clone = src && jQuery.isArray(src) ? src : [];
+                            clone = src && Array.isArray(src) ? src : [];
 
                         } else {
                             clone = src && _isPlainObject(src) ? src : {};
@@ -3653,6 +3715,119 @@ var MM = ( function (window, ajax, Faye) {
               MM.Internal.onReady();
             });
 
+        },
+
+        /**
+         *  This method will initialize the MindMeld SDK, get a token, and start
+         *  a session.  It is called instead of the  MM.init, .getToken, and
+         *  .setActiveSession seqence.
+         *
+         * @param {Object} config configuration parameters containing developers' application id and
+         *                  onInit callback
+         *
+         * @param {string} config.appid application id for this MindMeld application
+         * @param {Object=} config.credentials Optional credentials for getting a token.
+         * Will use anonymous authentication if no credentials are given.
+         * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
+         * @param {Object=} config.session Object containing new session data.
+         // XXX: This is duplicated; we should probably source it from one location?
+         * Will create an `inviteonly` session if no data is given.
+         * Please refer to documentation for creating sessions
+         * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
+         * @param {string} config.session.name name of the new session
+         * @param {string} config.session.privacymode the privacy mode for the session. The supported privacy modes
+         * are 'friendsonly', 'inviteonly', and 'public'.  Sessions that are 'inviteonly' can be accessed only
+         * by the session organizer and any user on the inviteduser list for the session. Sessions that
+         * are 'friendsonly' can be accessed by users who are in the friends collection of the session
+         * organizer. Sessions that are 'public' can be accessed by all users of your application.
+         * @param {APISuccessCallback=} onSuccess callback for when starting the MindMeld session was successful
+         * @param {APIErrorCallback=} onFail callback for when starting the MindMeld session failed
+         * @memberOf MM
+         * @instance
+         *
+         * @example
+         *
+         MM.start({appid: 'ab133ef8123fda'}, function onSuccess () {
+           console.log('MindMeld started!');
+         }, function onFail (error) {
+           console.error('MindMeld failed to start:', error);
+         });
+         */
+        start: function (config, onSuccess, onError) {
+          onSuccess = onSuccess || function () {};
+          onError = onError || function (err) {
+            console.error('Error initializing MindMeld:', err);
+          };
+
+          if ( !('appid' in config) ) {
+            onError(new Error('You must supply the appid as either the first argument,' +
+              'or as a property in the config object.'));
+          }
+
+          var makeAnonymousCredentials = function () {
+
+            var USER_ID_COOKIE = 'mindmeld_anon_user_id';
+            // get user id cookie
+            var userID = docCookies.getItem(USER_ID_COOKIE);
+            if ( !userID ) {
+              // Make a random number, convert it to [0..9a..z], strip the '0.' prefix
+              var randomString = Math.random().toString(36).substr(2);
+              userID = 'mindmeld-anon-' + randomString();
+              // Set for a month
+              docCookies.setItem(USER_ID_COOKIE, userID, 60*60*24*31);
+            }
+
+            return {
+              anonymous: {
+                userid: userID,
+                name: 'Anonymous User',
+                domain: window.location.hostname
+              }
+            };
+          };
+
+
+          MM.init({
+            appid: config.appid,
+            cleanUrl: config.cleanUrl,
+            fayeClientUrl: config.fayeClientUrl,
+
+            onInit: function () {
+              //TODO: Also allow to set existing token.
+              // Default action is to make an anonymous session
+              var credentials = config.credentials || makeAnonymousCredentials();
+
+              MM.getToken(credentials, function onToken () {
+                console.log('Token retrieved.');
+
+                var session = config.session;
+                if ( !session ) {
+                  var date = new Date();
+                  var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
+                  session = {
+                    name: sessionName,
+                    privacymode: 'inviteonly'
+                  };
+                }
+
+                if (session.id) {
+                  // We already have an id, let's use it
+                  MM.setActiveSessionID(session.id, onSuccess, onError);
+                } else {
+                  // Make a new session
+                  MM.activeUser.sessions.post(
+                    session,
+                    function onSessionCreate(result) {
+                      console.log('Create session results:', result);
+                      MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                    },
+                    onError
+                  );
+                }
+              }, onError);
+
+            }
+          });
         },
 
         /**
@@ -5143,6 +5318,50 @@ var MM = ( function (window, ajax, Faye) {
         updateEventName: 'sessionsUpdate'
     });
 
+    MM.models.TextEntry = MM.Internal.createSubclass(MM.models.Model, {
+        /**
+         * MM.textEntry is a namespace that represents a textentry within the active session. It can only be used after
+         * textentryid has been set. It can be used to keep track of interim speech results that are posted to the API
+         * as a textentry. This namespace provides methods to retrieve, update, and delete a textentry from the MM API.
+         *
+         * @namespace MM.textEntry
+         * @memberOf MM
+         */
+        constructor: function (data) {
+            MM.models.TextEntry.superclass.constructor.apply(this, arguments);
+            for (var property in data) {
+                if (data.hasOwnProperty(property)) {
+                    this[property] = data[property];
+                }
+            }
+        },
+        localStoragePath: function () {
+            return 'MM.textEntry';
+        },
+        path: function () {
+            return('textentry/' + this.textentryid);
+        },
+        json: function () {
+            return this._json();
+        },
+        get: function (params, onSuccess, onFail) {
+            this._get(null, onSuccess, onFail);
+        },
+        post: function (data, onSuccess, onFail) {
+            var callback = function (result) {
+                var me = this;
+                // update the local copy of the textentry object with submitted data
+                for (var property in data) {
+                    if (data.hasOwnProperty(property)) {
+                        me[property] = data[property];
+                    }
+                }
+                MM.Util.testAndCall(onSuccess, result);
+            };
+            this.makeModelRequest('POST', this.path(), data, callback, onFail);
+        }
+    });
+
     MM.models.TextEntryList = MM.Internal.createSubclass(MM.models.Model, {
         /**
          * MM.activeSession.textentries represents the TextEntries collection in the MindMeld API. The history
@@ -6603,6 +6822,9 @@ var MM = ( function (window, ajax, Faye) {
         constructor: function () {
             MM.models.ActiveSession.superclass.constructor.apply(this, arguments);
             var session = this;
+            var interimTextEntry = null;
+            var listenerSessionId = 0;
+            var listenerResultId = 0;
 
             /**
              * A session's listener is automatically configured to post text entries with type 'speech' and weight of 1.0
@@ -6626,14 +6848,14 @@ var MM = ( function (window, ajax, Faye) {
             var listener = this.listener = new MM.Listener({
                 interimResults: true,
                 onResult: function(result, resultIndex, results, event) {
-                    // post a text entry for finalized results
-                    if (result.final) {
-                        postListenerResult(result.transcript);
-                    }
+                    postListenerResult(result);
                     // notify handler
                     MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
                 },
                 onStart: function (event) {
+                    listenerSessionId++;
+                    listenerResultId = 0;
+                    interimTextEntry = null;
                     MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
                 },
                 onEnd: function (event) {
@@ -6643,7 +6865,8 @@ var MM = ( function (window, ajax, Faye) {
                     if (results.length > 0) {
                         lastResult = results[results.length - 1];
                         if (!lastResult.final) {
-                            postListenerResult(lastResult.transcript);
+                            lastResult.final = true;
+                            postListenerResult(lastResult);
                         }
                     }
                     MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
@@ -6657,25 +6880,84 @@ var MM = ( function (window, ajax, Faye) {
                 var language = '';
                 if (listener.lang !== '') {
                     language = listener.lang;
-                } else if (typeof window.document !== 'undefined' && window.document.documentElement !== null && window.document.documentElement.lang !== '') {
+                } else if (typeof window.document !== 'undefined' && window.document.documentElement !== null &&
+                    window.document.documentElement.lang !== '') {
                     // attempt to retrieve from html element
                     language = window.document.documentElement.lang;
                 }
                 return language;
             }
-            function postListenerResult (transcript) {
+
+            function postListenerResult (result) {
                 var textEntryData = {
-                    text: transcript,
+                    text: result.transcript,
                     type: 'speech',
-                    weight: 1.0
+                    weight: 1.0,
+                    status: result.final ? 'final' : 'interim'
                 };
                 var lang = getEffectiveLang();
                 if (lang.length) {
                     textEntryData.language = MM.Listener.convertLanguageToISO6392(lang);
                 }
-                session.textentries.post(textEntryData, function(response) {
-                    MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, response);
-                });
+                // These parameters are for tracking listener results on the client-side. These will be ignored
+                // by the API.
+                textEntryData.listenerResultId = listenerResultId++;
+                textEntryData.listenerSessionId = listenerSessionId;
+
+                if (interimTextEntry === null || interimTextEntry.listenerSessionId < listenerSessionId) {
+                    // If no interim result was posted in this listener session or a new listener session has started,
+                    // post a new textentry.
+                    interimTextEntry = new MM.models.TextEntry(textEntryData);
+                    console.log('posting new text entry: ' + textEntryData.text + ' (' + textEntryData.status + ')');
+                    // Post a new textentry to the session
+                    session.textentries.post(textEntryData, onResponse);
+                } else if (interimTextEntry.listenerSessionId === listenerSessionId &&
+                    interimTextEntry.text !== textEntryData.text) {
+                    // If interim result was posted in the this listener session, update the previously posted textentry.
+                    // Post only if the result text is different from the previous interim result.
+                    textEntryData.textentryid = interimTextEntry.textentryid;
+                    interimTextEntry = new MM.models.TextEntry(textEntryData);
+                    if (interimTextEntry.textentryid) {
+                        // if we got the textentry id from the API
+                        console.log('posting update to text entry: ' + textEntryData.text + ' (' +
+                            textEntryData.textentryid + ', ' + textEntryData.status + ')');
+                        // post update to the interim textentry
+                        interimTextEntry.post(textEntryData, onResponse);
+                    } // else don't post until we get the textentry id from the API
+                } else if (interimTextEntry.listenerSessionId > listenerSessionId) {
+                    console.log("Oops, something unexpected happened: the interim textentry's listenerSessionId is " +
+                        "greater than the current listenerSessionId.");
+                }
+
+                function onResponse(result) {
+                    if (interimTextEntry === null ||
+                        interimTextEntry.listenerSessionId !== textEntryData.listenerSessionId) {
+                        // if a new listener session has started, this response doesn't matter anymore
+                        return;
+                    }
+
+                    if (textEntryData.status === 'final') {
+                        // if we posted a final listener result, reset
+                        interimTextEntry = null;
+                    } else {
+                        interimTextEntry.textentryid = result.data.textentryid;
+                        if (interimTextEntry.listenerResultId > textEntryData.listenerResultId) {
+                            // if there's unposted interim result, post it.
+                            textEntryData = {
+                                text: interimTextEntry.text,
+                                type: interimTextEntry.type,
+                                weight: interimTextEntry.weight,
+                                status: interimTextEntry.status
+                            };
+                            console.log('posting update to text entry: ' + textEntryData.text + ' (' +
+                                textEntryData.textentryid + ', ' + textEntryData.status + ')');
+                            // post update to the interim textentry
+                            interimTextEntry.post(textEntryData, onResponse);
+                        }
+                    }
+
+                    MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, result);
+                }
             }
             _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
         },
