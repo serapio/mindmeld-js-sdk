@@ -1,3 +1,5 @@
+/* jshint node: true, browser: false */
+
 // gulpfile to build the mindmeld-microphone web component, mindmeld-microphone-component.html
 // This gulpfile compiles SCSS, minifies JS, and vulcanizes the component so that
 // it can be consumed via a single HTML file that has no external CSS or JS

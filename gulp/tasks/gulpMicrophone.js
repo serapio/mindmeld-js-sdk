@@ -1,3 +1,5 @@
+/* jshint node: true, browser: false */
+
 // gulpfile to build the MindMeldMicrophone source files
 
 'use strict';
