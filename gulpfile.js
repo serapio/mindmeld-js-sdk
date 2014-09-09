@@ -43,6 +43,8 @@ require('./gulp/tasks/gulpMicrophoneComponent');
 
 gulp.task('buildMicrophoneComponent', ['micComponent.build']);
 
+gulp.task('mic', ['mic.build', 'micComponent.build']);
+
 // --------------------------------------------------------------------- //
 
 // ------------------------------ Tests -------------------------------- //
@@ -52,8 +54,8 @@ require('./gulp/tasks/tests');
 
 
 // General Tasks
-gulp.task('archive', ['sdk.archive', 'docs', 'sw.build', 'vn.build', 'mic.build', 'micComponent.build']);
-gulp.task('build', ['sdk.build', 'sw.build', 'vn.build', 'mic.build', 'micComponent.build', 'tests.build']);
+gulp.task('archive', ['sdk.archive', 'docs', 'sw.build', 'vn.build', 'mic']);
+gulp.task('build', ['sdk.build', 'sw.build', 'vn.build', 'mic', 'tests.build']);
 
 gulp.task('docs', function () {
   // We do it this slightly hacky way, because you need to jsdoc all the files at once,
