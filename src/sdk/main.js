@@ -1,4 +1,4 @@
-/* global ajax, Faye */
+/* global ajax, Faye, docCookies */
 
 /**
  * MM is the primary interface to all MindMeld JavaScript SDK functionality. Call {@link MM#init} before anything
@@ -742,6 +742,119 @@ var MM = ( function (window, ajax, Faye) {
               MM.Internal.onReady();
             });
 
+        },
+
+        /**
+         *  This method will initialize the MindMeld SDK, get a token, and start
+         *  a session.  It is called instead of the  MM.init, .getToken, and
+         *  .setActiveSession seqence.
+         *
+         * @param {Object} config configuration parameters containing developers' application id and
+         *                  onInit callback
+         *
+         * @param {string} config.appid application id for this MindMeld application
+         * @param {Object=} config.credentials Optional credentials for getting a token.
+         * Will use anonymous authentication if no credentials are given.
+         * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
+         * @param {Object=} config.session Object containing new session data.
+         // XXX: This is duplicated; we should probably source it from one location?
+         * Will create an `inviteonly` session if no data is given.
+         * Please refer to documentation for creating sessions
+         * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
+         * @param {string} config.session.name name of the new session
+         * @param {string} config.session.privacymode the privacy mode for the session. The supported privacy modes
+         * are 'friendsonly', 'inviteonly', and 'public'.  Sessions that are 'inviteonly' can be accessed only
+         * by the session organizer and any user on the inviteduser list for the session. Sessions that
+         * are 'friendsonly' can be accessed by users who are in the friends collection of the session
+         * organizer. Sessions that are 'public' can be accessed by all users of your application.
+         * @param {APISuccessCallback=} onSuccess callback for when starting the MindMeld session was successful
+         * @param {APIErrorCallback=} onFail callback for when starting the MindMeld session failed
+         * @memberOf MM
+         * @instance
+         *
+         * @example
+         *
+         MM.start({appid: 'ab133ef8123fda'}, function onSuccess () {
+           console.log('MindMeld started!');
+         }, function onFail (error) {
+           console.error('MindMeld failed to start:', error);
+         });
+         */
+        start: function (config, onSuccess, onError) {
+          onSuccess = onSuccess || function () {};
+          onError = onError || function (err) {
+            console.error('Error initializing MindMeld:', err);
+          };
+
+          if ( !('appid' in config) ) {
+            onError(new Error('You must supply the appid as either the first argument,' +
+              'or as a property in the config object.'));
+          }
+
+          var makeAnonymousCredentials = function () {
+
+            var USER_ID_COOKIE = 'mindmeld_anon_user_id';
+            // get user id cookie
+            var userID = docCookies.getItem(USER_ID_COOKIE);
+            if ( !userID ) {
+              // Make a random number, convert it to [0..9a..z], strip the '0.' prefix
+              var randomString = Math.random().toString(36).substr(2);
+              userID = 'mindmeld-anon-' + randomString();
+              // Set for a month
+              docCookies.setItem(USER_ID_COOKIE, userID, 60*60*24*31);
+            }
+
+            return {
+              anonymous: {
+                userid: userID,
+                name: 'Anonymous User',
+                domain: window.location.hostname
+              }
+            };
+          };
+
+
+          MM.init({
+            appid: config.appid,
+            cleanUrl: config.cleanUrl,
+            fayeClientUrl: config.fayeClientUrl,
+
+            onInit: function () {
+              //TODO: Also allow to set existing token.
+              // Default action is to make an anonymous session
+              var credentials = config.credentials || makeAnonymousCredentials();
+
+              MM.getToken(credentials, function onToken () {
+                console.log('Token retrieved.');
+
+                var session = config.session;
+                if ( !session ) {
+                  var date = new Date();
+                  var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
+                  session = {
+                    name: sessionName,
+                    privacymode: 'inviteonly'
+                  };
+                }
+
+                if (session.id) {
+                  // We already have an id, let's use it
+                  MM.setActiveSessionID(session.id, onSuccess, onError);
+                } else {
+                  // Make a new session
+                  MM.activeUser.sessions.post(
+                    session,
+                    function onSessionCreate(result) {
+                      console.log('Create session results:', result);
+                      MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                    },
+                    onError
+                  );
+                }
+              }, onError);
+
+            }
+          });
         },
 
         /**
