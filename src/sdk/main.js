@@ -756,17 +756,17 @@ var MM = ( function (window, ajax, Faye) {
          * @param {Object=} config.credentials Optional credentials for getting a token.
          * Will use anonymous authentication if no credentials are given.
          * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
+         * @param {string=} config.sessionid sessionid of an existing, active session you wish to join
          * @param {Object=} config.session Object containing new session data.
-         // XXX: This is duplicated; we should probably source it from one location?
          * Will create an `inviteonly` session if no data is given.
          * Please refer to documentation for creating sessions
          * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
          * @param {string} config.session.name name of the new session
          * @param {string} config.session.privacymode the privacy mode for the session. The supported privacy modes
-         * are 'friendsonly', 'inviteonly', and 'public'.  Sessions that are 'inviteonly' can be accessed only
+         * are `friendsonly`, `inviteonly`, and `public`.  Sessions that are `inviteonly` can be accessed only
          * by the session organizer and any user on the inviteduser list for the session. Sessions that
-         * are 'friendsonly' can be accessed by users who are in the friends collection of the session
-         * organizer. Sessions that are 'public' can be accessed by all users of your application.
+         * are `friendsonly` can be accessed by users who are in the friends collection of the session
+         * organizer. Sessions that are `public` can be accessed by all users of your application.
          * @param {APISuccessCallback=} onSuccess callback for when starting the MindMeld session was successful
          * @param {APIErrorCallback=} onFail callback for when starting the MindMeld session failed
          * @memberOf MM
@@ -774,11 +774,38 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @example
          *
-         MM.start({appid: 'ab133ef8123fda'}, function onSuccess () {
-           console.log('MindMeld started!');
+         # To start a new MindMeld session with anonymous user
+         MM.start( { appid: "<your application id>" }, function onSuccess () {
+           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
          }, function onFail (error) {
            console.error('MindMeld failed to start:', error);
          });
+
+         # or to choose a user and session information
+         MM.start({
+           appid: "<your application id>"
+           credentials: {
+             simple: {
+               userid: "einstein79",
+               name: "Albert Einstein"
+             }
+           },
+           session: {
+             name: "The relative session",
+             privacymode: "inviteonly"
+           }
+         }, function onSuccess () {
+           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
+         }, function onFail (error) {
+           console.error('MindMeld failed to start:', error);
+         });
+
+         # or to join an existing session as an anonymous user
+         MM.start({
+           appid: "<your application id>"
+           sessionid: "<existing session id>"
+         });
+
          */
         start: function (config, onSuccess, onError) {
           onSuccess = onSuccess || function () {};
@@ -827,21 +854,21 @@ var MM = ( function (window, ajax, Faye) {
               MM.getToken(credentials, function onToken () {
                 console.log('Token retrieved.');
 
-                var session = config.session;
-                if ( !session ) {
-                  var date = new Date();
-                  var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
-                  session = {
-                    name: sessionName,
-                    privacymode: 'inviteonly'
-                  };
-                }
-
-                if (session.id) {
+                if (config.sessionid) {
                   // We already have an id, let's use it
-                  MM.setActiveSessionID(session.id, onSuccess, onError);
+                  MM.setActiveSessionID(config.sessionid, onSuccess, onError);
                 } else {
                   // Make a new session
+                  var session = config.session;
+                  if ( !session ) {
+                    var date = new Date();
+                    var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
+                    session = {
+                      name: sessionName,
+                      privacymode: 'inviteonly'
+                    };
+                  }
+
                   MM.activeUser.sessions.post(
                     session,
                     function onSessionCreate(result) {
