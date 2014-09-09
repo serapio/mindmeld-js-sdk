@@ -4485,8 +4485,10 @@ var MM = ( function (window, ajax, Faye) {
                 if (!config.hasOwnProperty('earlyFinalResults')) {
                     config.earlyFinalResults = true; // on by default
                 }
-
                 this.setConfig(config);
+
+                this.sessionID = 0;
+                this.resultID = 0;
             },
             /**
              * Sets the listener object's configuration. Pass null for callback fields to deregister previous callbacks.
@@ -4582,9 +4584,12 @@ var MM = ( function (window, ajax, Faye) {
                 if (typeof recognizer === 'undefined') {
                     recognizer = this._recognizer = new window.SpeechRecognition();
                     recognizer.onresult = function(event) {
+                        listener.resultID++;
                         var result = {
                             final: false,
-                            transcript: ''
+                            transcript: '',
+                            sessionID: listener.sessionID,
+                            resultID: listener.resultID
                         };
                         var resultIndex = event.resultIndex;
                         var results = listener._results;
@@ -4627,6 +4632,9 @@ var MM = ( function (window, ajax, Faye) {
                         listener._listening = true;
                         listener._lastStartTime = Date.now();
                         resultFinalized = false;
+
+                        listener.sessionID++;
+                        listener.resultID = 0;
                         MM.Util.testAndCallThis(listener._onStart, listener, event);
                     };
                     recognizer.onend = function(event) {
