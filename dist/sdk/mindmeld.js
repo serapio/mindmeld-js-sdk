@@ -2908,69 +2908,6 @@ window.ajax = ajax;
 
 })();
 
-/*\
-|*|
-|*|  :: cookies.js ::
-|*|
-|*|  A complete cookies reader/writer framework with full unicode support.
-|*|
-|*|  revision #1
-|*|
-|*|  https://developer.mozilla.org/en-US/docs/Web/API/document.cookie
-|*|
-|*|  This framework is released under the GNU Public License, version 3 or later.
-|*|  http://www.gnu.org/licenses/gpl-3.0-standalone.html
-|*|
-|*|  Syntaxes:
-|*|
-|*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
-|*|  * docCookies.getItem(name)
-|*|  * docCookies.removeItem(name[, path[, domain]])
-|*|  * docCookies.hasItem(name)
-|*|  * docCookies.keys()
-|*|
-\*/
-
-window.docCookies = {
-  getItem: function (sKey) {
-    if (!sKey) { return null; }
-    return decodeURIComponent(document.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
-  },
-  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return false; }
-    var sExpires = '';
-    if (vEnd) {
-      switch (vEnd.constructor) {
-        case Number:
-          sExpires = vEnd === Infinity ? '; expires=Fri, 31 Dec 9999 23:59:59 GMT' : '; max-age=' + vEnd;
-          break;
-        case String:
-          sExpires = '; expires=' + vEnd;
-          break;
-        case Date:
-          sExpires = '; expires=' + vEnd.toUTCString();
-          break;
-      }
-    }
-    document.cookie = encodeURIComponent(sKey) + '=' + encodeURIComponent(sValue) + sExpires + (sDomain ? '; domain=' + sDomain : '') + (sPath ? '; path=' + sPath : '') + (bSecure ? '; secure' : '');
-    return true;
-  },
-  removeItem: function (sKey, sPath, sDomain) {
-    if (!this.hasItem(sKey)) { return false; }
-    document.cookie = encodeURIComponent(sKey) + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' + (sDomain ? '; domain=' + sDomain : '') + (sPath ? '; path=' + sPath : '');
-    return true;
-  },
-  hasItem: function (sKey) {
-    if (!sKey) { return false; }
-    return (new RegExp('(?:^|;\\s*)' + encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=')).test(document.cookie);
-  },
-  keys: function () {
-    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, '').split(/\s*(?:\=[^;]*)?;\s*/);
-    for (var nLen = aKeys.length, nIdx = 0; nIdx < nLen; nIdx++) { aKeys[nIdx] = decodeURIComponent(aKeys[nIdx]); }
-    return aKeys;
-  }
-};
-
 /* global ajax, Faye, docCookies */
 
 /**
@@ -3786,22 +3723,20 @@ var MM = ( function (window, ajax, Faye) {
             console.error('Error initializing MindMeld:', err);
           };
 
-          if ( !('appid' in config) ) {
-            onError(new Error('You must supply the appid as either the first argument,' +
-              'or as a property in the config object.'));
+          if ( !config.appid ) {
+            onError('You must supply the appid in the config object.');
           }
 
           var makeAnonymousCredentials = function () {
 
-            var USER_ID_COOKIE = 'mindmeld_anon_user_id';
+            var USER_ID_KEY = 'mindmeld_anon_user_id';
             // get user id cookie
-            var userID = docCookies.getItem(USER_ID_COOKIE);
+            var userID = localStorage && localStorage.getItem(USER_ID_KEY);
             if ( !userID ) {
               // Make a random number, convert it to [0..9a..z], strip the '0.' prefix
               var randomString = Math.random().toString(36).substr(2);
-              userID = 'mindmeld-anon-' + randomString();
-              // Set for a month
-              docCookies.setItem(USER_ID_COOKIE, userID, 60*60*24*31);
+              userID = 'mindmeld-anon-' + randomString;
+              localStorage && localStorage.setItem(USER_ID_KEY, userID);
             }
 
             return {
@@ -3813,48 +3748,42 @@ var MM = ( function (window, ajax, Faye) {
             };
           };
 
+          config.onInit = function () {
+            //TODO: Also allow to set existing token.
+            // Default action is to make an anonymous session
+            var credentials = config.credentials || makeAnonymousCredentials();
 
-          MM.init({
-            appid: config.appid,
-            cleanUrl: config.cleanUrl,
-            fayeClientUrl: config.fayeClientUrl,
+            MM.getToken(credentials, function onToken () {
+              console.log('Token retrieved.');
 
-            onInit: function () {
-              //TODO: Also allow to set existing token.
-              // Default action is to make an anonymous session
-              var credentials = config.credentials || makeAnonymousCredentials();
-
-              MM.getToken(credentials, function onToken () {
-                console.log('Token retrieved.');
-
-                if (config.sessionid) {
-                  // We already have an id, let's use it
-                  MM.setActiveSessionID(config.sessionid, onSuccess, onError);
-                } else {
-                  // Make a new session
-                  var session = config.session;
-                  if ( !session ) {
-                    var date = new Date();
-                    var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
-                    session = {
-                      name: sessionName,
-                      privacymode: 'inviteonly'
-                    };
-                  }
-
-                  MM.activeUser.sessions.post(
-                    session,
-                    function onSessionCreate(result) {
-                      console.log('Create session results:', result);
-                      MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
-                    },
-                    onError
-                  );
+              if (config.sessionid) {
+                // We already have an id, let's use it
+                MM.setActiveSessionID(config.sessionid, onSuccess, onError);
+              } else {
+                // Make a new session
+                var session = config.session;
+                if ( !session ) {
+                  var date = new Date();
+                  var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
+                  session = {
+                    name: sessionName,
+                    privacymode: 'inviteonly'
+                  };
                 }
-              }, onError);
 
-            }
-          });
+                MM.activeUser.sessions.post(
+                  session,
+                  function onSessionCreate(result) {
+                    console.log('Create session results:', result);
+                    MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                  },
+                  onError
+                );
+              }
+            }, onError);
+          };
+
+          MM.init(config);
         },
 
         /**
