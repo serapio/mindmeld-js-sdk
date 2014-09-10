@@ -149,7 +149,7 @@ gulp.task('embed.build', function () {
  * Watch for changes in mindmeld js files and build mindmeld.js
  */
 gulp.task('sdk.watch', ['sdk.uglify', 'embed.build'], function () {
-    gulp.watch(srcMMDirectory + '**/*.js', ['sdk.concat']);
+    gulp.watch(srcMMDirectory + '**/*.js', ['sdk.uglify']);
     gulp.watch(srcDirectory + 'embed.js', ['embed.build']);
 });
 
