@@ -24,6 +24,6 @@
   },
   "devDependencies": {
     "jasmine": "~2.0.0",
-    "jasmine-ajax": "~2.0.1"
+    "jasmine-ajax": "20f194d25cf299d4c88565035644bb91455a2039"
   }
 }
