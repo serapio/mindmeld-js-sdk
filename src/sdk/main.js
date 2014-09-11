@@ -756,17 +756,17 @@ var MM = ( function (window, ajax, Faye) {
          * @param {Object=} config.credentials Optional credentials for getting a token.
          * Will use anonymous authentication if no credentials are given.
          * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
+         * @param {string=} config.sessionid sessionid of an existing, active session you wish to join
          * @param {Object=} config.session Object containing new session data.
-         // XXX: This is duplicated; we should probably source it from one location?
          * Will create an `inviteonly` session if no data is given.
          * Please refer to documentation for creating sessions
          * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
          * @param {string} config.session.name name of the new session
          * @param {string} config.session.privacymode the privacy mode for the session. The supported privacy modes
-         * are 'friendsonly', 'inviteonly', and 'public'.  Sessions that are 'inviteonly' can be accessed only
+         * are `friendsonly`, `inviteonly`, and `public`.  Sessions that are `inviteonly` can be accessed only
          * by the session organizer and any user on the inviteduser list for the session. Sessions that
-         * are 'friendsonly' can be accessed by users who are in the friends collection of the session
-         * organizer. Sessions that are 'public' can be accessed by all users of your application.
+         * are `friendsonly` can be accessed by users who are in the friends collection of the session
+         * organizer. Sessions that are `public` can be accessed by all users of your application.
          * @param {APISuccessCallback=} onSuccess callback for when starting the MindMeld session was successful
          * @param {APIErrorCallback=} onFail callback for when starting the MindMeld session failed
          * @memberOf MM
@@ -774,11 +774,38 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @example
          *
-         MM.start({appid: 'ab133ef8123fda'}, function onSuccess () {
-           console.log('MindMeld started!');
+         # To start a new MindMeld session with anonymous user
+         MM.start( { appid: "<your application id>" }, function onSuccess () {
+           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
          }, function onFail (error) {
            console.error('MindMeld failed to start:', error);
          });
+
+         # or to choose a user and session information
+         MM.start({
+           appid: "<your application id>"
+           credentials: {
+             simple: {
+               userid: "einstein79",
+               name: "Albert Einstein"
+             }
+           },
+           session: {
+             name: "The relative session",
+             privacymode: "inviteonly"
+           }
+         }, function onSuccess () {
+           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
+         }, function onFail (error) {
+           console.error('MindMeld failed to start:', error);
+         });
+
+         # or to join an existing session as an anonymous user
+         MM.start({
+           appid: "<your application id>"
+           sessionid: "<existing session id>"
+         });
+
          */
         start: function (config, onSuccess, onError) {
           onSuccess = onSuccess || function () {};
@@ -786,22 +813,20 @@ var MM = ( function (window, ajax, Faye) {
             console.error('Error initializing MindMeld:', err);
           };
 
-          if ( !('appid' in config) ) {
-            onError(new Error('You must supply the appid as either the first argument,' +
-              'or as a property in the config object.'));
+          if ( !config.appid ) {
+            onError('You must supply the appid in the config object.');
           }
 
           var makeAnonymousCredentials = function () {
 
-            var USER_ID_COOKIE = 'mindmeld_anon_user_id';
+            var USER_ID_KEY = 'mindmeld_anon_user_id';
             // get user id cookie
-            var userID = docCookies.getItem(USER_ID_COOKIE);
+            var userID = MM.support.localStorage && localStorage.getItem(USER_ID_KEY);
             if ( !userID ) {
               // Make a random number, convert it to [0..9a..z], strip the '0.' prefix
               var randomString = Math.random().toString(36).substr(2);
-              userID = 'mindmeld-anon-' + randomString();
-              // Set for a month
-              docCookies.setItem(USER_ID_COOKIE, userID, 60*60*24*31);
+              userID = 'mindmeld-anon-' + randomString;
+              MM.support.localStorage && localStorage.setItem(USER_ID_KEY, userID);
             }
 
             return {
@@ -813,20 +838,19 @@ var MM = ( function (window, ajax, Faye) {
             };
           };
 
+          config.onInit = function () {
+            //TODO: Also allow to set existing token.
+            // Default action is to make an anonymous session
+            var credentials = config.credentials || makeAnonymousCredentials();
 
-          MM.init({
-            appid: config.appid,
-            cleanUrl: config.cleanUrl,
-            fayeClientUrl: config.fayeClientUrl,
+            MM.getToken(credentials, function onToken () {
+              console.log('Token retrieved.');
 
-            onInit: function () {
-              //TODO: Also allow to set existing token.
-              // Default action is to make an anonymous session
-              var credentials = config.credentials || makeAnonymousCredentials();
-
-              MM.getToken(credentials, function onToken () {
-                console.log('Token retrieved.');
-
+              if (config.sessionid) {
+                // We already have an id, let's use it
+                MM.setActiveSessionID(config.sessionid, onSuccess, onError);
+              } else {
+                // Make a new session
                 var session = config.session;
                 if ( !session ) {
                   var date = new Date();
@@ -837,24 +861,19 @@ var MM = ( function (window, ajax, Faye) {
                   };
                 }
 
-                if (session.id) {
-                  // We already have an id, let's use it
-                  MM.setActiveSessionID(session.id, onSuccess, onError);
-                } else {
-                  // Make a new session
-                  MM.activeUser.sessions.post(
-                    session,
-                    function onSessionCreate(result) {
-                      console.log('Create session results:', result);
-                      MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
-                    },
-                    onError
-                  );
-                }
-              }, onError);
+                MM.activeUser.sessions.post(
+                  session,
+                  function onSessionCreate(result) {
+                    console.log('Create session results:', result);
+                    MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                  },
+                  onError
+                );
+              }
+            }, onError);
+          };
 
-            }
-          });
+          MM.init(config);
         },
 
         /**
@@ -4757,7 +4776,7 @@ var MM = ( function (window, ajax, Faye) {
         Listener.prototype._listening = false;
         Listener.prototype._results = [];
         Listener.prototype.continuous = false;
-        Listener.prototype.lang = "";
+        Listener.prototype.lang = '';
         Listener.prototype.interimResults = false;
         Object.defineProperties(Listener.prototype, {
             listening: {
@@ -4772,7 +4791,7 @@ var MM = ( function (window, ajax, Faye) {
             }
         });
 
-        var languageTags6391To6392 = {'ab':'abk','aa':'aar','af':'afr','sq':'sqi','am':'amh','ar':'ara','an':'arg','hy':'hye','as':'asm','ae':'ave','ay':'aym','az':'aze','ba':'bak','eu':'eus','be':'bel','bn':'ben','bh':'bih','bi':'bis','bs':'bos','br':'bre','bg':'bul','my':'mya','ca':'cat','ch':'cha','ce':'che','zh':'zho','cu':'chu','cv':'chv','kw':'cor','co':'cos','hr':'hrv','cs':'ces','da':'dan','dv':'div','nl':'nld','dz':'dzo','en':'eng','eo':'epo','et':'est','fo':'fao','fj':'fij','fi':'fin','fr':'fra','gd':'gla','gl':'glg','ka':'kat','de':'deu','el':'ell','gn':'grn','gu':'guj','ht':'hat','ha':'hau','he':'heb','hz':'her','hi':'hin','ho':'hmo','hu':'hun','is':'isl','io':'ido','id':'ind','ia':'ina','ie':'ile','iu':'iku','ik':'ipk','ga':'gle','it':'ita','ja':'jpn','jv':'jav','kl':'kal','kn':'kan','ks':'kas','kk':'kaz','km':'khm','ki':'kik','rw':'kin','ky':'kir','kv':'kom','ko':'kor','kj':'kua','ku':'kur','lo':'lao','la':'lat','lv':'lav','li':'lim','ln':'lin','lt':'lit','lb':'ltz','mk':'mkd','mg':'mlg','ms':'msa','ml':'mal','mt':'mlt','gv':'glv','mi':'mri','mr':'mar','mh':'mah','mo':'mol','mn':'mon','na':'nau','nv':'nav','nd':'nde','nr':'nbl','ng':'ndo','ne':'nep','se':'sme','no':'nor','nb':'nob','nn':'nno','ny':'nya','oc':'oci','or':'ori','om':'orm','os':'oss','pi':'pli','pa':'pan','fa':'fas','pl':'pol','pt':'por','ps':'pus','qu':'que','rm':'roh','ro':'ron','rn':'run','ru':'rus','sm':'smo','sg':'sag','sa':'san','sc':'srd','sr':'srp','sn':'sna','ii':'iii','sd':'snd','si':'sin','sk':'slk','sl':'slv','so':'som','st':'sot','es':'spa','su':'sun','sw':'swa','ss':'ssw','sv':'swe','tl':'tgl','ty':'tah','tg':'tgk','ta':'tam','tt':'tat','te':'tel','th':'tha','bo':'bod','ti':'tir','to':'ton','ts':'tso','tn':'tsn','tr':'tur','tk':'tuk','tw':'twi','ug':'uig','uk':'ukr','ur':'urd','uz':'uzb','vi':'vie','vo':'vol','wa':'wln','cy':'cym','fy':'fry','wo':'wol','xh':'xho','yi':'yid','yo':'yor','za':'zha','zu':'zul'}
+        var languageTags6391To6392 = {'ab':'abk','aa':'aar','af':'afr','sq':'sqi','am':'amh','ar':'ara','an':'arg','hy':'hye','as':'asm','ae':'ave','ay':'aym','az':'aze','ba':'bak','eu':'eus','be':'bel','bn':'ben','bh':'bih','bi':'bis','bs':'bos','br':'bre','bg':'bul','my':'mya','ca':'cat','ch':'cha','ce':'che','zh':'zho','cu':'chu','cv':'chv','kw':'cor','co':'cos','hr':'hrv','cs':'ces','da':'dan','dv':'div','nl':'nld','dz':'dzo','en':'eng','eo':'epo','et':'est','fo':'fao','fj':'fij','fi':'fin','fr':'fra','gd':'gla','gl':'glg','ka':'kat','de':'deu','el':'ell','gn':'grn','gu':'guj','ht':'hat','ha':'hau','he':'heb','hz':'her','hi':'hin','ho':'hmo','hu':'hun','is':'isl','io':'ido','id':'ind','ia':'ina','ie':'ile','iu':'iku','ik':'ipk','ga':'gle','it':'ita','ja':'jpn','jv':'jav','kl':'kal','kn':'kan','ks':'kas','kk':'kaz','km':'khm','ki':'kik','rw':'kin','ky':'kir','kv':'kom','ko':'kor','kj':'kua','ku':'kur','lo':'lao','la':'lat','lv':'lav','li':'lim','ln':'lin','lt':'lit','lb':'ltz','mk':'mkd','mg':'mlg','ms':'msa','ml':'mal','mt':'mlt','gv':'glv','mi':'mri','mr':'mar','mh':'mah','mo':'mol','mn':'mon','na':'nau','nv':'nav','nd':'nde','nr':'nbl','ng':'ndo','ne':'nep','se':'sme','no':'nor','nb':'nob','nn':'nno','ny':'nya','oc':'oci','or':'ori','om':'orm','os':'oss','pi':'pli','pa':'pan','fa':'fas','pl':'pol','pt':'por','ps':'pus','qu':'que','rm':'roh','ro':'ron','rn':'run','ru':'rus','sm':'smo','sg':'sag','sa':'san','sc':'srd','sr':'srp','sn':'sna','ii':'iii','sd':'snd','si':'sin','sk':'slk','sl':'slv','so':'som','st':'sot','es':'spa','su':'sun','sw':'swa','ss':'ssw','sv':'swe','tl':'tgl','ty':'tah','tg':'tgk','ta':'tam','tt':'tat','te':'tel','th':'tha','bo':'bod','ti':'tir','to':'ton','ts':'tso','tn':'tsn','tr':'tur','tk':'tuk','tw':'twi','ug':'uig','uk':'ukr','ur':'urd','uz':'uzb','vi':'vie','vo':'vol','wa':'wln','cy':'cym','fy':'fry','wo':'wol','xh':'xho','yi':'yid','yo':'yor','za':'zha','zu':'zul'};
 
         /**
          * Converts language name or tag to the [ISO 639-2](http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) language
