@@ -4523,6 +4523,9 @@ var MM = ( function (window, ajax, Faye) {
                 if (!config.hasOwnProperty('earlyFinalResults')) {
                     config.earlyFinalResults = true; // on by default
                 }
+                if (! config.hasOwnProperty('postInterimResults')) {
+                    config.postInterimResults = false;
+                }
                 this.setConfig(config);
 
                 this.sessionID = 0;
@@ -4647,6 +4650,7 @@ var MM = ( function (window, ajax, Faye) {
                             if (event.results[i].isFinal) {
                                 window.clearTimeout(earlyFinalResultTimeout);
                                 result.final = true;
+                                listener.sessionID++;
                                 result.transcript = transcript;
                                 resultFinalized = false;
                                 break;

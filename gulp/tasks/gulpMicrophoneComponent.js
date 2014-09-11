@@ -129,3 +129,5 @@ gulp.task('micComponent.watch', ['micComponent.vulcanize'], function () {
        'micComponent.vulcanize'
    ]);
 });
+
+gulp.task('mic.watch.all', ['mic.watch', 'micComponent.watch']);

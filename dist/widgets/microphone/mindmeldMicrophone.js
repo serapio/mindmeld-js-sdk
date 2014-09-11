@@ -42,32 +42,31 @@
         MindMeldMicrophone.publishEvent('init');
     };
 
-    // Sets the listener config for MM.activeSession's Listener. The mindmeld-microphone's
+    // Sets the listener config for a new MM.Listener The mindmeld-microphone's
     // event handlers publish the Listener events like onResult and onEnd
     function initMMListener () {
-        listener = MM.activeSession.listener;
-        var listenerConfig = {
+        listener = new MM.Listener({
 
-            interimResults: true,
+                interimResults: true,
 
-            onResult: function (result, resultIndex, results, event) {
-                MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
-            },
+                onResult: function (result, resultIndex, results, event) {
+                    MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
+                },
 
-            onStart: function (event) {
-                MindMeldMicrophone.publishEvent('start', event);
-            },
+                onStart: function (event) {
+                    MindMeldMicrophone.publishEvent('start', event);
+                },
 
-            onEnd: function (event) {
-                MindMeldMicrophone.publishEvent('end', event);
-            },
+                onEnd: function (event) {
+                    MindMeldMicrophone.publishEvent('end', event);
+                },
 
-            onError: function (error) {
-                MindMeldMicrophone.publishEvent('error', error);
+                onError: function (error) {
+                    MindMeldMicrophone.publishEvent('error', error);
+                }
             }
-        };
 
-        MM.activeSession.setListenerConfig(listenerConfig);
+        );
     }
 
     // Initializes the volume monitor used to animate the microphone

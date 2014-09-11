@@ -53,7 +53,7 @@
 
                 microphone.on('result',
                     function onMicResult (result, resultIndex, results, event) {
-                        console.log('mic result: ' + result.transcript);
+                        console.log('mic result: ' + JSON.stringify(result));
                     }
                 );
 
