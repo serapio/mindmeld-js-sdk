@@ -1,0 +1,145 @@
+// Spacing
+$cardWidth: 218px;
+$cardMargin: 10px;
+$cardBackgroundColor: #fff;
+$cardTextColor: #888;
+$cardTitleColor: #636363;
+$cardTextSize: 11px;
+$cardTitleSize: 15px;
+
+@mixin box-shadow($top, $left, $blur, $color, $inset:"") {
+  -webkit-box-shadow:$top $left $blur $color #{$inset};
+  -moz-box-shadow:$top $left $blur $color #{$inset};
+  box-shadow:$top $left $blur $color #{$inset};
+}
+
+$narrow-device: "only screen and (max-device-width : 600px)";
+$narrow-window: "only screen and (max-width : 600px)";
+
+body {
+  background-color: #f9f9f9;
+}
+
+.clear-fix {
+  clear: both;
+}
+
+#cards {
+  position: relative;
+
+  background-color: #f9f9f9;
+  padding: 10px;
+  margin: 0 auto;
+
+  font-family: arial, helvetica, sans-serif;
+
+  @media #{$narrow-device} {
+    margin: auto;
+  }
+
+  @for $i from 1 through 8 {
+    $el-width: (($cardWidth + 2*$cardMargin) * $i) + 20 + 2;
+    // ((card width + 20 padding) * i) + outer padding + border
+    $el-media: "all and (min-width: " + $el-width + ")";
+    @media #{$el-media} {
+      width: $el-width;
+    }
+  }
+
+  &.loading {
+    opacity: 0.3;
+  }
+
+  .card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: $cardWidth;
+
+    border: 1px solid #DDD;
+    margin: $cardMargin;
+    padding: 15px 0 5px;
+    background-color: $cardBackgroundColor;
+    display: block;
+
+    text-decoration: none;
+    color: $cardTextColor;
+
+    border-radius: 7px;
+    @include box-shadow(0, 0, 6px, rgba(0,0,0,0.2));
+
+    &:hover {
+      border: 1px solid #A5A5A7;
+      text-decoration: none;
+      color: darken($cardTextColor, 25%);
+
+      .title {
+        color: darken($cardTitleColor, 55%);
+      }
+    }
+
+    .title {
+      color: $cardTitleColor;
+      margin: 0 15px;
+      font-size: $cardTitleSize;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    p {
+      font-size: $cardTextSize;
+      line-height: 1.5em;
+      margin: 10px 15px;
+    }
+
+    p.image {
+      width: 100%;
+      text-align: center;
+      margin: 5px 0;
+      line-height: initial;
+
+      &.not-loaded {
+        //XXX: Temporary hack.
+        height: 311px;
+        overflow: hidden;
+        background: $cardBackgroundColor url('images/spinner.gif')  no-repeat center;
+        img {
+          opacity: 0;
+        }
+      }
+
+      img {
+        width: 100%;
+      }
+    }
+
+    .row {
+
+      p {
+        margin: 2px 0;
+        display: block;
+
+        &.align-left {
+          float: left;
+          text-align: left;
+          margin-left: 15px;
+        }
+        &.align-right {
+          float: right;
+          text-align: right;
+          margin-right: 15px;
+        }
+        &.placeholder {
+          font-size: $cardTextSize;
+          font-style: italic;
+          color: #aaa;
+        }
+      }
+
+      .price {
+        font-weight: 600;
+      }
+
+    }
+  }
+
+}
