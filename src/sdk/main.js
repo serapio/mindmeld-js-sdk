@@ -4014,16 +4014,6 @@ var MM = ( function (window, ajax, Faye) {
                     MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
                 },
                 onEnd: function (event) {
-                    // Add last result if it was not final
-                    var results = this.results;
-                    var lastResult = null;
-                    if (results.length > 0) {
-                        lastResult = results[results.length - 1];
-                        if (!lastResult.final) {
-                            lastResult.final = true;
-                            MM.activeSession.textentries.submitTextEntry(lastResult);
-                        }
-                    }
                     MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
                 },
                 onError: function(error) {
@@ -4694,6 +4684,18 @@ var MM = ( function (window, ajax, Faye) {
                     recognizer.onend = function(event) {
                         window.clearTimeout(abortTimeout);
                         abortTimeout = 0;
+
+                        // fire onResult if results remaining
+                        var results = listener.results;
+                        var lastResult = null;
+                        if (results.length > 0) {
+                            lastResult = results[results.length - 1];
+                            if (! lastResult.final) {
+                                lastResult.final = true;
+                                MM.Util.testAndCallThis(listener._onResult, listener, lastResult, 0, results);
+                            }
+                        }
+
                         listener._listening = false;
                         MM.Util.testAndCallThis(listener._onEnd, listener, event);
                     };
