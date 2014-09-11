@@ -2400,9 +2400,16 @@ var MM = ( function (window, ajax, Faye) {
         constructor: function () {
             MM.models.TextEntryList.superclass.constructor.apply(this, arguments);
 
-            this.onTextEntryPostedHandler = null;
+            this.textEntryPostedHandlers = [];
             this.interimTextEntry = null;
             this.textSessionID = null;
+
+            // register text entry posted handler for session listener
+            this.addTextEntryPostedHandler(
+                function onTextEntryPosted (response) {
+                    MM.Util.testAndCallThis(MM.activeSession._onTextEntryPosted, MM.activeSession.listener, response);
+                }
+            )
         },
         localStoragePath: function () {
             return 'MM.activeSession.textentries';
@@ -2623,8 +2630,10 @@ var MM = ( function (window, ajax, Faye) {
                     MM.activeSession.textentries.post(textEntryData, onResponse);
                     self.textSessionID = textEntryData.sessionID;
                 } else if (
-                    self.interimTextEntry.sessionID === self.textSessionID &&
-                    self.interimTextEntry.text !== textEntryData.text) {
+                        self.interimTextEntry.sessionID === self.textSessionID && // post update only if this is same text session
+                        self.interimTextEntry.text !== textEntryData.text || // and don't post updates if new text is the same
+                        (self.interimTextEntry.text === textEntryData.text && textEntryData.status === 'final') // unless it's a final
+                    ) {
                     // If interim result was posted in the this listener session, update the previously posted textentry.
                     // Post only if the result text is different from the previous interim result.
                     textEntryData.textentryid = self.interimTextEntry.textentryid;
@@ -2642,7 +2651,7 @@ var MM = ( function (window, ajax, Faye) {
                 }
 
                 function onResponse (response) {
-                    MM.Util.testAndCall(self.onTextEntryPostedHandler, response);
+                    MM.Util.testAndCallThis(self._onTextEntryPosted, self, response);
 
                     if (self.interimTextEntry === null ||
                         self.interimTextEntry.sessionID !== textEntryData.sessionID) {
@@ -2673,19 +2682,27 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         /**
-         * Sets the activeSession.textentries' onTextEntryPosted handler. If no handler is passed in,
-         * onTextEntryPosted sets the handler to null
          *
          * @param {function=} handler
          * @memberOf MM.activeSession.textentries
          * @instance
          */
-         onTextEntryPosted: function (handler) {
-            if (handler) {
-                this.onTextEntryPostedHandler = handler;
-            } else {
-                this.onTextEntryPostedHandler = null;
-            }
+
+        addTextEntryPostedHandler: function (handler) {
+            this.textEntryPostedHandlers.push(handler);
+        },
+
+        /**
+         *
+         * @param response
+         * @private
+         */
+        _onTextEntryPosted: function (response) {
+            this.textEntryPostedHandlers.forEach(
+                function callHandler (handler) {
+                    handler(response);
+                }
+            )
         },
 
         /**
@@ -3965,9 +3982,6 @@ var MM = ( function (window, ajax, Faye) {
         constructor: function () {
             MM.models.ActiveSession.superclass.constructor.apply(this, arguments);
             var session = this;
-            var interimTextEntry = null;
-            var listenerSessionId = 0;
-            var listenerResultId = 0;
 
             /**
              * A session's listener is automatically configured to post text entries with type 'speech' and weight of 1.0
@@ -3991,14 +4005,12 @@ var MM = ( function (window, ajax, Faye) {
             var listener = this.listener = new MM.Listener({
                 interimResults: true,
                 onResult: function(result, resultIndex, results, event) {
-                    postListenerResult(result);
-                    // notify handler
+                    if (result.final || listener.postInterimResults === true) {
+                        MM.activeSession.textentries.submitTextEntry(result);
+                    }
                     MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
                 },
                 onStart: function (event) {
-                    listenerSessionId++;
-                    listenerResultId = 0;
-                    interimTextEntry = null;
                     MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
                 },
                 onEnd: function (event) {
@@ -4009,7 +4021,7 @@ var MM = ( function (window, ajax, Faye) {
                         lastResult = results[results.length - 1];
                         if (!lastResult.final) {
                             lastResult.final = true;
-                            postListenerResult(lastResult);
+                            MM.activeSession.textentries.submitTextEntry(lastResult);
                         }
                     }
                     MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
@@ -4019,90 +4031,10 @@ var MM = ( function (window, ajax, Faye) {
                 }
             });
 
-            function getEffectiveLang () {
-                var language = '';
-                if (listener.lang !== '') {
-                    language = listener.lang;
-                } else if (typeof window.document !== 'undefined' && window.document.documentElement !== null &&
-                    window.document.documentElement.lang !== '') {
-                    // attempt to retrieve from html element
-                    language = window.document.documentElement.lang;
-                }
-                return language;
-            }
 
-            function postListenerResult (result) {
-                var textEntryData = {
-                    text: result.transcript,
-                    type: 'speech',
-                    weight: 1.0,
-                    status: result.final ? 'final' : 'interim'
-                };
-                var lang = getEffectiveLang();
-                if (lang.length) {
-                    textEntryData.language = MM.Listener.convertLanguageToISO6392(lang);
-                }
-                // These parameters are for tracking listener results on the client-side. These will be ignored
-                // by the API.
-                textEntryData.listenerResultId = listenerResultId++;
-                textEntryData.listenerSessionId = listenerSessionId;
 
-                if (interimTextEntry === null || interimTextEntry.listenerSessionId < listenerSessionId) {
-                    // If no interim result was posted in this listener session or a new listener session has started,
-                    // post a new textentry.
-                    interimTextEntry = new MM.models.TextEntry(textEntryData);
-                    console.log('posting new text entry: ' + textEntryData.text + ' (' + textEntryData.status + ')');
-                    // Post a new textentry to the session
-                    session.textentries.post(textEntryData, onResponse);
-                } else if (interimTextEntry.listenerSessionId === listenerSessionId &&
-                    interimTextEntry.text !== textEntryData.text) {
-                    // If interim result was posted in the this listener session, update the previously posted textentry.
-                    // Post only if the result text is different from the previous interim result.
-                    textEntryData.textentryid = interimTextEntry.textentryid;
-                    interimTextEntry = new MM.models.TextEntry(textEntryData);
-                    if (interimTextEntry.textentryid) {
-                        // if we got the textentry id from the API
-                        console.log('posting update to text entry: ' + textEntryData.text + ' (' +
-                            textEntryData.textentryid + ', ' + textEntryData.status + ')');
-                        // post update to the interim textentry
-                        interimTextEntry.post(textEntryData, onResponse);
-                    } // else don't post until we get the textentry id from the API
-                } else if (interimTextEntry.listenerSessionId > listenerSessionId) {
-                    console.log("Oops, something unexpected happened: the interim textentry's listenerSessionId is " +
-                        "greater than the current listenerSessionId.");
-                }
-
-                function onResponse(result) {
-                    if (interimTextEntry === null ||
-                        interimTextEntry.listenerSessionId !== textEntryData.listenerSessionId) {
-                        // if a new listener session has started, this response doesn't matter anymore
-                        return;
-                    }
-
-                    if (textEntryData.status === 'final') {
-                        // if we posted a final listener result, reset
-                        interimTextEntry = null;
-                    } else {
-                        interimTextEntry.textentryid = result.data.textentryid;
-                        if (interimTextEntry.listenerResultId > textEntryData.listenerResultId) {
-                            // if there's unposted interim result, post it.
-                            textEntryData = {
-                                text: interimTextEntry.text,
-                                type: interimTextEntry.type,
-                                weight: interimTextEntry.weight,
-                                status: interimTextEntry.status
-                            };
-                            console.log('posting update to text entry: ' + textEntryData.text + ' (' +
-                                textEntryData.textentryid + ', ' + textEntryData.status + ')');
-                            // post update to the interim textentry
-                            interimTextEntry.post(textEntryData, onResponse);
-                        }
-                    }
-
-                    MM.Util.testAndCallThis(session._onTextEntryPosted, session.listener, result);
-                }
-            }
-            _extend(this, MM.Internal.customEventHandlers); // adds support for custom events on session channel
+            // adds support for custom events on session channel
+            _extend(this, MM.Internal.customEventHandlers);
         },
         localStoragePath: function () {
             return 'MM.activeSession';
@@ -4624,6 +4556,7 @@ var MM = ( function (window, ajax, Faye) {
                     interimResults: 'interimResults',
                     lang: 'lang',
                     earlyFinalResults: 'earlyFinalResults',
+                    postInterimResults: 'postInterimResults', // undocumented until we decide it's useful
                     onTrueFinalResult: '_onTrueFinalResult' // undocumented
                 };
 
