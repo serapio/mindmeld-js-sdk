@@ -1,3 +1,6 @@
+/* global MM, VolumeMonitor */
+/* exported MindMeldMicrophone */
+
 /**
  * Adds the MindMeldMicrophone singleton object to the global namespace. The MindMeldMicrophone
  * exposes the following methods:
@@ -111,7 +114,7 @@
                         holdTimeout = null;
                     },
                     holdDuration
-                )
+                );
             }
         });
 
@@ -149,19 +152,25 @@
 
     // Publicly Accessible Methods of mindmeld-microphone widget
 
-    // Start recording
+    /**
+     * Start recording
+     */
     MindMeldMicrophone.start = function start (continuous) {
         listener.continuous = continuous;
         listener.start();
         volumeMonitor.start();
     };
 
-    // Returns if the microphone is currently listening
+    /**
+     * Returns if the microphone is currently listening
+     */
     MindMeldMicrophone.listening = function listening () {
         return listener.listening;
     };
 
-    // Stops recording
+    /**
+     * Stops recording
+     */
     MindMeldMicrophone.stop = function stop () {
         listener.stop();
     };
@@ -169,7 +178,9 @@
     // Event Dispatcher
     var subscriptions = {};
 
-    // Subscribe to microphone events
+    /**
+     * Subscribe to microphone events
+     */
     MindMeldMicrophone.on = function on (eventName, callback, context) {
         if (! subscriptions[eventName]) {
             subscriptions[eventName] = [];
@@ -181,7 +192,9 @@
         subscriptions[eventName].push(subscription);
     };
 
-    // Publish microphone events to subscribers
+    /**
+     * Publish microphone events to subscribers
+     */
     MindMeldMicrophone.publishEvent = function publishEvent (eventName) {
         var subscribers = subscriptions[eventName];
         if (subscribers !== undefined) {
@@ -190,7 +203,7 @@
                 function invokeCallback (subscription) {
                     subscription.callback.apply(subscription.context, args);
                 }
-            )
+            );
         }
     };
 
