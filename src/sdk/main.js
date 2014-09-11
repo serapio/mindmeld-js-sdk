@@ -2428,7 +2428,7 @@ var MM = ( function (window, ajax, Faye) {
                 function onTextEntryPosted (response) {
                     MM.Util.testAndCallThis(MM.activeSession._onTextEntryPosted, MM.activeSession.listener, response);
                 }
-            )
+            );
         },
         localStoragePath: function () {
             return 'MM.activeSession.textentries';
@@ -2603,7 +2603,7 @@ var MM = ( function (window, ajax, Faye) {
             this.makeModelRequest('POST', this.path(), textEntryData, onResponse, onFail);
 
             function onResponse (response) {
-                MM.Util.testAndCall(self.onTextEntryPostedHandler, response);
+                MM.Util.testAndCallThis(this._onTextEntryPosted, this, response);
                 MM.Util.testAndCall(onSuccess, response);
             }
         },
@@ -2665,8 +2665,8 @@ var MM = ( function (window, ajax, Faye) {
                         self.interimTextEntry.post(textEntryData, onResponse);
                     }
                 } else if (self.interimTextEntry.sessionID > self.textSessionID) {
-                    console.log("Oops, something unexpected happened: the interim text entry's sessionID is " +
-                        "greater than the current textSessionID.");
+                    console.error('Oops, something unexpected happened: the interim text entry\'s sessionID is ' +
+                        'greater than the current textSessionID.');
                 }
 
                 function onResponse (response) {

@@ -201,7 +201,8 @@
             var args = Array.prototype.slice.call(arguments, 1);
             subscribers.forEach(
                 function invokeCallback (subscription) {
-                    subscription.callback.apply(subscription.context, args);
+                    var context = subscription.context || this;
+                    subscription.callback.apply(context , args);
                 }
             );
         }
