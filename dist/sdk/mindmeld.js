@@ -5331,14 +5331,14 @@ var MM = ( function (window, ajax, Faye) {
 
             this.textEntryPostedHandlers = [];
             this.interimTextEntry = null;
-            this.textSessionID = null;
+            this.textSegmentID = null;
 
             // register text entry posted handler for session listener
             this.addTextEntryPostedHandler(
                 function onTextEntryPosted (response) {
                     MM.Util.testAndCallThis(MM.activeSession._onTextEntryPosted, MM.activeSession.listener, response);
                 }
-            )
+            );
         },
         localStoragePath: function () {
             return 'MM.activeSession.textentries';
@@ -5513,7 +5513,7 @@ var MM = ( function (window, ajax, Faye) {
             this.makeModelRequest('POST', this.path(), textEntryData, onResponse, onFail);
 
             function onResponse (response) {
-                MM.Util.testAndCall(self.onTextEntryPostedHandler, response);
+                MM.Util.testAndCallThis(this._onTextEntryPosted, this, response);
                 MM.Util.testAndCall(onSuccess, response);
             }
         },
@@ -5527,14 +5527,14 @@ var MM = ( function (window, ajax, Faye) {
         submitTextEntry: function (textResult) {
             var self = this;
             if (textResult.final === undefined ||
-                textResult.sessionID === undefined ||
+                textResult.segmentID === undefined ||
                 textResult.resultID === undefined) {
                 // If final, sessionID, or resultID are not defined, just POST the text entry
                 // without worrying about updating interim results
                 self.post(textResult);
             } else {
-                if (textResult.sessionID !== self.textSessionID) {
-                    self.textSessionID = textResult.sessionID;
+                if (textResult.segmentID !== self.textSegmentID) {
+                    self.textSessionID = textResult.segmentID;
                     self.interimTextEntry = null;
                 }
 
@@ -5547,19 +5547,19 @@ var MM = ( function (window, ajax, Faye) {
 
                     // unused by API, but used for tracking interim text entries
                     resultID: textResult.resultID,
-                    sessionID: textResult.sessionID
+                    segmentID: textResult.segmentID
                 };
 
-                if (self.interimTextEntry === null || self.interimTextEntry.sessionID < self.textSessionID) {
+                if (self.interimTextEntry === null || self.interimTextEntry.segmentID < self.textSegmentID) {
                     // If no interim result was posted in this listener session or a new listener session has started,
                     // post a new textentry.
                     self.interimTextEntry = new MM.models.TextEntry(textEntryData);
                     console.log('posting new text entry: ' + textEntryData.text + ' (' + textEntryData.status + ')');
                     // Post a new textentry to the session
                     MM.activeSession.textentries.post(textEntryData, onResponse);
-                    self.textSessionID = textEntryData.sessionID;
+                    self.textSegmentID = textEntryData.segmentID;
                 } else if (
-                        self.interimTextEntry.sessionID === self.textSessionID && // post update only if this is same text session
+                        self.interimTextEntry.segmentID === self.textSegmentID && // post update only if this is same text segment
                         self.interimTextEntry.text !== textEntryData.text || // and don't post updates if new text is the same
                         (self.interimTextEntry.text === textEntryData.text && textEntryData.status === 'final') // unless it's a final
                     ) {
@@ -5574,16 +5574,16 @@ var MM = ( function (window, ajax, Faye) {
                         // post update to the interim textentry
                         self.interimTextEntry.post(textEntryData, onResponse);
                     }
-                } else if (self.interimTextEntry.sessionID > self.textSessionID) {
-                    console.log("Oops, something unexpected happened: the interim text entry's sessionID is " +
-                        "greater than the current textSessionID.");
+                } else if (self.interimTextEntry.segmentID > self.textSegmentID) {
+                    console.error('Oops, something unexpected happened: the interim text entry\'s segmentID is ' +
+                        'greater than the current textSegmentID.');
                 }
 
                 function onResponse (response) {
                     MM.Util.testAndCallThis(self._onTextEntryPosted, self, response);
 
                     if (self.interimTextEntry === null ||
-                        self.interimTextEntry.sessionID !== textEntryData.sessionID) {
+                        self.interimTextEntry.segmentID !== textEntryData.segmentID) {
                         return;
                     }
 
@@ -7457,7 +7457,7 @@ var MM = ( function (window, ajax, Faye) {
                 }
                 this.setConfig(config);
 
-                this.sessionID = 0;
+                this.segmentID = 0;
                 this.resultID = 0;
             },
             /**
@@ -7559,7 +7559,7 @@ var MM = ( function (window, ajax, Faye) {
                         var result = {
                             final: false,
                             transcript: '',
-                            sessionID: listener.sessionID,
+                            segmentID: listener.segmentID,
                             resultID: listener.resultID
                         };
                         var recognizerLanguage = recognizer.lang;
@@ -7579,7 +7579,7 @@ var MM = ( function (window, ajax, Faye) {
                             if (event.results[i].isFinal) {
                                 window.clearTimeout(earlyFinalResultTimeout);
                                 result.final = true;
-                                listener.sessionID++;
+                                listener.segmentID++;
                                 result.transcript = transcript;
                                 resultFinalized = false;
                                 break;
@@ -7610,7 +7610,7 @@ var MM = ( function (window, ajax, Faye) {
                         listener._lastStartTime = Date.now();
                         resultFinalized = false;
 
-                        listener.sessionID++;
+                        listener.segmentID++;
                         listener.resultID = 0;
                         MM.Util.testAndCallThis(listener._onStart, listener, event);
                     };
