@@ -5526,13 +5526,9 @@ var MM = ( function (window, ajax, Faye) {
          */
         submitTextEntry: function (textResult) {
             var self = this;
-            if (textResult.final === undefined ||
-                textResult.segmentID === undefined ||
-                textResult.resultID === undefined) {
-                // If final, sessionID, or resultID are not defined, just POST the text entry
-                // without worrying about updating interim results
-                self.post(textResult);
-            } else {
+            if (textResult.final !== undefined && 
+                textResult.segmentID &&
+                textResult.resultID){
                 if (textResult.segmentID !== self.textSegmentID) {
                     self.textSessionID = textResult.segmentID;
                     self.interimTextEntry = null;
@@ -5559,9 +5555,9 @@ var MM = ( function (window, ajax, Faye) {
                     MM.activeSession.textentries.post(textEntryData, onResponse);
                     self.textSegmentID = textEntryData.segmentID;
                 } else if (
-                        self.interimTextEntry.segmentID === self.textSegmentID && // post update only if this is same text segment
-                        self.interimTextEntry.text !== textEntryData.text || // and don't post updates if new text is the same
-                        (self.interimTextEntry.text === textEntryData.text && textEntryData.status === 'final') // unless it's a final
+                    self.interimTextEntry.segmentID === self.textSegmentID && // post update only if this is same text segment
+                    self.interimTextEntry.text !== textEntryData.text || // and don't post updates if new text is the same
+                    (self.interimTextEntry.text === textEntryData.text && textEntryData.status === 'final') // unless it's a final
                     ) {
                     // If interim result was posted in the this listener session, update the previously posted textentry.
                     // Post only if the result text is different from the previous interim result.
@@ -5607,6 +5603,10 @@ var MM = ( function (window, ajax, Faye) {
                         }
                     }
                 }
+            } else {
+                // If final, sessionID, or resultID are not defined, just POST the text entry
+                // without worrying about updating interim results
+                self.post(textResult);
             }
         },
 
