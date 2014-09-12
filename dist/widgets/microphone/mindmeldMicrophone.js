@@ -1,4 +1,4 @@
-/* global MM, VolumeMonitor */
+/* global MM */
 /* exported MindMeldMicrophone */
 
 /**
@@ -16,8 +16,8 @@
  *  - 'error': there was an error with the microphone
  */
 
-'use strict';
 (function microphone (MM) {
+    'use strict';
 
     var MindMeldMicrophone = window.MindMeldMicrophone = window.MindMeldMicrophone || {};
     var containerElement;
@@ -210,10 +210,11 @@
 
 }(MM));
 
+/* exported VolumeMonitor */
 // Volume Monitor
 
-'use strict';
 (function volumeMonitor () {
+    'use strict';
 
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
         window.navigator.webkitGetUserMedia ||

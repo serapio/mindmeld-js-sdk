@@ -1,7 +1,8 @@
+/* exported VolumeMonitor */
 // Volume Monitor
 
-'use strict';
 (function volumeMonitor () {
+    'use strict';
 
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
         window.navigator.webkitGetUserMedia ||

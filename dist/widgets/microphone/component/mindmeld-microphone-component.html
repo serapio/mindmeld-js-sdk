@@ -136,7 +136,7 @@
     </div>
 </template>
 <!-- inject:js -->
-<script>/* global MM, VolumeMonitor */
+<script>/* global MM */
 /* exported MindMeldMicrophone */
 
 /**
@@ -154,8 +154,8 @@
  *  - 'error': there was an error with the microphone
  */
 
-'use strict';
 (function microphone (MM) {
+    'use strict';
 
     var MindMeldMicrophone = window.MindMeldMicrophone = window.MindMeldMicrophone || {};
     var containerElement;
@@ -348,10 +348,11 @@
 
 }(MM));
 
+/* exported VolumeMonitor */
 // Volume Monitor
 
-'use strict';
 (function volumeMonitor () {
+    'use strict';
 
     window.navigator.getUserMedia = (window.navigator.getUserMedia ||
         window.navigator.webkitGetUserMedia ||
@@ -443,14 +444,16 @@
 
 })();
 
+/* global MindMeldMicrophone */
 /**
  * microphone-component.js uses MindMeldMicrophone to create a web component, <mindmeld-microphone>,
  * that wraps all the functionality in MindMeldMicrophone.
  */
 
-'use strict';
 
 (function microphone (MindMeldMicrophone) {
+    'use strict';
+
     var importerDocument = document;
     var currentScript = document._currentScript || document.currentScript;
     var componentDocument = currentScript.ownerDocument;

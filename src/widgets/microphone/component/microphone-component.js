@@ -1,11 +1,13 @@
+/* global MindMeldMicrophone */
 /**
  * microphone-component.js uses MindMeldMicrophone to create a web component, <mindmeld-microphone>,
  * that wraps all the functionality in MindMeldMicrophone.
  */
 
-'use strict';
 
 (function microphone (MindMeldMicrophone) {
+    'use strict';
+
     var importerDocument = document;
     var currentScript = document._currentScript || document.currentScript;
     var componentDocument = currentScript.ownerDocument;
