@@ -48,6 +48,14 @@ gulp.task('mic', ['mic.build', 'micComponent.build']);
 
 // --------------------------------------------------------------------- //
 
+// -------------------------- Search Input Widget -------------------------- //
+require('./gulp/tasks/searchInput');
+
+gulp.task('buildSearchInput', ['searchInput.build']);
+
+// --------------------------------------------------------------------- //
+
+
 // -------------------------- Cards Widget -------------------------- //
 require('./gulp/tasks/cardsWidget');
 
@@ -62,8 +70,8 @@ require('./gulp/tasks/tests');
 
 
 // General Tasks
-gulp.task('archive', ['sdk.archive', 'docs', 'sw.build', 'vn.build', 'mic']);
-gulp.task('build', ['sdk.build', 'sw.build', 'vn.build', 'mic', 'tests.build']);
+gulp.task('archive', ['sdk.archive', 'docs', 'sw.build', 'vn.build', 'mic', 'searchInput.build']);
+gulp.task('build', ['sdk.build', 'sw.build', 'vn.build', 'mic', 'searchInput.build', 'tests.build']);
 
 gulp.task('docs', function () {
   // We do it this slightly hacky way, because you need to jsdoc all the files at once,

@@ -36,10 +36,6 @@ dist/widgets/microphone/component/mindmeld-microphone-component.js
 dist/widgets/microphone/component/mindmeld-microphone-component.min.js
 dist/widgets/microphone/component/mindmeld-microphone-component.min.js.map
 
+# Search Input
+dist/widgets/searchInput/mindmeldSearchInput.min.js.map
 
-# Microphone Component
-dist/widgets/microphoneComponent/mindmeld-microphone.css
-dist/widgets/microphoneComponent/mindmeld-microphone.min.css
-dist/widgets/microphoneComponent/mindmeld-microphone.js
-dist/widgets/microphoneComponent/mindmeld-microphone.min.js
-dist/widgets/microphoneComponent/mindmeld-microphone.min.js.map

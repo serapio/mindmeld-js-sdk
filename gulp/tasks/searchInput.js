@@ -1,6 +1,6 @@
 /* jshint node: true, browser: false */
 
-// gulpfile to build the MindMeldMicrophone source files
+// gulpfile to build the MindMeldSearchInput source files
 
 'use strict';
 
@@ -15,63 +15,52 @@ var sourcemaps = require('gulp-sourcemaps');
 
 // Paths
 var rootDirectory = __dirname + '/../../';
-var relativeDistDirectory = 'dist/widgets/microphone/';
-var relativeSrcDirectory = 'src/widgets/microphone/';
+var relativeDistDirectory = 'dist/widgets/searchInput/';
+var relativeSrcDirectory = 'src/widgets/searchInput/';
 var distDirectory = rootDirectory + relativeDistDirectory;
 var srcDirectory = rootDirectory + relativeSrcDirectory;
 
 var paths = {
     js: [
-        srcDirectory + 'microphone.js',
-        srcDirectory + 'volumeMonitor.js'
+        srcDirectory + 'searchInput.js'
     ],
     styles: [
-        srcDirectory + 'mindmeldMicrophone.scss'
-    ],
-    html: [
-        srcDirectory + 'mindmeldMicrophone.html'
+        srcDirectory + 'mindmeldSearchInput.scss'
     ]
 };
 
 // Compile and minify SCSS
-gulp.task('mic.css', function () {
+gulp.task('searchInput.css', function () {
     return gulp.src(paths.styles)
         .pipe(sass())
-        .pipe(rename('mindmeldMicrophone.css'))
+        .pipe(rename('mindmeldSearchInput.css'))
         .pipe(gulp.dest(distDirectory))
         .pipe(minifyCSS())
-        .pipe(rename('mindmeldMicrophone.min.css'))
+        .pipe(rename('mindmeldSearchInput.min.css'))
         .pipe(gulp.dest(distDirectory));
 });
 
 // Concat and minify JS
-gulp.task('mic.js', function () {
+gulp.task('searchInput.js', function () {
     return gulp.src(paths.js)
         .pipe(sourcemaps.init())
-            .pipe(concat('mindMeldMicrophone.js'))
+            .pipe(concat('mindmeldSearchInput.js'))
             .pipe(gulp.dest(distDirectory))
             .pipe(uglify(), {
                 mangle: true
             })
-            .pipe(rename('mindMeldMicrophone.min.js'))
+            .pipe(rename('mindmeldSearchInput.min.js'))
         .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(distDirectory));
-});
-
-// Copy HTML
-gulp.task('mic.html', function () {
-    return gulp.src(paths.html)
         .pipe(gulp.dest(distDirectory));
 });
 
 
 // Main gulp task used to completely build the
-// MindMeldMicrophone files
-gulp.task('mic.build', ['mic.js', 'mic.css', 'mic.html']);
+// MindMeldSearchInput files
+gulp.task('searchInput.build', ['searchInput.js', 'searchInput.css']);
 
 // Watch for changes in source files and automatically build
-gulp.task('mic.watch', ['mic.build'], function () {
-    gulp.watch([paths.js], ['mic.js']);
-    gulp.watch([paths.styles], ['mic.css']);
-    gulp.watch([paths.html], ['mic.html']);
+gulp.task('searchInput.watch', ['searchInput.build'], function () {
+    gulp.watch([paths.js], ['searchInput.js']);
+    gulp.watch([paths.styles], ['searchInput.css']);
 });
