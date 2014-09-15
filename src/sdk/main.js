@@ -4456,11 +4456,22 @@ var MM = ( function (window, ajax, Faye) {
                 }
 
                 // This timeout prevents a the listener from falling into a broken state
+                // when the speech recognition backend stops listening after ~60 seconds
+
+                var longListenStopTimeout = null;
+                function setLongListenStopTimeout() {
+                    window.clearTimeout(longListenStopTimeout);
+                    longListenStopTimeout = window.setTimeout(function() {
+                        recognizer.stop();
+                    }, 59500);
+                }
+
+                // This timeout prevents a the listener from falling into a broken state
                 // abort if the recognition fails to call onEnd (chrome bug hack)
-                var abortTimeout = 0;
-                function setAbortTimeout() {
-                    window.clearTimeout(abortTimeout);
-                    abortTimeout = window.setTimeout(function() {
+                var onEndAbortTimeout = null;
+                function setOnEndAbortTimeout() {
+                    window.clearTimeout(onEndAbortTimeout);
+                    onEndAbortTimeout = window.setTimeout(function() {
                         recognizer.abort();
                     }, 2000);
                 }
@@ -4518,8 +4529,8 @@ var MM = ( function (window, ajax, Faye) {
                             }
                         }
 
-                        if (abortTimeout != 0) {
-                            setAbortTimeout();
+                        if (onEndAbortTimeout != null) {
+                            setOnEndAbortTimeout();
                         }
 
                         if (shouldFireCallback) {
@@ -4535,24 +4546,28 @@ var MM = ( function (window, ajax, Faye) {
                             }
                         }
                     };
-                    recognizer.onstart = function(event) {
+                    recognizer.onstart = function (event) {
                         listener._listening = true;
                         listener._lastStartTime = Date.now();
                         resultFinalized = false;
+                        setLongListenStopTimeout();
+
                         MM.Util.testAndCallThis(listener._onStart, listener, event);
                     };
-                    recognizer.onend = function(event) {
-                        window.clearTimeout(abortTimeout);
-                        abortTimeout = 0;
+                    recognizer.onend = function (event) {
+                        window.clearTimeout(onEndAbortTimeout);
+                        onEndAbortTimeout = null;
+                        window.clearTimeout(longListenStopTimeout);
+                        longListenStopTimeout = null;
                         listener._listening = false;
                         MM.Util.testAndCallThis(listener._onEnd, listener, event);
                     };
-                    recognizer.onerror = function(event) {
+                    recognizer.onerror = function (event) {
                         MM.Util.testAndCallThis(listener._onError, listener, event);
                     };
-                    recognizer.onaudioend = function(/* event <-- ignored */) {
+                    recognizer.onaudioend = function (event) {
                         if (!recognizer.continuous) {
-                            setAbortTimeout();
+                            setOnEndAbortTimeout();
                         }
                     };
                 }
