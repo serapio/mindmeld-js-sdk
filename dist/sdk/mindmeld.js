@@ -7395,19 +7395,22 @@ var MM = ( function (window, ajax, Faye) {
                         return;
                     }
                     window.clearTimeout(earlyFinalResultTimeout);
-                    earlyFinalResultTimeout = window.setTimeout(function() {
-                        var results = listener._results;
-                        var lastResult = null;
-                        var resultIndex = results.length - 1;
-                        if (resultIndex >= 0) {
-                            lastResult = results[resultIndex];
-                            if (!lastResult.final) {
-                                resultFinalized = lastResult.final = true;
-                                lastResult.early = true;
-                                MM.Util.testAndCallThis(listener._onResult, listener, lastResult, resultIndex, results, event);
-                            }
+                    // produce synthetic final result when the recognition takes too long
+                    earlyFinalResultTimeout = window.setTimeout(finalizeResult, 1500);
+                }
+
+                function finalizeResult() {
+                    var results = listener._results;
+                    var lastResult = null;
+                    var resultIndex = results.length - 1;
+                    if (resultIndex >= 0) {
+                        lastResult = results[resultIndex];
+                        if (!lastResult.final) {
+                            resultFinalized = lastResult.final = true;
+                            lastResult.early = true;
+                            MM.Util.testAndCallThis(listener._onResult, listener, lastResult, resultIndex, results, event);
                         }
-                    }, 1500); // produce synthetic final result when the recognition takes too long
+                    }
                 }
 
                 // this variable indicates whether a listening session should be restarted automatically
@@ -7482,6 +7485,9 @@ var MM = ( function (window, ajax, Faye) {
                         longListenStopTimeout = null;
                         window.clearTimeout(earlyFinalResultTimeout);
                         earlyFinalResultTimeout = null;
+
+                        finalizeResult();
+                        resultFinalized = false;
 
                         if (listener._shouldKeepListening) {
                             listener.start();
