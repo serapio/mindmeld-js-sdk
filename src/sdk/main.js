@@ -4457,7 +4457,6 @@ var MM = ( function (window, ajax, Faye) {
 
                 // This timeout prevents a the listener from falling into a broken state
                 // when the speech recognition backend stops listening after ~60 seconds
-
                 var longListenStopTimeout = null;
                 function setLongListenStopTimeout() {
                     window.clearTimeout(longListenStopTimeout);
@@ -4501,6 +4500,9 @@ var MM = ( function (window, ajax, Faye) {
                     }, 1500); // produce synthetic final result when the recognition takes too long
                 }
 
+                // this variable indicates whether a listening session should be restarted automatically
+                listener._shouldKeepListening = false;
+
                 var recognizer = this._recognizer;
                 if (typeof recognizer === 'undefined') {
                     recognizer = this._recognizer = new window.SpeechRecognition();
@@ -4509,8 +4511,14 @@ var MM = ( function (window, ajax, Faye) {
                             final: false,
                             transcript: ''
                         };
-                        var resultIndex = event.resultIndex;
+
+                        // find listener result index
                         var results = listener._results;
+                        var lastResult = results.length > 0 ? results[results.length - 1] : null;
+                        var resultIndex = results.length;
+                        if (lastResult != null && !lastResult.final) {
+                            resultIndex--;
+                        }
 
                         // Only fire callback if the result is not finalized
                         var shouldFireCallback = !resultFinalized;
@@ -4520,6 +4528,7 @@ var MM = ( function (window, ajax, Faye) {
 
                             if (event.results[i].isFinal) {
                                 window.clearTimeout(earlyFinalResultTimeout);
+                                earlyFinalResultTimeout = null;
                                 result.final = true;
                                 result.transcript = transcript;
                                 resultFinalized = false;
@@ -4547,22 +4556,41 @@ var MM = ( function (window, ajax, Faye) {
                         }
                     };
                     recognizer.onstart = function (event) {
-                        listener._listening = true;
-                        listener._lastStartTime = Date.now();
                         resultFinalized = false;
                         setLongListenStopTimeout();
 
-                        MM.Util.testAndCallThis(listener._onStart, listener, event);
+                        if (!listener._listening || !listener._shouldKeepListening) {
+                            listener._listening = true;
+                            listener._lastStartTime = Date.now();
+                            MM.Util.testAndCallThis(listener._onStart, listener, event);
+                        }
                     };
                     recognizer.onend = function (event) {
                         window.clearTimeout(onEndAbortTimeout);
                         onEndAbortTimeout = null;
                         window.clearTimeout(longListenStopTimeout);
                         longListenStopTimeout = null;
-                        listener._listening = false;
-                        MM.Util.testAndCallThis(listener._onEnd, listener, event);
+                        window.clearTimeout(earlyFinalResultTimeout);
+                        earlyFinalResultTimeout = null;
+
+                        if (listener._shouldKeepListening) {
+                            listener.start();
+                        } else {
+                            listener._isStopping = false;
+                            listener._listening = false;
+                            MM.Util.testAndCallThis(listener._onEnd, listener, event);
+                        }
                     };
                     recognizer.onerror = function (event) {
+                        if (listener._shouldKeepListening) {
+                            if (event.error === 'no-speech') {
+                                return;
+                            }
+                        }
+                        if (event.error === 'abort') {
+                            listener._isStopping = false;
+                        }
+                        listener._shouldKeepListening = false;
                         MM.Util.testAndCallThis(listener._onError, listener, event);
                     };
                     recognizer.onaudioend = function (event) {
@@ -4571,7 +4599,7 @@ var MM = ( function (window, ajax, Faye) {
                         }
                     };
                 }
-                recognizer.continuous = this.continuous;
+                listener._shouldKeepListening = recognizer.continuous = this.continuous;
                 recognizer.interimResults = this.interimResults;
                 var lang = (function () {
                     var language = '';
@@ -4595,8 +4623,14 @@ var MM = ( function (window, ajax, Faye) {
              * @instance
              */
             stop: function() {
+                this._shouldKeepListening = false;
                 if (this._recognizer) {
-                    this._recognizer.stop();
+                    if (this._isStopping) {
+                        this._recognizer.abort();
+                    } else {
+                        this._recognizer.stop();
+                        this._isStopping = true;
+                    }
                 }
             },
             /**
@@ -4606,6 +4640,7 @@ var MM = ( function (window, ajax, Faye) {
              * @instance
              */
             cancel: function() {
+                this._shouldKeepListening = false;
                 if (this._recognizer) {
                     this._recognizer.abort();
                 }
