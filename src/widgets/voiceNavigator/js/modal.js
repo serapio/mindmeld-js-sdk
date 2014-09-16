@@ -133,23 +133,24 @@ var MMVoice = {
         this.$tags.on('click', '.tag', onTagClick);
         this.$historyList.on('click', '.tag', onTagClick);
 
+        // Mixpanel
+        if (window.mixpanel && window.location.hostname.indexOf('expectlabs.com') >= 0) {
+            this._useMixPanel = true;
+            window.mixpanel.track('modal-init');
+            window.mixpanel.track_links('#cards .card', 'card-clicked');
+        }
+
         if (!('ontouchstart' in window)) {
-            if (MMVoice._useMixPanel) {
-                window.mixpanel.track('touch-screen');
-            }
             // Scrollbars for non touch devices
             var $innerContentDiv = $('.inner-content-div');
             $innerContentDiv.slimScroll({
                 height: '100%',
                 distance: '6px'
             });
-        }
-
-        // Mixpanel
-        if (window.mixpanel && window.location.hostname.indexOf('expectlabs.com') >= 0) {
-            this._useMixPanel = true;
-            window.mixpanel.track('modal-init');
-            window.mixpanel.track_links('#cards .card', 'card-clicked');
+        } else {
+            if (MMVoice._useMixPanel) {
+                window.mixpanel.track('touch-screen');
+            }
         }
 
         // Resize
@@ -1143,10 +1144,8 @@ var MMVoice = {
             } else {
                 self.$cards.removeClass('loading');
             }
-            if (self.is_locked) {
-                if (self._lockWhileRecording) {
-                    self.lockWhileRecording();
-                }
+            if (self.is_locked && self._lockWhileRecording) {
+                self.lockWhileRecording();
                 MM.activeSession.listener.start();
             } else {
                 MMVoice.status = false;
@@ -1522,7 +1521,9 @@ function startVolumeMonitor() {
             navigator.msGetUserMedia);
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-        a.context = new AudioContext();
+        if (!a.context) {
+            a.context = new AudioContext();
+        }
         a.analyzer = a.context.createAnalyser();
         a.analyzer.smoothingTimeConstant = 0.18;
         a.analyzer.fftSize = 256;

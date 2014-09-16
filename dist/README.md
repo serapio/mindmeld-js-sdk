@@ -28,12 +28,12 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.5.7.js"></script>
+<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.6.0.js"></script>
 ```
 
-* Un-minified: [mindmeld-2.5.7.js][versionedSDKDownloadLink]
-* Minified: [mindmeld-2.5.7.min.js][versionedMinifiedSDKDownloadLink]
-* Both + Hello World + Documentation: [mindmeld-js-sdk-2.5.7.zip][versionedSDKZIPDownloadLink]
+* Un-minified: [mindmeld-2.6.0.js][versionedSDKDownloadLink]
+* Minified: [mindmeld-2.6.0.min.js][versionedMinifiedSDKDownloadLink]
+* Both + Hello World + Documentation: [mindmeld-js-sdk-2.6.0.zip][versionedSDKZIPDownloadLink]
 
 ### Clone git repository
 Both files are also available directly from the mindmeld-js-sdk git repository. Simply clone the repo:
@@ -74,6 +74,51 @@ supported by the MindMeld API. The JavaScript SDK wraps the objects and collecti
 RESTful API with convenient JavaScript objects. These objects can then be used to communicate with the MindMeld
 API. The JavaScript SDK also provides the ability to send and receive real-time push events in most modern browsers.
 
+### Quick Start
+
+The SDK contains a convenience wrapper method `MM.start` to get you up and
+running in no time.  To start a session, create an anonymous user, and create
+and use a new session:
+
+```javascript
+MM.start( { appid: "<your application id>" } );
+```
+
+You can supply optional `onSuccess` and `onFail` callbacks:
+
+```javascript
+MM.start( { appid: "<your application id>" }, function onSuccess () {
+  console.log('MindMeld started with active user id', MM.activeUserId,
+    'and session id', MM.activeSessionId);
+}, function onFail (error) {
+  console.error('MindMeld failed to start:', error);
+});
+```
+
+If you want to choose a particular user or session info, you can:
+```javascript
+MM.start({
+  appid: "<your application id>",
+  credentials: {
+    simple: {
+      userid: "einstein79",
+      name: "Albert Einstein"
+    }
+  },
+  session: {
+    name: "The relative session",
+    privacymode: "inviteonly"
+  }
+}, function onSuccess () {
+  console.log('MindMeld started with active user id', MM.activeUserId,
+    'and session id', MM.activeSessionId);
+}, function onFail (error) {
+  console.error('MindMeld failed to start:', error);
+});
+```
+
+If you wish to manually control the steps, use the Initialization, Token, and
+Session sections below.
 
 ### Initialization
 
@@ -365,6 +410,6 @@ if (MM.support.speechRecognition) { // check for support in the current browser
 [latestSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld.js
 [latestMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld.min.js
 [latestSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld-js-sdk.zip
-[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.5.7.js
-[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.5.7.min.js
-[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.5.7.zip
+[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.6.0.js
+[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.6.0.min.js
+[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.6.0.zip
