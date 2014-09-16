@@ -4519,6 +4519,7 @@ var MM = ( function (window, ajax, Faye) {
                         var results = listener._results;
                         var lastResult = results.length > 0 ? results[results.length - 1] : null;
                         var resultIndex = results.length;
+                        // decrement index so we overwrite the interim result
                         if (lastResult != null && !lastResult.final) {
                             resultIndex--;
                         }
@@ -4539,6 +4540,11 @@ var MM = ( function (window, ajax, Faye) {
                             } else {
                                 result.transcript += transcript; // collapse multiple pending results into one
                             }
+                        }
+
+                        // if we restarted, we'll need to add a space for some results
+                        if (resultIndex >= 0 && !/^\s/.test(result.transcript.charAt(0))) {
+                            result.transcript = " " + result.transcript;
                         }
 
                         if (onEndAbortTimeout != null) {
@@ -4580,7 +4586,7 @@ var MM = ( function (window, ajax, Faye) {
                         resultFinalized = false;
 
                         if (listener._shouldKeepListening) {
-                            listener.start();
+                            recognizer.start();
                         } else {
                             listener._isStopping = false;
                             listener._listening = false;
