@@ -1,10 +1,6 @@
 /* global MM, $ */
 
-
-//////////////
-// Initial import of symbols
-
-var Cards = window.Cards;
+var Cards = window.MindMeldCards;
 Cards.initialize({
   parentSelector: '#cards',
   cardSelector: '.card',
@@ -15,49 +11,19 @@ Cards.initialize({
 
 var Microphone = window.MindMeldMicrophone;
 
-///////
-// Microphone
-
-$(function() {
-
-  Microphone.on('result', function(result) {
-    $('#searchInput').val(result.transcript);
-    $('#searchInput').toggleClass('final', result.final);
-    if (result.final) submitInput(result.transcript);
-  });
-
+Microphone.on('start', function () {
+  console.log('Microphone started');
 });
 
-//////////////
-// Search Input
-
-$(function() {
-
-  $('#searchInput').on('focus', function() {
-    $('#searchInput').removeClass('final');
-  });
-
-  $('#searchInput').keypress(function (e) {
-    // We are looking for CR (keyCode 13)
-    var keyCode = e.originalEvent.keyCode;
-    if (keyCode !== 13) {
-      return;
-    }
-
-    // User pressed return
-    $('#searchInput').blur();
-    $('#searchInput').addClass('final');
-    var text = $('#searchInput').val().trim();
-    $('#searchInput').val(text);
-    submitInput(text);
-
-    return false;
-  });
-
+Microphone.on('stop', function () {
+  console.log('Microphone stopped');
 });
 
-///////////////
-// MM
+Microphone.on('error', function (event) {
+  // Some errors are benign
+  if (event.error === 'abort' || event.error === 'no-speech') return;
+  console.error('Microphone error', event.error);
+});
 
 // Convert the raw data for card into the data needed for the template.
 // Must return new data
@@ -79,7 +45,7 @@ var processRawCardData = function (card) {
   return card;
 };
 
-var submitInput = function(text) {
+Microphone.on('text',  function(text) {
   Cards.setLoading(true);
   MM.activeSession.textentries.post({
     text: text,
@@ -106,7 +72,7 @@ var submitInput = function(text) {
     });
   });
 
-};
+});
 
 ////////
 // Config
@@ -117,4 +83,10 @@ var config = {
   fayeClientUrl: 'https://push-west-dev-d.expectlabs.com:443/faye',
 };
 
-MM.start(config);
+MM.start(config, function onSuccess () {
+  console.log('MindMeld initialized successfully.');
+  Microphone.initialize($('.mindmeld-query')[0]);
+
+}, function onFail (error) {
+  console.error('MindMeld failed to initialize:', error);
+});

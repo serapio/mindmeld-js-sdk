@@ -10,202 +10,255 @@
  * - listening(): returns a boolean indicating whether the mic is listening
  * - on(event, callback, context): register for a MindMeldMicrophone event. Events exposed:
  *  - 'init': fired after initialize() finishes
- *  - 'result': there is a speech-to-text result
+ *  - 'result': there is a speech-to-text result.  Passes a result object:
+ *      `result = { transcript: (String), final: (Boolean) }`
  *  - 'start': the microphone starts recording
  *  - 'stop': the microphone stops recording
- *  - 'error': there was an error with the microphone
+ *  - 'error': there was an error with the microphone.  Passes an event object:
+ *      `event = { error: (String) }`
  */
 
 (function microphone (MM) {
-    'use strict';
+  'use strict';
 
-    var MindMeldMicrophone = window.MindMeldMicrophone = window.MindMeldMicrophone || {};
-    var containerElement;
-    var listener;
-    var volumeMonitor;
+  var MindMeldMicrophone = window.MindMeldMicrophone = window.MindMeldMicrophone || {};
+  var listener;
+  var volumeMonitor;
+  var queryElement;
+  var microphoneElement;
 
-
-    // initialize() checks for speech recognition support,
-    // sets up the MM.activeSession's Listener, initializes
-    // the volume monitor, and initializes mindmeld-microphone's
-    // click handlers
-    MindMeldMicrophone.initialize = function initialize (element) {
-        containerElement = element;
-        if (! MM.support.speechRecognition) {
-            containerElement.classList.add('disabled');
-            var errorMessage = 'This browser does not support speech recognition';
-            MindMeldMicrophone.publishEvent('error', errorMessage);
-            return;
-        }
-
-        initMMListener();
-        initVolumeMonitor();
-        initClickHandlers();
-        initUIHandlers();
-        MindMeldMicrophone.publishEvent('init');
-    };
-
-    // Sets the listener config for a new MM.Listener The mindmeld-microphone's
-    // event handlers publish the Listener events like onResult and onEnd
-    function initMMListener () {
-        listener = new MM.Listener({
-
-                interimResults: true,
-
-                onResult: function (result, resultIndex, results, event) {
-                    MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
-                },
-
-                onStart: function (event) {
-                    MindMeldMicrophone.publishEvent('start', event);
-                },
-
-                onEnd: function (event) {
-                    MindMeldMicrophone.publishEvent('end', event);
-                },
-
-                onError: function (error) {
-                    MindMeldMicrophone.publishEvent('error', error);
-                }
-            }
-
-        );
+  /**
+   * `initialize()` checks for speech recognition support, initializes
+   * the volume monitor, and initializes mindmeld-microphone's
+   * click handlers.  It will emit an `'init'` event when successfully
+   * completed, or an `'error'` event in the case of an error.
+   *
+   * @param element a vanilla DOM element that contains the microphone.
+   * Generally `document.getElementById('mindmeld-microphone')`
+   */
+  MindMeldMicrophone.initialize = function initialize (_queryElement) {
+    queryElement = _queryElement;
+    microphoneElement = queryElement.querySelector('.mindmeld-microphone');
+    if (! MM.support.speechRecognition) {
+      microphoneElement.classList.add('disabled');
+      var errorMessage = 'This browser does not support speech recognition';
+      MindMeldMicrophone.publishEvent('error', errorMessage);
+      return;
     }
 
-    // Initializes the volume monitor used to animate the microphone
-    // as the volume changes
-    function initVolumeMonitor () {
-        var volumePulser = containerElement.querySelector('.volume-pulser');
+    initMMListener();
+    initVolumeMonitor();
+    initClickHandlers();
+    initUIHandlers();
+    MindMeldMicrophone.publishEvent('init');
+  };
 
-        volumeMonitor = new window.VolumeMonitor({
-            listener: listener,
+  // Sets the listener config for a new MM.Listener The mindmeld-microphone's
+  // event handlers publish the Listener events like onResult and onEnd
+  function initMMListener () {
+    listener = new MM.Listener({
 
-            // Animate volume pulser by scaling a background circle based on volume
-            onVolumeChange: function onVolumeChanged (volume) {
-                var scale = ((volume / 100) * 0.5) + 1.0;
-                volumePulser.style.transform = 'scale(' + scale + ')';
-            },
+      interimResults: true,
 
-            // Hide volume pulser on stop
-            onStop: function onVolumeMonitorStopped () {
-                volumePulser.style.transform = 'scale(0.9)';
-            },
+      onResult: function (result, resultIndex, results, event) {
+        MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
+      },
 
-            // Public microphone error event when there is a volume monitor error
-            onError: function onVolumeMonitorError (error) {
-                MindMeldMicrophone.publishEvent('error', error);
-            }
-        });
+      onStart: function (event) {
+        MindMeldMicrophone.publishEvent('start', event);
+      },
+
+      onEnd: function (event) {
+        MindMeldMicrophone.publishEvent('end', event);
+      },
+
+      onError: function (error) {
+        MindMeldMicrophone.publishEvent('error', error);
+      }
     }
 
-    // Initializes mouse click handlers to start/stop the microphone
-    function initClickHandlers () {
-        var holdTimeout = null;
-        var holdDuration = 1000;
+  );
+}
 
-        var micButton = containerElement.querySelector('.icon-container');
-        micButton.addEventListener('mousedown', function onMouseDown () {
-            if (listener.listening) {
-                MindMeldMicrophone.stop();
-            } else {
-                holdTimeout = setTimeout(
-                    function startContinuousOnHold () {
-                        MindMeldMicrophone.start(true); // start mic in continuous mode
-                        holdTimeout = null;
-                    },
-                    holdDuration
-                );
-            }
-        });
+  // Initializes the volume monitor used to animate the microphone
+  // as the volume changes
+  function initVolumeMonitor () {
+    var volumePulser = microphoneElement.querySelector('.volume-pulser');
 
-        micButton.addEventListener('mouseup', function onMouseUp () {
-            if (holdTimeout !== null) {
-                // We have not reached the hold timeout yet, start mic in normal mode
-                clearTimeout(holdTimeout);
-                holdTimeout = null;
-                MindMeldMicrophone.start();
-            }
-        });
+    volumeMonitor = new window.VolumeMonitor({
+      listener: listener,
 
-        micButton.addEventListener('mouseout', function onMouseOut () {
-            clearTimeout(holdTimeout);
+      // Animate volume pulser by scaling a background circle based on volume
+      onVolumeChange: function onVolumeChanged (volume) {
+        var scale = ((volume / 100) * 0.5) + 1.0;
+        volumePulser.style.transform = 'scale(' + scale + ')';
+      },
+
+      // Hide volume pulser on stop
+      onStop: function onVolumeMonitorStopped () {
+        volumePulser.style.transform = 'scale(0.9)';
+      },
+
+      // Public microphone error event when there is a volume monitor error
+      onError: function onVolumeMonitorError (error) {
+        MindMeldMicrophone.publishEvent('error', error);
+      }
+    });
+  }
+
+  // Initializes mouse click handlers to start/stop the microphone
+  function initClickHandlers () {
+    var holdTimeout = null;
+    var holdDuration = 1000;
+
+    var micButton = microphoneElement.querySelector('.icon-container');
+    micButton.addEventListener('mousedown', function onMouseDown () {
+      if (listener.listening) {
+        MindMeldMicrophone.stop();
+      } else {
+        holdTimeout = setTimeout(
+          function startContinuousOnHold () {
+            MindMeldMicrophone.start(true); // start mic in continuous mode
             holdTimeout = null;
-        });
+          },
+          holdDuration
+        );
+      }
+    });
+
+    micButton.addEventListener('mouseup', function onMouseUp () {
+      if (holdTimeout !== null) {
+        // We have not reached the hold timeout yet, start mic in normal mode
+        clearTimeout(holdTimeout);
+        holdTimeout = null;
+        MindMeldMicrophone.start();
+      }
+    });
+
+    micButton.addEventListener('mouseout', function onMouseOut () {
+      clearTimeout(holdTimeout);
+      holdTimeout = null;
+    });
+  }
+
+  // Subscribes to microphone start/stop events to add CSS classes
+  // indicating listening, lock, or waiting state
+  function initUIHandlers () {
+    MindMeldMicrophone.on('start', function onMicrophoneStart () {
+      microphoneElement.classList.add('listening');
+      if (listener.continuous) {
+        microphoneElement.classList.add('lock');
+      }
+    });
+
+    MindMeldMicrophone.on('end', function onMicrophoneEnd () {
+      microphoneElement.classList.remove('listening');
+      microphoneElement.classList.remove('lock');
+    });
+
+    MindMeldMicrophone.on('result', function(result) {
+      queryElement.querySelector('.mindmeld-query-text span').innerHTML = result.transcript;
+      if (result.final) {
+        queryElement.querySelector('.mindmeld-query-text').classList.remove('interim');
+        MindMeldMicrophone.publishEvent('text', result.transcript);
+      } else {
+        queryElement.querySelector('.mindmeld-query-text').classList.add('interim');
+      }
+    });
+
+    var qt = queryElement.querySelector('.mindmeld-query-text');
+    qt.addEventListener('focus', function() {
+      qt.classList.add('interim');
+    });
+
+    qt.addEventListener('keypress', function (e) {
+      // We are looking for CR (keyCode 13)
+      var keyCode = e.keyCode;
+      if (keyCode !== 13) {
+        return;
+      }
+
+      // User pressed return
+      qt.blur();
+      qt.classList.remove('interim');
+      var text = qt.querySelector('span').innerHTML.trim();
+      qt.querySelector('span').innerHTML = text;
+      MindMeldMicrophone.publishEvent('text', text);
+
+      e.preventDefault();
+    });
+
+    console.log('found glass', queryElement.querySelector('.mindmeld-query-glass'));
+    queryElement.querySelector('.mindmeld-query-glass').addEventListener('click',
+      function (e) {
+        console.log('Clicking glass');
+        qt.classList.remove('interim');
+        var text = qt.querySelector('span').innerHTML.trim();
+        MindMeldMicrophone.publishEvent('text', text);
+
+        return false;
+      }
+    );
+
+  }
+
+
+  // Publicly Accessible Methods of mindmeld-microphone widget
+
+  /**
+   * Start recording
+   */
+  MindMeldMicrophone.start = function start (continuous) {
+    listener.continuous = continuous;
+    listener.start();
+    volumeMonitor.start();
+  };
+
+  /**
+   * Returns if the microphone is currently listening
+   */
+  MindMeldMicrophone.listening = function listening () {
+    return listener.listening;
+  };
+
+  /**
+   * Stops recording
+   */
+  MindMeldMicrophone.stop = function stop () {
+    listener.stop();
+  };
+
+  // Event Dispatcher
+  var subscriptions = {};
+
+  /**
+   * Subscribe to microphone events
+   */
+  MindMeldMicrophone.on = function on (eventName, callback, context) {
+    if (! subscriptions[eventName]) {
+      subscriptions[eventName] = [];
     }
+    var subscription = {
+      callback: callback,
+      context: context
+    };
+    subscriptions[eventName].push(subscription);
+  };
 
-    // Subscribes to microphone start/stop events to add CSS classes
-    // indicating listening, lock, or waiting state
-    function initUIHandlers () {
-        MindMeldMicrophone.on('start', function onMicrophoneStart () {
-            containerElement.classList.add('listening');
-            if (listener.continuous) {
-                containerElement.classList.add('lock');
-            }
-        });
-
-        MindMeldMicrophone.on('end', function onMicrophoneEnd () {
-            containerElement.classList.remove('listening');
-            containerElement.classList.remove('lock');
-        });
+  /**
+   * Publish microphone events to subscribers
+   */
+  MindMeldMicrophone.publishEvent = function publishEvent (eventName) {
+    var subscribers = subscriptions[eventName];
+    if (subscribers !== undefined) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      subscribers.forEach(
+        function invokeCallback (subscription) {
+          var context = subscription.context || this;
+          subscription.callback.apply(context , args);
+        }
+      );
     }
-
-
-    // Publicly Accessible Methods of mindmeld-microphone widget
-
-    /**
-     * Start recording
-     */
-    MindMeldMicrophone.start = function start (continuous) {
-        listener.continuous = continuous;
-        listener.start();
-        volumeMonitor.start();
-    };
-
-    /**
-     * Returns if the microphone is currently listening
-     */
-    MindMeldMicrophone.listening = function listening () {
-        return listener.listening;
-    };
-
-    /**
-     * Stops recording
-     */
-    MindMeldMicrophone.stop = function stop () {
-        listener.stop();
-    };
-
-    // Event Dispatcher
-    var subscriptions = {};
-
-    /**
-     * Subscribe to microphone events
-     */
-    MindMeldMicrophone.on = function on (eventName, callback, context) {
-        if (! subscriptions[eventName]) {
-            subscriptions[eventName] = [];
-        }
-        var subscription = {
-            callback: callback,
-            context: context
-        };
-        subscriptions[eventName].push(subscription);
-    };
-
-    /**
-     * Publish microphone events to subscribers
-     */
-    MindMeldMicrophone.publishEvent = function publishEvent (eventName) {
-        var subscribers = subscriptions[eventName];
-        if (subscribers !== undefined) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            subscribers.forEach(
-                function invokeCallback (subscription) {
-                    var context = subscription.context || this;
-                    subscription.callback.apply(context , args);
-                }
-            );
-        }
-    };
+  };
 
 }(MM));

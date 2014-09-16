@@ -22,40 +22,41 @@ var srcDirectory = rootDirectory + relativeSrcDirectory;
 
 var paths = {
     js: [
-        srcDirectory + 'microphone.js',
-        srcDirectory + 'volumeMonitor.js'
+        srcDirectory + '*.js',
     ],
     styles: [
-        srcDirectory + 'mindmeldMicrophone.scss'
+        srcDirectory + '*.scss'
     ],
     html: [
-        srcDirectory + 'mindmeldMicrophone.html'
+        srcDirectory + '*.html'
+    ],
+    images: [
+        srcDirectory + '/images/*'
     ]
 };
 
 // Compile and minify SCSS
 gulp.task('mic.css', function () {
-    return gulp.src(paths.styles)
-        .pipe(sass())
-        .pipe(rename('mindmeldMicrophone.css'))
-        .pipe(gulp.dest(distDirectory))
-        .pipe(minifyCSS())
-        .pipe(rename('mindmeldMicrophone.min.css'))
-        .pipe(gulp.dest(distDirectory));
+  return gulp.src(paths.styles)
+    .pipe(sass())
+    .pipe(gulp.dest(distDirectory))
+    .pipe(minifyCSS())
+    .pipe(rename({ extname: '.min.css' }))
+    .pipe(gulp.dest(distDirectory));
 });
 
 // Concat and minify JS
 gulp.task('mic.js', function () {
-    return gulp.src(paths.js)
-        .pipe(sourcemaps.init())
-            .pipe(concat('mindMeldMicrophone.js'))
-            .pipe(gulp.dest(distDirectory))
-            .pipe(uglify(), {
-                mangle: true
-            })
-            .pipe(rename('mindMeldMicrophone.min.js'))
-        .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(distDirectory));
+  return gulp.src(paths.js)
+    .pipe(sourcemaps.init())
+      // .pipe(concat(paths.js))
+      .pipe(gulp.dest(distDirectory))
+      .pipe(uglify(), {
+        mangle: true
+      })
+      .pipe(rename({ extname: '.min.js' }))
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(distDirectory));
 });
 
 // Copy HTML
@@ -64,14 +65,21 @@ gulp.task('mic.html', function () {
         .pipe(gulp.dest(distDirectory));
 });
 
+// Copy Images
+gulp.task('mic.images', function () {
+    return gulp.src(paths.images)
+        .pipe(gulp.dest(distDirectory + 'images/'));
+});
+
 
 // Main gulp task used to completely build the
 // MindMeldMicrophone files
-gulp.task('mic.build', ['mic.js', 'mic.css', 'mic.html']);
+gulp.task('mic.build', ['mic.js', 'mic.css', 'mic.html', 'mic.images']);
 
 // Watch for changes in source files and automatically build
 gulp.task('mic.watch', ['mic.build'], function () {
     gulp.watch([paths.js], ['mic.js']);
     gulp.watch([paths.styles], ['mic.css']);
     gulp.watch([paths.html], ['mic.html']);
+    gulp.watch([paths.images], ['mic.images']);
 });

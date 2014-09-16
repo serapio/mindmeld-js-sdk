@@ -1,4 +1,4 @@
-/* global Handlebars, jQuery */
+/* global Handlebars, jQuery, Spinner */
 /* exported Cards */
 
 ;(function (Handlebars, $) {
@@ -11,6 +11,8 @@
   var rowWidth, lastCardWidth;
   // Set each card at a slightly different level, so they can slide under each other.
   var baseZIndex = 50;
+  // Spinner for loading
+  var spinner;
 
   // Thanks koorchik, from http://stackoverflow.com/questions/8366733/external-template-in-underscore
   var render = function(templateUrl, templateData) {
@@ -59,14 +61,13 @@
     var cardLeft, cardTop;
 
     // Store this for layout of successive elements
-    // TODO: Should clear this out, since it just grows with results?
     existingCardSizes[$card[0].id] = {
       height: cardHeight,
       width: cardWidth
     };
 
     var numCardsInRow = Math.max( 1, Math.floor(parentWidth / cardWidth) );
-    // XXX: Store this for resize events.
+    // Store this for resize events.
     rowWidth = numCardsInRow*cardWidth;
     lastCardWidth = cardWidth;
 
@@ -112,7 +113,7 @@
     }
   };
 
-  var Cards = {
+  var MindMeldCards = {
 
     /**
      * options: {
@@ -141,7 +142,7 @@
           ) {
           // parent is too small to hold existing row, or big enough to hold another card
           //console.log('Parent has significantly reized; re-layout cards');
-          Cards.layoutCards();
+          MindMeldCards.layoutCards();
         }
       });
     },
@@ -197,11 +198,11 @@
       }
 
       // Now layout the cards
-      Cards.layoutCards();
+      MindMeldCards.layoutCards();
       // Need to triger another layout when the images are loaded, because the
       // image sizes may have changed
       $(options.cardSelector).imagesLoaded( function () {
-        Cards.layoutCards();
+        MindMeldCards.layoutCards();
       });
 
     },
@@ -226,10 +227,25 @@
      */
     setLoading: function(isLoading) {
       $(options.parentSelector).toggleClass('loading', isLoading);
+      if (isLoading) {
+        // Spin the spinner
+        if (spinner) {
+          spinner.spin($(options.parentSelector)[0]);
+        } else if (Spinner) {
+          spinner = new Spinner({
+            length: 60,
+            width: 15,
+            top: '200px'
+          }).spin($(options.parentSelector)[0]);
+        }
+      } else {
+        // Hide the spinner
+        spinner && spinner.stop();
+      }
     }
 
   };
 
-  window.Cards = Cards;
+  window.MindMeldCards = MindMeldCards;
 
 })(Handlebars, jQuery);
