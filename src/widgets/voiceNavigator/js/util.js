@@ -71,4 +71,10 @@ exports.log = function() {
     console.log.apply(console, args);
 };
 
+exports.debug = function() {
+    var args = Array.prototype.slice.call(arguments, 0);
+    args.splice(0, 0, exports.timestamp());
+    console.debug.apply(console, args);
+};
+
 exports.contentLoaded = contentLoaded;
