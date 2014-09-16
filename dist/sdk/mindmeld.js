@@ -2908,7 +2908,7 @@ window.ajax = ajax;
 
 })();
 
-/* global window, ajax, Faye */
+/* global ajax, Faye, docCookies */
 
 /**
  * MM is the primary interface to all MindMeld JavaScript SDK functionality. Call {@link MM#init} before anything
@@ -2928,10 +2928,9 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.5.6',
+        value: '2.5.7',
         writable: false
     });
-    
 
     var _isFunction = function(f) {
         return 'function' === typeof f;
@@ -2946,12 +2945,12 @@ var MM = ( function (window, ajax, Faye) {
         // - Any object or value whose internal [[Class]] property is not "[object Object]"
         // - DOM nodes
         // - window
-        if ( typeof obj !== "object" || obj.nodeType || _isWindow( obj ) ) {
+        if ( typeof obj !== 'object' || obj.nodeType || _isWindow( obj ) ) {
             return false;
         }
 
         if ( obj.constructor &&
-            !hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
+            !hasOwn.call( obj.constructor.prototype, 'isPrototypeOf' ) ) {
             return false;
         }
 
@@ -2968,7 +2967,7 @@ var MM = ( function (window, ajax, Faye) {
             deep = false;
 
         // Handle a deep copy situation
-        if ( typeof target === "boolean" ) {
+        if ( typeof target === 'boolean' ) {
             deep = target;
 
             // skip the boolean and the target
@@ -2977,7 +2976,7 @@ var MM = ( function (window, ajax, Faye) {
         }
 
         // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== "object" && ! _isFunction(target) ) {
+        if ( typeof target !== 'object' && ! _isFunction(target) ) {
             target = {};
         }
 
@@ -3004,7 +3003,7 @@ var MM = ( function (window, ajax, Faye) {
                     if ( deep && copy && ( _isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
                         if ( copyIsArray ) {
                             copyIsArray = false;
-                            clone = src && jQuery.isArray(src) ? src : [];
+                            clone = src && Array.isArray(src) ? src : [];
 
                         } else {
                             clone = src && _isPlainObject(src) ? src : {};
@@ -3653,6 +3652,138 @@ var MM = ( function (window, ajax, Faye) {
               MM.Internal.onReady();
             });
 
+        },
+
+        /**
+         *  This method will initialize the MindMeld SDK, get a token, and start
+         *  a session.  It is called instead of the  MM.init, .getToken, and
+         *  .setActiveSession seqence.
+         *
+         * @param {Object} config configuration parameters containing developers' application id and
+         *                  onInit callback
+         *
+         * @param {string} config.appid application id for this MindMeld application
+         * @param {Object=} config.credentials Optional credentials for getting a token.
+         * Will use anonymous authentication if no credentials are given.
+         * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
+         * @param {string=} config.sessionid sessionid of an existing, active session you wish to join
+         * @param {Object=} config.session Object containing new session data.
+         * Will create an `inviteonly` session if no data is given.
+         * Please refer to documentation for creating sessions
+         * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
+         * @param {string} config.session.name name of the new session
+         * @param {string} config.session.privacymode the privacy mode for the session. The supported privacy modes
+         * are `friendsonly`, `inviteonly`, and `public`.  Sessions that are `inviteonly` can be accessed only
+         * by the session organizer and any user on the inviteduser list for the session. Sessions that
+         * are `friendsonly` can be accessed by users who are in the friends collection of the session
+         * organizer. Sessions that are `public` can be accessed by all users of your application.
+         * @param {APISuccessCallback=} onSuccess callback for when starting the MindMeld session was successful
+         * @param {APIErrorCallback=} onFail callback for when starting the MindMeld session failed
+         * @memberOf MM
+         * @instance
+         *
+         * @example
+         *
+         # To start a new MindMeld session with anonymous user
+         MM.start( { appid: "<your application id>" }, function onSuccess () {
+           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
+         }, function onFail (error) {
+           console.error('MindMeld failed to start:', error);
+         });
+
+         # or to choose a user and session information
+         MM.start({
+           appid: "<your application id>"
+           credentials: {
+             simple: {
+               userid: "einstein79",
+               name: "Albert Einstein"
+             }
+           },
+           session: {
+             name: "The relative session",
+             privacymode: "inviteonly"
+           }
+         }, function onSuccess () {
+           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
+         }, function onFail (error) {
+           console.error('MindMeld failed to start:', error);
+         });
+
+         # or to join an existing session as an anonymous user
+         MM.start({
+           appid: "<your application id>"
+           sessionid: "<existing session id>"
+         });
+
+         */
+        start: function (config, onSuccess, onError) {
+          onSuccess = onSuccess || function () {};
+          onError = onError || function (err) {
+            console.error('Error initializing MindMeld:', err);
+          };
+
+          if ( !config.appid ) {
+            onError('You must supply the appid in the config object.');
+          }
+
+          var makeAnonymousCredentials = function () {
+
+            var USER_ID_KEY = 'mindmeld_anon_user_id';
+            // get user id cookie
+            var userID = MM.support.localStorage && localStorage.getItem(USER_ID_KEY);
+            if ( !userID ) {
+              // Make a random number, convert it to [0..9a..z], strip the '0.' prefix
+              var randomString = Math.random().toString(36).substr(2);
+              userID = 'mindmeld-anon-' + randomString;
+              MM.support.localStorage && localStorage.setItem(USER_ID_KEY, userID);
+            }
+
+            return {
+              anonymous: {
+                userid: userID,
+                name: 'Anonymous User',
+                domain: window.location.hostname
+              }
+            };
+          };
+
+          config.onInit = function () {
+            //TODO: Also allow to set existing token.
+            // Default action is to make an anonymous session
+            var credentials = config.credentials || makeAnonymousCredentials();
+
+            MM.getToken(credentials, function onToken () {
+              console.log('Token retrieved.');
+
+              if (config.sessionid) {
+                // We already have an id, let's use it
+                MM.setActiveSessionID(config.sessionid, onSuccess, onError);
+              } else {
+                // Make a new session
+                var session = config.session;
+                if ( !session ) {
+                  var date = new Date();
+                  var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
+                  session = {
+                    name: sessionName,
+                    privacymode: 'inviteonly'
+                  };
+                }
+
+                MM.activeUser.sessions.post(
+                  session,
+                  function onSessionCreate(result) {
+                    console.log('Create session results:', result);
+                    MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                  },
+                  onError
+                );
+              }
+            }, onError);
+          };
+
+          MM.init(config);
         },
 
         /**
@@ -7235,11 +7366,21 @@ var MM = ( function (window, ajax, Faye) {
                 }
 
                 // This timeout prevents a the listener from falling into a broken state
+                // when the speech recognition backend stops listening after ~60 seconds
+                var longListenStopTimeout = null;
+                function setLongListenStopTimeout() {
+                    window.clearTimeout(longListenStopTimeout);
+                    longListenStopTimeout = window.setTimeout(function() {
+                        recognizer.stop();
+                    }, 59500);
+                }
+
+                // This timeout prevents a the listener from falling into a broken state
                 // abort if the recognition fails to call onEnd (chrome bug hack)
-                var abortTimeout = 0;
-                function setAbortTimeout() {
-                    window.clearTimeout(abortTimeout);
-                    abortTimeout = window.setTimeout(function() {
+                var onEndAbortTimeout = null;
+                function setOnEndAbortTimeout() {
+                    window.clearTimeout(onEndAbortTimeout);
+                    onEndAbortTimeout = window.setTimeout(function() {
                         recognizer.abort();
                     }, 2000);
                 }
@@ -7254,20 +7395,26 @@ var MM = ( function (window, ajax, Faye) {
                         return;
                     }
                     window.clearTimeout(earlyFinalResultTimeout);
-                    earlyFinalResultTimeout = window.setTimeout(function() {
-                        var results = listener._results;
-                        var lastResult = null;
-                        var resultIndex = results.length - 1;
-                        if (resultIndex >= 0) {
-                            lastResult = results[resultIndex];
-                            if (!lastResult.final) {
-                                resultFinalized = lastResult.final = true;
-                                lastResult.early = true;
-                                MM.Util.testAndCallThis(listener._onResult, listener, lastResult, resultIndex, results, event);
-                            }
-                        }
-                    }, 1500); // produce synthetic final result when the recognition takes too long
+                    // produce synthetic final result when the recognition takes too long
+                    earlyFinalResultTimeout = window.setTimeout(finalizeResult, 1500);
                 }
+
+                function finalizeResult() {
+                    var results = listener._results;
+                    var lastResult = null;
+                    var resultIndex = results.length - 1;
+                    if (resultIndex >= 0) {
+                        lastResult = results[resultIndex];
+                        if (!lastResult.final) {
+                            resultFinalized = lastResult.final = true;
+                            lastResult.early = true;
+                            MM.Util.testAndCallThis(listener._onResult, listener, lastResult, resultIndex, results, event);
+                        }
+                    }
+                }
+
+                // this variable indicates whether a listening session should be restarted automatically
+                listener._shouldKeepListening = false;
 
                 var recognizer = this._recognizer;
                 if (typeof recognizer === 'undefined') {
@@ -7277,8 +7424,15 @@ var MM = ( function (window, ajax, Faye) {
                             final: false,
                             transcript: ''
                         };
-                        var resultIndex = event.resultIndex;
+
+                        // find listener result index
                         var results = listener._results;
+                        var lastResult = results.length > 0 ? results[results.length - 1] : null;
+                        var resultIndex = results.length;
+                        // decrement index so we overwrite the interim result
+                        if (lastResult != null && !lastResult.final) {
+                            resultIndex--;
+                        }
 
                         // Only fire callback if the result is not finalized
                         var shouldFireCallback = !resultFinalized;
@@ -7288,6 +7442,7 @@ var MM = ( function (window, ajax, Faye) {
 
                             if (event.results[i].isFinal) {
                                 window.clearTimeout(earlyFinalResultTimeout);
+                                earlyFinalResultTimeout = null;
                                 result.final = true;
                                 result.transcript = transcript;
                                 resultFinalized = false;
@@ -7297,8 +7452,13 @@ var MM = ( function (window, ajax, Faye) {
                             }
                         }
 
-                        if (abortTimeout != 0) {
-                            setAbortTimeout();
+                        // if we restarted, we'll need to add a space for some results
+                        if (resultIndex >= 0 && !/^\s/.test(result.transcript.charAt(0))) {
+                            result.transcript = " " + result.transcript;
+                        }
+
+                        if (onEndAbortTimeout != null) {
+                            setOnEndAbortTimeout();
                         }
 
                         if (shouldFireCallback) {
@@ -7314,28 +7474,54 @@ var MM = ( function (window, ajax, Faye) {
                             }
                         }
                     };
-                    recognizer.onstart = function(event) {
-                        listener._listening = true;
-                        listener._lastStartTime = Date.now();
+                    recognizer.onstart = function (event) {
                         resultFinalized = false;
-                        MM.Util.testAndCallThis(listener._onStart, listener, event);
+                        setLongListenStopTimeout();
+
+                        if (!listener._listening || !listener._shouldKeepListening) {
+                            listener._listening = true;
+                            listener._lastStartTime = Date.now();
+                            MM.Util.testAndCallThis(listener._onStart, listener, event);
+                        }
                     };
-                    recognizer.onend = function(event) {
-                        window.clearTimeout(abortTimeout);
-                        abortTimeout = 0;
-                        listener._listening = false;
-                        MM.Util.testAndCallThis(listener._onEnd, listener, event);
+                    recognizer.onend = function (event) {
+                        window.clearTimeout(onEndAbortTimeout);
+                        onEndAbortTimeout = null;
+                        window.clearTimeout(longListenStopTimeout);
+                        longListenStopTimeout = null;
+                        window.clearTimeout(earlyFinalResultTimeout);
+                        earlyFinalResultTimeout = null;
+
+                        finalizeResult();
+                        resultFinalized = false;
+
+                        if (listener._shouldKeepListening) {
+                            recognizer.start();
+                        } else {
+                            listener._isStopping = false;
+                            listener._listening = false;
+                            MM.Util.testAndCallThis(listener._onEnd, listener, event);
+                        }
                     };
-                    recognizer.onerror = function(event) {
+                    recognizer.onerror = function (event) {
+                        if (listener._shouldKeepListening) {
+                            if (event.error === 'no-speech') {
+                                return;
+                            }
+                        }
+                        if (event.error === 'abort') {
+                            listener._isStopping = false;
+                        }
+                        listener._shouldKeepListening = false;
                         MM.Util.testAndCallThis(listener._onError, listener, event);
                     };
-                    recognizer.onaudioend = function(/* event <-- ignored */) {
+                    recognizer.onaudioend = function (event) {
                         if (!recognizer.continuous) {
-                            setAbortTimeout();
+                            setOnEndAbortTimeout();
                         }
                     };
                 }
-                recognizer.continuous = this.continuous;
+                listener._shouldKeepListening = recognizer.continuous = this.continuous;
                 recognizer.interimResults = this.interimResults;
                 var lang = (function () {
                     var language = '';
@@ -7359,8 +7545,14 @@ var MM = ( function (window, ajax, Faye) {
              * @instance
              */
             stop: function() {
+                this._shouldKeepListening = false;
                 if (this._recognizer) {
-                    this._recognizer.stop();
+                    if (this._isStopping) {
+                        this._recognizer.abort();
+                    } else {
+                        this._recognizer.stop();
+                        this._isStopping = true;
+                    }
                 }
             },
             /**
@@ -7370,6 +7562,7 @@ var MM = ( function (window, ajax, Faye) {
              * @instance
              */
             cancel: function() {
+                this._shouldKeepListening = false;
                 if (this._recognizer) {
                     this._recognizer.abort();
                 }
@@ -7380,7 +7573,7 @@ var MM = ( function (window, ajax, Faye) {
         Listener.prototype._listening = false;
         Listener.prototype._results = [];
         Listener.prototype.continuous = false;
-        Listener.prototype.lang = "";
+        Listener.prototype.lang = '';
         Listener.prototype.interimResults = false;
         Object.defineProperties(Listener.prototype, {
             listening: {
@@ -7395,7 +7588,7 @@ var MM = ( function (window, ajax, Faye) {
             }
         });
 
-        var languageTags6391To6392 = {'ab':'abk','aa':'aar','af':'afr','sq':'sqi','am':'amh','ar':'ara','an':'arg','hy':'hye','as':'asm','ae':'ave','ay':'aym','az':'aze','ba':'bak','eu':'eus','be':'bel','bn':'ben','bh':'bih','bi':'bis','bs':'bos','br':'bre','bg':'bul','my':'mya','ca':'cat','ch':'cha','ce':'che','zh':'zho','cu':'chu','cv':'chv','kw':'cor','co':'cos','hr':'hrv','cs':'ces','da':'dan','dv':'div','nl':'nld','dz':'dzo','en':'eng','eo':'epo','et':'est','fo':'fao','fj':'fij','fi':'fin','fr':'fra','gd':'gla','gl':'glg','ka':'kat','de':'deu','el':'ell','gn':'grn','gu':'guj','ht':'hat','ha':'hau','he':'heb','hz':'her','hi':'hin','ho':'hmo','hu':'hun','is':'isl','io':'ido','id':'ind','ia':'ina','ie':'ile','iu':'iku','ik':'ipk','ga':'gle','it':'ita','ja':'jpn','jv':'jav','kl':'kal','kn':'kan','ks':'kas','kk':'kaz','km':'khm','ki':'kik','rw':'kin','ky':'kir','kv':'kom','ko':'kor','kj':'kua','ku':'kur','lo':'lao','la':'lat','lv':'lav','li':'lim','ln':'lin','lt':'lit','lb':'ltz','mk':'mkd','mg':'mlg','ms':'msa','ml':'mal','mt':'mlt','gv':'glv','mi':'mri','mr':'mar','mh':'mah','mo':'mol','mn':'mon','na':'nau','nv':'nav','nd':'nde','nr':'nbl','ng':'ndo','ne':'nep','se':'sme','no':'nor','nb':'nob','nn':'nno','ny':'nya','oc':'oci','or':'ori','om':'orm','os':'oss','pi':'pli','pa':'pan','fa':'fas','pl':'pol','pt':'por','ps':'pus','qu':'que','rm':'roh','ro':'ron','rn':'run','ru':'rus','sm':'smo','sg':'sag','sa':'san','sc':'srd','sr':'srp','sn':'sna','ii':'iii','sd':'snd','si':'sin','sk':'slk','sl':'slv','so':'som','st':'sot','es':'spa','su':'sun','sw':'swa','ss':'ssw','sv':'swe','tl':'tgl','ty':'tah','tg':'tgk','ta':'tam','tt':'tat','te':'tel','th':'tha','bo':'bod','ti':'tir','to':'ton','ts':'tso','tn':'tsn','tr':'tur','tk':'tuk','tw':'twi','ug':'uig','uk':'ukr','ur':'urd','uz':'uzb','vi':'vie','vo':'vol','wa':'wln','cy':'cym','fy':'fry','wo':'wol','xh':'xho','yi':'yid','yo':'yor','za':'zha','zu':'zul'}
+        var languageTags6391To6392 = {'ab':'abk','aa':'aar','af':'afr','sq':'sqi','am':'amh','ar':'ara','an':'arg','hy':'hye','as':'asm','ae':'ave','ay':'aym','az':'aze','ba':'bak','eu':'eus','be':'bel','bn':'ben','bh':'bih','bi':'bis','bs':'bos','br':'bre','bg':'bul','my':'mya','ca':'cat','ch':'cha','ce':'che','zh':'zho','cu':'chu','cv':'chv','kw':'cor','co':'cos','hr':'hrv','cs':'ces','da':'dan','dv':'div','nl':'nld','dz':'dzo','en':'eng','eo':'epo','et':'est','fo':'fao','fj':'fij','fi':'fin','fr':'fra','gd':'gla','gl':'glg','ka':'kat','de':'deu','el':'ell','gn':'grn','gu':'guj','ht':'hat','ha':'hau','he':'heb','hz':'her','hi':'hin','ho':'hmo','hu':'hun','is':'isl','io':'ido','id':'ind','ia':'ina','ie':'ile','iu':'iku','ik':'ipk','ga':'gle','it':'ita','ja':'jpn','jv':'jav','kl':'kal','kn':'kan','ks':'kas','kk':'kaz','km':'khm','ki':'kik','rw':'kin','ky':'kir','kv':'kom','ko':'kor','kj':'kua','ku':'kur','lo':'lao','la':'lat','lv':'lav','li':'lim','ln':'lin','lt':'lit','lb':'ltz','mk':'mkd','mg':'mlg','ms':'msa','ml':'mal','mt':'mlt','gv':'glv','mi':'mri','mr':'mar','mh':'mah','mo':'mol','mn':'mon','na':'nau','nv':'nav','nd':'nde','nr':'nbl','ng':'ndo','ne':'nep','se':'sme','no':'nor','nb':'nob','nn':'nno','ny':'nya','oc':'oci','or':'ori','om':'orm','os':'oss','pi':'pli','pa':'pan','fa':'fas','pl':'pol','pt':'por','ps':'pus','qu':'que','rm':'roh','ro':'ron','rn':'run','ru':'rus','sm':'smo','sg':'sag','sa':'san','sc':'srd','sr':'srp','sn':'sna','ii':'iii','sd':'snd','si':'sin','sk':'slk','sl':'slv','so':'som','st':'sot','es':'spa','su':'sun','sw':'swa','ss':'ssw','sv':'swe','tl':'tgl','ty':'tah','tg':'tgk','ta':'tam','tt':'tat','te':'tel','th':'tha','bo':'bod','ti':'tir','to':'ton','ts':'tso','tn':'tsn','tr':'tur','tk':'tuk','tw':'twi','ug':'uig','uk':'ukr','ur':'urd','uz':'uzb','vi':'vie','vo':'vol','wa':'wln','cy':'cym','fy':'fry','wo':'wol','xh':'xho','yi':'yid','yo':'yor','za':'zha','zu':'zul'};
 
         /**
          * Converts language name or tag to the [ISO 639-2](http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) language
