@@ -48,8 +48,6 @@
 $narrow-device: "only screen and (max-device-width : 600px)";
 $narrow-window: "only screen and (max-width : 600px)";
 
-$white: #fff;
-$faint-grey: #f9f9f9;
 $light-grey: #888;
 $grey: #636363;
 $dark-grey: #333;
@@ -59,13 +57,7 @@ $query-height: 70px;
 $query-border-width: 2px;
 $query-inner-height: $query-height - 4*$query-border-width;
 $query-border-radius: $query-height / 2;
-
-// Microphone variables
 $icon-size: 32px;
-$mic-size: $query-inner-height;
-$mic-color: #2fbbfb;
-$disabled-mic-color: #aaa;
-$icon-color: white;
 
 .mindmeld-query {
   &, & * {
@@ -96,7 +88,7 @@ $icon-color: white;
 
   .mindmeld-query-input {
     width: calc(100% - 55px);
-    background-color: $white;
+    background-color: white;
     height: $query-height;
     z-index: 2;
     position: relative;
@@ -175,6 +167,15 @@ $icon-color: white;
 }
 
 
+/******************
+ * Microphone CSS *
+ ******************/
+
+$mic-size: $query-inner-height;
+$mic-icon-size: $icon-size;
+$mic-color: #2fbbfb;
+$disabled-mic-color: #aaa;
+
 @include keyframes(mic-listening-pulse) {
   0% {
     background-color: $mic-color;
@@ -223,9 +224,9 @@ $icon-color: white;
     //box-shadow: 0 0 0 1px rgba(0,0,0,0.3) inset;
 
     .icon {
-      width: $icon-size;
-      height: $icon-size;
-      fill: $icon-color;
+      width: $mic-icon-size;
+      height: $mic-icon-size;
+      fill: white;
       display: block;
       margin: 0 auto;
       position: relative;
