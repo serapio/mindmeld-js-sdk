@@ -38,16 +38,6 @@ gulp.task('buildMicrophone', ['mic.build']);
 
 // --------------------------------------------------------------------- //
 
-// -------------------------- Microphone Component -------------------------- //
-require('./gulp/tasks/microphoneComponent');
-
-gulp.task('buildMicrophoneComponent', ['micComponent.build']);
-
-gulp.task('mic.watch.all', ['mic.watch', 'micComponent.watch']);
-gulp.task('mic', ['mic.build', 'micComponent.build']);
-
-// --------------------------------------------------------------------- //
-
 // -------------------------- Search Input Widget -------------------------- //
 require('./gulp/tasks/searchInput');
 
