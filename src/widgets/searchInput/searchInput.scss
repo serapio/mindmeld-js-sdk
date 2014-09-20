@@ -1,0 +1,126 @@
+@mixin transition($args...) {
+  -webkit-transition: $args;
+  -moz-transition: $args;
+  -ms-transition: $args;
+  -o-transition: $args;
+  transition: $args;
+}
+
+$narrow-device: "only screen and (max-device-width : 600px)";
+$narrow-window: "only screen and (max-width : 600px)";
+
+$light-grey: #888;
+$grey: #636363;
+$dark-grey: #333;
+
+// Query variables
+$query-height: 70px;
+$query-border-width: 2px;
+$query-inner-height: $query-height - 4*$query-border-width;
+$query-border-radius: $query-height / 2;
+$icon-size: 32px;
+
+.mindmeld-query {
+  &, & * {
+    box-sizing: border-box;
+  }
+
+
+  height: $query-height;
+  width: 100%;
+
+  @media #{$narrow-device} {
+    margin: auto;
+  }
+
+  $spacing-unit: 238px;
+
+  @for $i from 1 through 8 {
+    $el-width: $spacing-unit * $i + 20px;
+    // ((card width + 20 padding) * i) + outer padding + border
+    $el-media: "all and (min-width: " + $el-width + ")";
+    @media #{$el-media} {
+      width: $el-width;
+    }
+  }
+
+  margin: 10px auto;
+  position: relative;
+
+  .mindmeld-query-input {
+    width: calc(100% - 55px);
+    background-color: white;
+    height: $query-height;
+    z-index: 2;
+    position: relative;
+    border-radius: $query-border-radius;
+    border: $query-border-width solid $grey;
+
+    div.mindmeld-query-text {
+      position: relative;
+      top: $query-border-width;
+      $query-text-left: 30px;
+      left: $query-text-left;
+
+      width: calc(100% - #{$query-text-left} - #{$query-height});
+      height: $query-inner-height;
+      min-height: 0;
+      border: none;
+      padding: 0;
+      outline: none;
+
+      color: $dark-grey;
+      font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-size: 18px;
+      font-weight: 300;
+      line-height: $query-inner-height;
+
+      resize: none;
+      box-shadow: none;
+
+      overflow: hidden;
+
+      &.interim {
+        color: $light-grey;
+      }
+
+      span {
+        display: inline-block;
+        vertical-align: middle;
+        line-height: normal;
+      }
+    }
+
+  }
+
+  .mindmeld-query-glass {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: $query-height;
+    border-top-right-radius: $query-border-radius;
+    border-bottom-right-radius: $query-border-radius;
+    z-index: 1;
+
+    background-color: $grey;
+    @include transition(background-color 0.5s ease-in-out);
+
+    &:hover {
+      cursor: pointer;
+      background-color: $dark-grey;
+    }
+
+    img.magnifying-glass {
+      position: absolute;
+      top: ($query-height - $icon-size)/2;
+      right: ($query-height - $icon-size)/2;;
+
+      width: $icon-size;
+      height: $icon-size;
+
+      transform: scale(-1, 1);
+    }
+  }
+
+}

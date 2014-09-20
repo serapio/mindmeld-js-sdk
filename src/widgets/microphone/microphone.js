@@ -24,7 +24,6 @@
   var MindMeldMicrophone = window.MindMeldMicrophone = window.MindMeldMicrophone || {};
   var listener;
   var volumeMonitor;
-  var queryElement;
   var microphoneElement;
 
   /**
@@ -36,9 +35,8 @@
    * @param element a vanilla DOM element that contains the microphone.
    * Generally `document.getElementById('mindmeld-microphone')`
    */
-  MindMeldMicrophone.initialize = function initialize (_queryElement) {
-    queryElement = _queryElement;
-    microphoneElement = queryElement.querySelector('.mindmeld-microphone');
+  MindMeldMicrophone.initialize = function initialize (element) {
+    microphoneElement = element;
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
       var errorMessage = 'This browser does not support speech recognition';
@@ -155,50 +153,6 @@
       microphoneElement.classList.remove('listening');
       microphoneElement.classList.remove('lock');
     });
-
-    MindMeldMicrophone.on('result', function(result) {
-      queryElement.querySelector('.mindmeld-query-text span').innerHTML = result.transcript;
-      if (result.final) {
-        queryElement.querySelector('.mindmeld-query-text').classList.remove('interim');
-        MindMeldMicrophone.publishEvent('text', result.transcript);
-      } else {
-        queryElement.querySelector('.mindmeld-query-text').classList.add('interim');
-      }
-    });
-
-    var qt = queryElement.querySelector('.mindmeld-query-text');
-    qt.addEventListener('focus', function() {
-      qt.classList.add('interim');
-    });
-
-    qt.addEventListener('keypress', function (e) {
-      // We are looking for CR (keyCode 13)
-      var keyCode = e.keyCode;
-      if (keyCode !== 13) {
-        return;
-      }
-
-      // User pressed return
-      qt.blur();
-      qt.classList.remove('interim');
-      var text = qt.querySelector('span').innerHTML.trim();
-      qt.querySelector('span').innerHTML = text;
-      MindMeldMicrophone.publishEvent('text', text);
-
-      e.preventDefault();
-    });
-
-    console.log('found glass', queryElement.querySelector('.mindmeld-query-glass'));
-    queryElement.querySelector('.mindmeld-query-glass').addEventListener('click',
-      function (e) {
-        console.log('Clicking glass');
-        qt.classList.remove('interim');
-        var text = qt.querySelector('span').innerHTML.trim();
-        MindMeldMicrophone.publishEvent('text', text);
-
-        return false;
-      }
-    );
 
   }
 

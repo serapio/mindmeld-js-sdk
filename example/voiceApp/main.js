@@ -1,5 +1,6 @@
 /* global MM, $ */
 
+/* Initialize Widgets */
 var Cards = window.MindMeldCards;
 Cards.initialize({
   parentSelector: '#cards',
@@ -9,21 +10,11 @@ Cards.initialize({
   duration: 300
 });
 
+var SearchInput = window.MindMeldSearchInput;
+
 var Microphone = window.MindMeldMicrophone;
 
-Microphone.on('start', function () {
-  console.log('Microphone started');
-});
-
-Microphone.on('stop', function () {
-  console.log('Microphone stopped');
-});
-
-Microphone.on('error', function (event) {
-  // Some errors are benign
-  if (event.error === 'abort' || event.error === 'no-speech') return;
-  console.error('Microphone error', event.error);
-});
+/* Helper functions for processing and submitting data */
 
 // Convert the raw data for card into the data needed for the template.
 // Must return new data
@@ -45,7 +36,7 @@ var processRawCardData = function (card) {
   return card;
 };
 
-Microphone.on('text',  function(text) {
+var submitText = function(text) {
   Cards.setLoading(true);
   MM.activeSession.textentries.post({
     text: text,
@@ -72,10 +63,32 @@ Microphone.on('text',  function(text) {
     });
   });
 
+};
+
+/* Set up widget events */
+
+Microphone.on('start', function () {
+  console.log('Microphone started');
 });
 
-////////
-// Config
+Microphone.on('stop', function () {
+  console.log('Microphone stopped');
+});
+
+Microphone.on('error', function (event) {
+  // Some errors are benign
+  if (event.error === 'aborted' || event.error === 'no-speech') return;
+  console.error('Microphone error', event.error);
+});
+
+Microphone.on('result', function(result) {
+  SearchInput.setText(result.transcript, result.final);
+  submitText(result.transcript);
+});
+
+SearchInput.on('submitText', submitText);
+
+/* Initialize MindMeld */
 
 var config = {
   appid: 'a8794c3630531468cfdba416823cfec507a4249c',
@@ -85,7 +98,8 @@ var config = {
 
 MM.start(config, function onSuccess () {
   console.log('MindMeld initialized successfully.');
-  Microphone.initialize($('.mindmeld-query')[0]);
+  Microphone.initialize($('.mindmeld-microphone')[0]);
+  SearchInput.initialize($('.mindmeld-query')[0]);
 
 }, function onFail (error) {
   console.error('MindMeld failed to initialize:', error);

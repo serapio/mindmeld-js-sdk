@@ -75,7 +75,8 @@ gulp.task('cards.build', ['cards.js', 'cards.css', 'cards.html', 'cards.images']
 
 // Watch for changes in source files and automatically build
 gulp.task('cards.watch', ['cards.build'], function () {
-  gulp.watch([paths.js], ['cards.js']);
-  gulp.watch([paths.styles], ['cards.css']);
-  gulp.watch([paths.html], ['cards.html']);
+    gulp.watch([paths.js], ['cards.js']);
+    gulp.watch([paths.styles], ['cards.css']);
+    gulp.watch([paths.html], ['cards.html']);
+    gulp.watch([paths.images], ['cards.images']);
 });
