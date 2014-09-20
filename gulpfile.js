@@ -60,8 +60,8 @@ require('./gulp/tasks/tests');
 
 
 // General Tasks
-gulp.task('archive', ['sdk.archive', 'docs', 'sw.build', 'vn.build', 'mic', 'searchInput.build']);
-gulp.task('build', ['sdk.build', 'sw.build', 'vn.build', 'mic', 'searchInput.build', 'tests.build']);
+gulp.task('archive', ['sdk.archive', 'docs', 'build']);
+gulp.task('build', ['sdk.build', 'sw.build', 'vn.build', 'mic.build', 'cards.build', 'searchInput.build', 'tests.build']);
 
 gulp.task('docs', function () {
   // We do it this slightly hacky way, because you need to jsdoc all the files at once,
