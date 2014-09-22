@@ -8,15 +8,15 @@
 <body>
     <h2>The MindMeld Search Input Example</h2>
 
-    <div class="mindmeld-query">
+    <div class="mindmeld-search">
 
-      <div class="mindmeld-query-input">
-        <div class="mindmeld-query-text" contenteditable="true">
+      <div class="mindmeld-search-input">
+        <div class="mindmeld-search-text" contenteditable="true">
           <span>What dresses do you have in red?</span>
         </div>
       </div>
 
-      <div class="mindmeld-query-glass">
+      <div class="mindmeld-search-glass">
         <img class="magnifying-glass" src="../../../dist/widgets/searchInput/images/magnifying_glass.svg" />
       </div>
 
@@ -32,7 +32,7 @@
             initSearchInput();
 
             function initSearchInput () {
-                var searchElement = document.querySelector('.mindmeld-query');
+                var searchElement = document.querySelector('.mindmeld-search');
                 subscribeToSearchInputEvents();
                 MindMeldSearchInput.initialize(searchElement);
                 MindMeldSearchInput.setText('hello', false);

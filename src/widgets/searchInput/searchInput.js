@@ -11,7 +11,7 @@
 
   MindMeldSearchInput.initialize = function initialize (element) {
     containerElement = element;
-    textElement = containerElement.querySelector('.mindmeld-query-text');
+    textElement = containerElement.querySelector('.mindmeld-search-text');
     textElement.addEventListener('focus', function() {
       MindMeldSearchInput.setFinal(false);
     });
@@ -32,7 +32,7 @@
       e.preventDefault();
     });
 
-    containerElement.querySelector('.mindmeld-query-glass').addEventListener('click',
+    containerElement.querySelector('.mindmeld-search-glass').addEventListener('click',
       function (e) {
         console.log('Clicking glass');
         MindMeldSearchInput.setFinal(true);

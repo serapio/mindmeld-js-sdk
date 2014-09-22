@@ -13,20 +13,20 @@ $light-grey: #888;
 $grey: #636363;
 $dark-grey: #333;
 
-// Query variables
-$query-height: 70px;
-$query-border-width: 2px;
-$query-inner-height: $query-height - 4*$query-border-width;
-$query-border-radius: $query-height / 2;
+// search variables
+$search-height: 70px;
+$search-border-width: 2px;
+$search-inner-height: $search-height - 4*$search-border-width;
+$search-border-radius: $search-height / 2;
 $icon-size: 32px;
 
-.mindmeld-query {
+.mindmeld-search {
   &, & * {
     box-sizing: border-box;
   }
 
 
-  height: $query-height;
+  height: $search-height;
   width: 100%;
 
   @media #{$narrow-device} {
@@ -47,23 +47,23 @@ $icon-size: 32px;
   margin: 10px auto;
   position: relative;
 
-  .mindmeld-query-input {
+  .mindmeld-search-input {
     width: calc(100% - 55px);
     background-color: white;
-    height: $query-height;
+    height: $search-height;
     z-index: 2;
     position: relative;
-    border-radius: $query-border-radius;
-    border: $query-border-width solid $grey;
+    border-radius: $search-border-radius;
+    border: $search-border-width solid $grey;
 
-    div.mindmeld-query-text {
+    div.mindmeld-search-text {
       position: relative;
-      top: $query-border-width;
-      $query-text-left: 30px;
-      left: $query-text-left;
+      top: $search-border-width;
+      $search-text-left: 30px;
+      left: $search-text-left;
 
-      width: calc(100% - #{$query-text-left} - #{$query-height});
-      height: $query-inner-height;
+      width: calc(100% - #{$search-text-left} - #{$search-height});
+      height: $search-inner-height;
       min-height: 0;
       border: none;
       padding: 0;
@@ -73,7 +73,7 @@ $icon-size: 32px;
       font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
       font-size: 18px;
       font-weight: 300;
-      line-height: $query-inner-height;
+      line-height: $search-inner-height;
 
       resize: none;
       box-shadow: none;
@@ -93,14 +93,14 @@ $icon-size: 32px;
 
   }
 
-  .mindmeld-query-glass {
+  .mindmeld-search-glass {
     position: absolute;
     top: 0;
     right: 0;
     width: 100px;
-    height: $query-height;
-    border-top-right-radius: $query-border-radius;
-    border-bottom-right-radius: $query-border-radius;
+    height: $search-height;
+    border-top-right-radius: $search-border-radius;
+    border-bottom-right-radius: $search-border-radius;
     z-index: 1;
 
     background-color: $grey;
@@ -113,8 +113,8 @@ $icon-size: 32px;
 
     img.magnifying-glass {
       position: absolute;
-      top: ($query-height - $icon-size)/2;
-      right: ($query-height - $icon-size)/2;;
+      top: ($search-height - $icon-size)/2;
+      right: ($search-height - $icon-size)/2;;
 
       width: $icon-size;
       height: $icon-size;

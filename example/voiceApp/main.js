@@ -99,7 +99,7 @@ var config = {
 MM.start(config, function onSuccess () {
   console.log('MindMeld initialized successfully.');
   Microphone.initialize($('.mindmeld-microphone')[0]);
-  SearchInput.initialize($('.mindmeld-query')[0]);
+  SearchInput.initialize($('.mindmeld-search')[0]);
 
 }, function onFail (error) {
   console.error('MindMeld failed to initialize:', error);
