@@ -1,7 +1,7 @@
 /* global Handlebars, jQuery, Spinner */
 /* exported Cards */
 
-;(function (Handlebars, $) {
+;(function (Handlebars, $, Spinner) {
 
   // options for initialization
   var options = {};
@@ -248,4 +248,4 @@
 
   window.MindMeldCards = MindMeldCards;
 
-})(Handlebars, jQuery);
+})(Handlebars, jQuery, Spinner);
