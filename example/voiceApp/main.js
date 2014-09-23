@@ -7,7 +7,7 @@ Cards.initialize({
   cardSelector: '.card',
   templateDirectory: '../../dist/widgets/cards',
   templateName: 'cardTemplate',
-  duration: 300
+  animationDuration: 600
 });
 
 var SearchInput = window.MindMeldSearchInput;
