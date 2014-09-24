@@ -377,6 +377,28 @@ if (MM.support.speechRecognition) { // check for support in the current browser
 }
 ```
 
+## Widgets and Examples
+We've made some widgets that leverage the SDK to perform some common tasks.
+You'll find them in `src/widgets/`; three that serve as good components are:
+
+* MindMeldMicrophone: In `src/widgets/microphone/`, there are html, scss, and
+  js files that wrap the Listener into a responsive UI component.
+* MindMeldSearchInput: In `src/widgets/searchInput/`, there are html, scss, and
+  js files for a search input that works well with the microphone.
+* MindMeldCards: In `src/widgets/cards/`, there are html, scss, and
+  js files for a customizeable, animated, and responsive component to display
+  cards for the documents returned by the SDK.
+
+In the `example/` directory, we have several code examples for how to use the
+SDK and the widgets.  In `example/widgets/`, we have made several examples on
+how to use the widgets individually.
+
+To see an example fully-functional MindMeld app, look inside of
+`example/voiceApp/`.  This application ties the microphone, search input, and cards
+widgets together in a standalone app.  With this application,
+you'll see how to build natural-language voice search into your application
+with very few lines of code.
+
 ## Repository Contents ([mindmeld-js-sdk](https://github.com/expectlabs/mindmeld-js-sdk))
 * *src/*: Directory containing all source files for SDK and widgets
 * *src/sdk/*: Directory containing source files for mindmeld.js
