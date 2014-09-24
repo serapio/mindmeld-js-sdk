@@ -101,8 +101,13 @@ Microphone.on('stop', function () {
  */
 Microphone.on('error', function (event) {
   // Some errors are benign
-  if (event.error === 'aborted' || event.error === 'no-speech') return;
-  console.error('Microphone error', event.error);
+  if (event.error === 'aborted') {
+    console.log('Microphone aborted');
+  } else if (event.error === 'no-speech') {
+    console.log('Microphone did not receive any speech.');
+  } else {
+    console.error('Microphone error', event.error);
+  }
 });
 
 /*
@@ -140,7 +145,7 @@ var config = {
 MM.start(config, function onSuccess () {
   console.log('MindMeld initialized successfully.');
 
-  // Pass in DOM (not jQuery) elements to this initializers.
+  // Pass in DOM (not jQuery) elements to these initializers.
   Microphone.initialize($('.mindmeld-microphone')[0]);
   SearchInput.initialize($('.mindmeld-search')[0]);
 
