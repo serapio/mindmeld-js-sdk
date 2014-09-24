@@ -9,6 +9,11 @@
   var textElement;
 
 
+  /**
+   * Initialize the search element.  Pass in the DOM (not jQuery) element
+   * that contains the search input.  In the provided html snippet, it would be
+   * `document.querySelector('.mindmeld-search')`.
+   */
   MindMeldSearchInput.initialize = function initialize (element) {
     containerElement = element;
     textElement = containerElement.querySelector('.mindmeld-search-text');
@@ -32,6 +37,11 @@
       e.preventDefault();
     });
 
+    textElement.addEventListener('click', function (e) {
+      //We want to focus on the span inside.
+      textElement.querySelector('span').focus();
+    });
+    
     containerElement.querySelector('.mindmeld-search-glass').addEventListener('click',
       function (e) {
         console.log('Clicking glass');
@@ -46,6 +56,10 @@
     MindMeldSearchInput.publishEvent('init');
   };
 
+  /**
+   * Set whether the search text is considered finalized or not.
+   * Non-final text is de-emphasized.
+   */
   MindMeldSearchInput.setFinal = function setFinal (isFinal) {
     if (isFinal) {
       textElement.classList.remove('interim');
@@ -54,12 +68,17 @@
     }
   };
 
+  /**
+   * Get the text of the search input.
+   */
   MindMeldSearchInput.getText = function getText () {
     return textElement.querySelector('span').innerHTML;
   };
 
-  // Sets the text of the search input. Use isFinal boolean to
-  // indicate whether the text is finalized or not
+  /**
+   * Sets the text of the search input. Use isFinal boolean to
+   * indicate whether the text is finalized or not
+   */
   MindMeldSearchInput.setText = function setText (text, isFinal) {
     MindMeldSearchInput.setFinal(isFinal);
     textElement.querySelector('span').innerHTML = text;
@@ -86,7 +105,7 @@
   /**
   * Publish microphone events to subscribers
   */
-  MindMeldSearchInput.publishEvent = function publishEvent (eventName) {
+  MindMeldSearchInput.publishEvent = function publishEvent (eventName /*, args...*/) {
     var subscribers = subscriptions[eventName];
     if (subscribers !== undefined) {
       var args = Array.prototype.slice.call(arguments, 1);

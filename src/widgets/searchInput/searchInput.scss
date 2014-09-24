@@ -67,7 +67,6 @@ $icon-size: 32px;
       min-height: 0;
       border: none;
       padding: 0;
-      outline: none;
 
       color: $dark-grey;
       font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -88,6 +87,8 @@ $icon-size: 32px;
         display: inline-block;
         vertical-align: middle;
         line-height: normal;
+        outline: none;
+        padding-left: 2px; //This ensures the cursor will appear, even when the span is empty.
       }
     }
 

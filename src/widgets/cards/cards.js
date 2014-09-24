@@ -5,12 +5,8 @@
 
   // options for initialization
   var options = {};
-  // Map from documentid to {height:, width:}
-  var existingCardSizes = {};
   // Store how wide a row of cards is, to intelligently resize on window resize events.
   var rowWidth, lastCardWidth;
-  // Set each card at a slightly different level, so they can slide under each other.
-  var baseZIndex = 50;
   // Spinner for loading
   var spinner;
 
@@ -54,7 +50,7 @@
    * Calculates the screen position for the card.
    * Cards are placed left to right, top to bottom.
    */
-  var calculateCardScreenPosition = function ($card, index) {
+  var calculateCardScreenPosition = function ($card, index, existingCardSizes) {
     var parentWidth = $(options.parentSelector).width();
     var cardWidth = $card.outerWidth(true);
     var cardHeight = $card.outerHeight(true);
@@ -91,12 +87,16 @@
     return { top: cardTop, left: cardLeft };
   };
 
-  var layoutCard = function ($card, index) {
+  /*
+   * Layout a single card, given the index and previous card sizes.
+   */
+  var layoutCard = function ($card, index, existingCardSizes) {
     // Set the z-index so that cards cleanly move over one another.
     // This applies to their pre-animation index
-    $card.css('z-index', baseZIndex - index);
+    var BASE_Z_INDEX = 50;
+    $card.css('z-index', BASE_Z_INDEX - index);
 
-    var position = calculateCardScreenPosition($card, index);
+    var position = calculateCardScreenPosition($card, index, existingCardSizes);
     if ( $card.attr('new') ) {
       $card.attr('new', null);
       $card.css('left', position.left + 'px');
@@ -109,13 +109,15 @@
       $card.transition({
         left: position.left,
         top: position.top,
-      });
+      }, options.animationDuration);
     }
   };
 
   var MindMeldCards = {
 
     /**
+     * Initialize the cards widget with provided options.
+     *
      * options: {
      *   templateName: (String) name of Handlebars template for the card.  We will
      *     look for [templateDirectory]/[templateName].html
@@ -124,14 +126,13 @@
      *   parentSelector: (String) jQuery selector for parent element of cards, eg '#cards'.
      *     This element must have a non-zero width.
      *   cardSelector: (String) jQuery selector for the cards, eg '.card'.
-     *   animationDuration: (Number) Duration (in ms) for the animations.  Default 300.
-     *
+     *   animationDuration: (Number) Duration (in ms) for the animations.  Default 500.
      * }
      */
     initialize: function (_options) {
       options = _options;
       if ( !('animationDuration' in options) ) {
-        options.animationDuration = 300;
+        options.animationDuration = 500;
       }
 
       //Re-layout cards on window size change.
@@ -155,9 +156,6 @@
     setCards: function (cards, onClick) {
       console.log('Appending cards', cards);
       //TODO: Handle no cards case.
-
-      // Clear out old sizes
-      existingCardSizes = {};
 
       // First set the DOM correctly
       cards.forEach( function (card, i) {
@@ -214,8 +212,12 @@
      * It should be idempotent.
      */
     layoutCards: function () {
+      // Keep track of the sizes of cards, to know where to place the next one.
+      // Map from documentid to {height:, width:}
+      var existingCardSizes = {};
+
       $(options.cardSelector).each(function (index, cardElt) {
-        layoutCard( $(cardElt), index );
+        layoutCard( $(cardElt), index, existingCardSizes );
       });
 
     },
@@ -232,6 +234,7 @@
         if (spinner) {
           spinner.spin($(options.parentSelector)[0]);
         } else if (Spinner) {
+          // If we don't have a Spinner, just don't show the animation
           spinner = new Spinner({
             length: 60,
             width: 15,
