@@ -3,10 +3,11 @@
 <html>
 <head>
   <title>MindMeld VoiceApp Example</title>
-  <link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+  <meta name="viewport" content="initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="../../dist/widgets/searchInput/searchInput.css">
   <link rel="stylesheet" href="../../dist/widgets/microphone/microphone.css">
-  <link rel="stylesheet" href="../../dist/widgets/cards/cards.css" />
+  <link rel="stylesheet" href="../../dist/widgets/cards/cards.css">
 
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.9/jquery.transit.min.js"></script>
@@ -26,6 +27,14 @@
   html, body {
     min-height: 100%;
     margin: 0;
+  }
+  @-ms-viewport{
+    width: extend-to-zoom;
+    zoom: 1.0;
+  }
+  @viewport{
+    width: extend-to-zoom;
+    zoom: 1.0;
   }
   </style>
 

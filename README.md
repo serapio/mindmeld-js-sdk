@@ -397,7 +397,9 @@ To see an example fully-functional MindMeld app, look inside of
 `example/voiceApp/`.  This application ties the microphone, search input, and cards
 widgets together in a standalone app.  With this application,
 you'll see how to build natural-language voice search into your application
-with very few lines of code.
+with very few lines of code.  We've explained the structure of the app, and how
+to run and modify it, in the
+[developer center](https://developer.expectlabs.com/docs/sdks/js/starterApp).
 
 ## Repository Contents ([mindmeld-js-sdk](https://github.com/expectlabs/mindmeld-js-sdk))
 * *src/*: Directory containing all source files for SDK and widgets
