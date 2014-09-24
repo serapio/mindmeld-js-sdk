@@ -17,6 +17,9 @@ dist/test/
 mindmeld-js-sdk.iml
 .idea/
 
+# Config file for git-sync
+sftp-config.json
+
 # Development sandbox
 sandbox/
 
@@ -24,3 +27,15 @@ sandbox/
 .sass-cache/
 searchWidget/.sass-cache
 searchWidget/css/*.map
+
+# Microphone Widget
+dist/widgets/microphone/mindmeldMicrophone.min.js.map
+
+# Microphone Web Component
+dist/widgets/microphone/component/mindmeld-microphone-component.js
+dist/widgets/microphone/component/mindmeld-microphone-component.min.js
+dist/widgets/microphone/component/mindmeld-microphone-component.min.js.map
+
+# Search Input
+dist/widgets/searchInput/mindmeldSearchInput.min.js.map
+
