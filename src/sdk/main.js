@@ -18,7 +18,7 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.6.0',
+        value: '2.7.0',
         writable: false
     });
 
@@ -2633,7 +2633,7 @@ var MM = ( function (window, ajax, Faye) {
          */
         submitTextEntry: function (textResult) {
             var self = this;
-            if (textResult.final !== undefined && 
+            if (textResult.final !== undefined &&
                 textResult.segmentID &&
                 textResult.resultID){
                 if (textResult.segmentID !== self.textSegmentID) {

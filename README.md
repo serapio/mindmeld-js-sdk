@@ -28,12 +28,12 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.6.0.js"></script>
+<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.7.0.js"></script>
 ```
 
-* Un-minified: [mindmeld-2.6.0.js][versionedSDKDownloadLink]
-* Minified: [mindmeld-2.6.0.min.js][versionedMinifiedSDKDownloadLink]
-* Both + Hello World + Documentation: [mindmeld-js-sdk-2.6.0.zip][versionedSDKZIPDownloadLink]
+* Un-minified: [mindmeld-2.7.0.js][versionedSDKDownloadLink]
+* Minified: [mindmeld-2.7.0.min.js][versionedMinifiedSDKDownloadLink]
+* Both + Hello World + Documentation: [mindmeld-js-sdk-2.7.0.zip][versionedSDKZIPDownloadLink]
 
 ### Clone git repository
 Both files are also available directly from the mindmeld-js-sdk git repository. Simply clone the repo:
@@ -397,7 +397,9 @@ To see an example fully-functional MindMeld app, look inside of
 `example/voiceApp/`.  This application ties the microphone, search input, and cards
 widgets together in a standalone app.  With this application,
 you'll see how to build natural-language voice search into your application
-with very few lines of code.
+with very few lines of code.  We've explained the structure of the app, and how
+to run and modify it, in the
+[developer center](https://developer.expectlabs.com/docs/sdks/js/starterApp).
 
 ## Repository Contents ([mindmeld-js-sdk](https://github.com/expectlabs/mindmeld-js-sdk))
 * *src/*: Directory containing all source files for SDK and widgets
@@ -432,6 +434,6 @@ with very few lines of code.
 [latestSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld.js
 [latestMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld.min.js
 [latestSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld-js-sdk.zip
-[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.6.0.js
-[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.6.0.min.js
-[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.6.0.zip
+[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.7.0.js
+[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.7.0.min.js
+[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.7.0.zip
