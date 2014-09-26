@@ -32,9 +32,9 @@ var versionedMinifiedMindMeldName = '';
  */
 gulp.task('sdk.concat', function () {
     return gulp.src([
-            srcMMDirectory + 'vendor/faye.js',
-            srcMMDirectory + 'vendor/ajax.js',
-            srcMMDirectory + 'main.js'
+        srcMMDirectory + 'vendor/faye.js',
+        srcMMDirectory + 'vendor/ajax.js',
+        srcMMDirectory + 'main.js'
     ])
         .pipe(concat('mindmeld.js'))
         .pipe(gulp.dest(distMMDirectory));
@@ -147,7 +147,7 @@ gulp.task('embed.build', function () {
  * Watch for changes in mindmeld js files and build mindmeld.js
  */
 gulp.task('sdk.watch', ['sdk.uglify', 'embed.build'], function () {
-    gulp.watch(srcMMDirectory + '**/*.js', ['sdk.concat']);
+    gulp.watch(srcMMDirectory + '**/*.js', ['sdk.uglify']);
     gulp.watch(srcDirectory + 'embed.js', ['embed.build']);
 });
 
