@@ -40,7 +40,7 @@ var MM = ( function (window, ajax, Faye) {
         }
 
         if ( obj.constructor &&
-            !hasOwn.call( obj.constructor.prototype, 'isPrototypeOf' ) ) {
+            !obj.constructor.prototype.hasOwnProperty('isPrototypeOf' ) ) {
             return false;
         }
 
