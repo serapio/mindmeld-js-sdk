@@ -5276,12 +5276,14 @@ var MM = ( function (window, ajax, Faye) {
 
     MM.models.TextEntry = MM.Internal.createSubclass(MM.models.Model, {
         /**
-         * MM.textEntry is a namespace that represents a textentry within the active session. It can only be used after
-         * textentryid has been set. It can be used to keep track of interim speech results that are posted to the API
-         * as a textentry. This namespace provides methods to retrieve, update, and delete a textentry from the MM API.
+         * The MM.models.TextEntry class is used to store and update a given text entry. You may only update
+         * an existing TextEntry if it has a textentryid. To set the textentryid, use the
+         * {@link MM.activeSession.textentries.post} function to post a text entry and use the
+         * textentryid field set in the response.
          *
          * @namespace MM.textEntry
          * @memberOf MM
+         * @private
          */
         constructor: function (data) {
             MM.models.TextEntry.superclass.constructor.apply(this, arguments);
@@ -5517,10 +5519,25 @@ var MM = ( function (window, ajax, Faye) {
                 MM.Util.testAndCall(onSuccess, response);
             }
         },
+      
         /**
-         * Submits a text entry that can contain a sessionID and resultID
+         * Submits a text entry that can contain a sessionID and resultID. This is intended to be used when you would
+         * like to submit a text entry and then post incremental updates to it.
+         * {@link MM.activeSession.textentries.submitTextEntry} handles POSTing a new text entry, and POSTing updates
+         * to the new text entry in a reliable fashion.
          *
-         * @param {Object} textResult
+         * @param {Object} textResult           Object containing new text entry data. A superset of textEntryData
+         *                                      used in {@link MM.activeSession.textentries.post}.
+         * @param {string} textResult.text      New text to be submitted
+         * @param {string} textResult.type      A short string that can be used to categorize text entries into
+         *                                      different buckets
+         *
+         * @param {number} textResult.weight    A decimal number indicating how important the text entry is to ranking.
+         * @param {string} [textResult.language]  An ISO 629-2 language code to specify text language
+         * @param {number} [textResult.segmentID] An identifier for a unique text entry. This could be an ID for a new sentence
+         *                                        spoken from MM.Listener or a new chat message
+         * @param {number} [textResult.resultID]  An identifier for a unique update to a given text entry. This could be the ID for
+         *                                        a new result returned from MM.Listener that isn't yet final.
          * @memberOf MM.activeSession.textentries
          * @instance
          */
@@ -5611,17 +5628,19 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         /**
+         *  Use {@link MM.activeSession.textentries.addTextEntryPostedHandler} to add a callback for when new
+         *  text entries are posted.
          *
          * @param {function=} handler
          * @memberOf MM.activeSession.textentries
          * @instance
          */
-
         addTextEntryPostedHandler: function (handler) {
             this.textEntryPostedHandlers.push(handler);
         },
 
         /**
+         * Called every time a text entry is posted and handles calling all textEntryPostedHandlers.
          *
          * @param response
          * @private

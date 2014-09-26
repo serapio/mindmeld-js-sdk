@@ -110,7 +110,19 @@
     var holdDuration = 1000;
 
     var micButton = microphoneElement.querySelector('.icon-container');
-    micButton.addEventListener('mousedown', function onMouseDown () {
+    micButton.addEventListener('mousedown', onMouseDown);
+    micButton.addEventListener('touchstart',
+      // some mobile devices fire both 'touchstart' and 'mousedown'
+      // this prevents trying to start the listener twice at
+      // the same time
+      function onTouchStart (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        onMouseDown();
+      }
+    );
+
+    function onMouseDown () {
       if (listener.listening) {
         MindMeldMicrophone.stop();
       } else {
@@ -122,21 +134,41 @@
           holdDuration
         );
       }
-    });
+    }
 
-    micButton.addEventListener('mouseup', function onMouseUp () {
+    micButton.addEventListener('mouseup', onMouseUp);
+    micButton.addEventListener('touchend',
+      function onTouchEnd (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        onMouseUp();
+      }
+    );
+
+    function onMouseUp () {
+    counter++;
+      $('#counter').text(counter);
       if (holdTimeout !== null) {
         // We have not reached the hold timeout yet, start mic in normal mode
         clearTimeout(holdTimeout);
         holdTimeout = null;
         MindMeldMicrophone.start();
       }
-    });
+    }
 
-    micButton.addEventListener('mouseout', function onMouseOut () {
+    micButton.addEventListener('mouseout', onMouseOut);
+    micButton.addEventListener('touchleave',
+      function onTouchLeave (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        onMouseOut();
+      }
+    );
+
+    function onMouseOut () {
       clearTimeout(holdTimeout);
       holdTimeout = null;
-    });
+    }
   }
 
   // Subscribes to microphone start/stop events to add CSS classes
