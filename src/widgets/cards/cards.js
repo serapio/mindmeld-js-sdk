@@ -119,10 +119,7 @@
      * Initialize the cards widget with provided options.
      *
      * options: {
-     *   templateName: (String) name of Handlebars template for the card.  We will
-     *     look for [templateDirectory]/[templateName].html
-     *   templateDirectory: (String) name of directory the templates are in,
-     *     eg 'html/templates'
+     *   templatePath: (String) path to Handlebars template for the card.
      *   parentSelector: (String) jQuery selector for parent element of cards, eg '#cards'.
      *     This element must have a non-zero width.
      *   cardSelector: (String) jQuery selector for the cards, eg '.card'.
@@ -166,9 +163,7 @@
           placeCardInDom($card, i);
         } else {
           // New card; render and place in DOM
-          var templateUrl = options.templateDirectory ? options.templateDirectory + '/' : '';
-          templateUrl += options.templateName + '.html';
-          $card = $( render( templateUrl, card ) );
+          $card = $( render( options.templatePath, card ) );
 
           $card.css('opacity', 0);
           $card.attr('new', true);

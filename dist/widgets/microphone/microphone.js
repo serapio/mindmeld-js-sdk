@@ -54,7 +54,7 @@
   // Sets the listener config for a new MM.Listener The mindmeld-microphone's
   // event handlers publish the Listener events like onResult and onEnd
   function initMMListener () {
-    listener = new MM.Listener({
+    listener = MM.listener = new MM.Listener({
 
       interimResults: true,
 

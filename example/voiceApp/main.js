@@ -20,16 +20,18 @@ var Microphone = window.MindMeldMicrophone;
 
 $(function () {
   Cards.initialize({
+    // CSS Selector of the element that will contain the cards
     parentSelector: '#cards',
+    // CSS Selector for the created cards (chosen in the cards template)
     cardSelector: '.card',
-    templateDirectory: '../../dist/widgets/cards',
-    templateName: 'cardTemplate',
+    // Path to Handlebars template for the card
+    templatePath: '../../dist/widgets/cards/cardTemplate.html',
+    // Duration of card animations in ms
     animationDuration: 600
   });
 
   // Pass in DOM (not jQuery) elements to these initializers.
   Microphone.initialize($('.mindmeld-microphone')[0]);
-
   SearchInput.initialize($('.mindmeld-search')[0]);
 
 });
