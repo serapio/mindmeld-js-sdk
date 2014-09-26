@@ -150,7 +150,7 @@ var MM = ( function (window, ajax, Faye) {
      */
     MM.config = {
         cleanUrl: 'https://mindmeldv2.expectlabs.com/',
-        fayeClientUrl: 'https://push-west-prod-a.expectlabs.com:443/faye'
+        fayeClientUrl: 'https://pushv2.expectlabs.com:443/faye'
     };
 
     /**
@@ -2616,7 +2616,7 @@ var MM = ( function (window, ajax, Faye) {
          */
         submitTextEntry: function (textResult) {
             var self = this;
-            if (textResult.final !== undefined && 
+            if (textResult.final !== undefined &&
                 textResult.segmentID &&
                 textResult.resultID){
                 if (textResult.segmentID !== self.textSegmentID) {
