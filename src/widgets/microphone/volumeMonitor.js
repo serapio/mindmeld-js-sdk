@@ -29,7 +29,7 @@
         var self = this;
 
         if (!this.audioStarted) {
-            this.context = new AudioContext();
+            this.context = this.context || new AudioContext();
             this.analyzer = this.context.createAnalyser();
             this.analyzer.smoothingTimeConstant = 0.18;
             this.analyzer.fftSize = 256;
