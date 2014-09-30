@@ -1051,7 +1051,7 @@ var MMVoice = {
         UTIL.log('getting documents');
         var self = this;
 
-        var queryParams = { limit: self.config.numResults || 14 };
+        var queryParams = { limit: self.config.numResults || 20 };
         if (self.config.highlight !== undefined) {
             queryParams['highlight'] = JSON.stringify(self.config.highlight);
         }
