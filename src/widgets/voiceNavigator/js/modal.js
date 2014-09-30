@@ -879,15 +879,15 @@ var MMVoice = {
         // make card heights the same
         var maxHeight = 0;
         $('.card:not(.removed)', this.$cards).each(function() {
-            var height = $('.yelp-card', this).height();
-            console.log('height: '+height);
+            var height = $(this).children(":first").height();
+            console.log('card height: '+height);
             if (height > maxHeight) {
                 maxHeight = height;
             }
         })
         $('.card:not(.removed)', this.$cards).each(function() {
-            console.log(maxHeight - $('.yelp-card', this).height());
-            $('.height-adjust', this).height(maxHeight - $('.yelp-card', this).height());
+            console.log(maxHeight - $(this).children(":first").height());
+            $('.height-adjust', this).height(maxHeight - $(this).children(":first").height());
         });
 
         if (!self.$cards.hasClass('isotope')) {
