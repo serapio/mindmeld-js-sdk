@@ -1055,6 +1055,9 @@ var MMVoice = {
         if (self.config.highlight !== undefined) {
             queryParams['highlight'] = JSON.stringify(self.config.highlight);
         }
+        if (self.config.facets !== undefined) {
+            queryParams['facets'] = JSON.stringify(self.config.facets);
+        }
         var requestKey = 'default';
         var selectedEntityIDs = Object.keys(MMVoice.selectedEntityMap);
         if (selectedEntityIDs.length > 0) {
