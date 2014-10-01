@@ -73,10 +73,8 @@
       onError: function (error) {
         MindMeldMicrophone.publishEvent('error', error);
       }
-    }
-
-  );
-}
+    });
+  }
 
   // Initializes the volume monitor used to animate the microphone
   // as the volume changes
