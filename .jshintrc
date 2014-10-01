@@ -7,7 +7,7 @@
     "eqeqeq": true,
     "indent": 2,
     "immed": true,
-    "latedef": 'nofunc',
+    "latedef": "nofunc",
     "newcap": true,
     "noarg": true,
     "quotmark": "single",
