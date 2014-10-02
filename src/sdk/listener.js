@@ -137,11 +137,15 @@
    *                                               In some cases, a browser's speech service can take over 10 seconds to finalize
    *                                               a result. The earlyFinalResults reduces the time between results.
    *                                               This is enabled by defualt.
-   * @property {ListenerResultCallback} [onResult] the callback that will process listener results. This property must be
+   * @property {ListenerResultCallback} [onResult] [Deprecated: use `listener.on('result', ...)` instead]
+   *                                               The callback that will process listener results. This property must be
    *                                               provided when creating a new {@link MM.Listener}.
-   * @property {function} [onStart=null]           the event handler which is called when a listening session begins.
-   * @property {function} [onEnd=null]             the event handler which is called when a listening session ends.
-   * @property {function} [onError=null]           the event handler which is called when errors are received.
+   * @property {function} [onStart=null]           [Deprecated: use `listener.on('start', ...)` instead]
+   *                                               The event handler which is called when a listening session begins.
+   * @property {function} [onEnd=null]             [Deprecated: use `listener.on('end', ...)` instead]
+   *                                               The event handler which is called when a listening session ends.
+   * @property {function} [onError=null]           [Deprecated: use `listener.on('error', ...)` instead]
+   *                                               The event handler which is called when errors are received.
    * @property {APISuccessCallback} [onTextEntryPosted=null] the event handler which is called when text entries are posted.
    *                                                         Note: This is only called when using the activeSession's listener
    */
@@ -277,11 +281,9 @@
 
 
   /**
-   * Sets the listener object's configuration. Pass null for callback fields to deregister previous callbacks.
+   * Sets the listener object's configuration.
    *
    * @param {ListenerConfig} config an object containing the listener's configuration properties
-   * @memberOf MM.Listener
-   * @instance
    */
   Listener.prototype.setConfig = function(config) {
     var self = this;
@@ -320,8 +322,19 @@
   /**
    * Subscribe to events from the listener.
    *
-   * @param {String} eventName One of 'start', 'result', 'end', 'error'.
-   * @param {function} callback Function to call for the event.  TODO: Explain arguments.
+   * @param {String} eventName          One of `start`, `result`, `end`, `error`.
+   * @param {String} eventName.start    Emitted when speech recognition starts.
+   *                                    No argument is provided to the callback.
+   * @param {String} eventName.end      Emitted when speech recognition ends.
+   *                                    No argument is provided to the callback.
+   * @param {String} eventName.result   Emitted when speech recognition ends.
+   *                                    The callback should be a {@link ListenerResultCallback}.
+   * @param {String} eventName.error    Emitted when speech recognition encounters an error.
+   *                                    The callback will be given an `event` object with a String `error` property.
+   *                                    For possible values of `event.error`, see
+   *                                    https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html#speechrecognitionerror
+   * @param {function} callback Function to call for the event.
+   *
    * @param {Object=} context If supplied, will be used for `this` in the callback.
    */
   Listener.prototype.on = function (eventName, callback, context) {
@@ -335,7 +348,7 @@
     this.subscriptions[eventName].push(subscription);
   };
 
-  /**
+  /*
    * Emit events to subscribers.  It's not generally necessary to call this; it's
    * primarily used internally.
    *
@@ -528,12 +541,10 @@
   };
 
   /**
-   * Starts a speech recognition session. The onResult callback will begin receiving results as the user's speech
-   * is recognized.
+   * Starts a speech recognition session. As the user's speech is recognized,
+   * the listener will begin to emit `result` events.
    *
    * @throws When speech recognition is not supported in the browser, an error is thrown.
-   * @memberOf MM.Listener
-   * @instance
    */
   Listener.prototype.start = function() {
     if (!MM.support.speechRecognition) {
@@ -576,10 +587,8 @@
   };
 
   /**
-   * Stops the active speech recognition session. One more result may be send to the onResult callback.
+   * Stops the active speech recognition session. One more result may be emitted.
    *
-   * @memberOf MM.Listener
-   * @instance
    */
   Listener.prototype.stop = function() {
     this._shouldKeepListening = false;
@@ -594,10 +603,8 @@
   };
 
   /**
-   * Cancels the active speech recognition session. No further results will be sent to the onResult callback.
+   * Cancels the active speech recognition session.
    *
-   * @memberOf MM.Listener
-   * @instance
    */
   Listener.prototype.cancel = function() {
     this._shouldKeepListening = false;
