@@ -206,37 +206,42 @@
           continuous: true,
           interimResults: true,
           lang: 'es-ES' // listen for European Spanish
-          onResult: function(result) {
-            if (result.final) {
-              // post text entry for final results
-              postTextEntry(result.transcript);
+        });
 
-              // update UI to show final result
-            } else {
-              // update UI to show interim result
-            }
-          },
-          onStart: function(event) {
-            // update ui to show listening
-          },
-          onEnd: function(event) {
-            var results = this.results;
-            var lastResult = null;
-            if (results.length > 0) {
-              lastResult = results[results.length - 1];
-            }
+        myListener.on('result', function (result) {
+          if (result.final) {
+            // post text entry for final results
+            postTextEntry(result.transcript);
 
-            if (!lastResult.final) { // wasn't final when last received onResult
-              // post for the last result
-              postTextEntry(lastResult.transcript);
-              // update UI to show final result
-            }
-          },
-          onError: function(event) {
-            console.log('listener encountered error: ' + event.error);
-            // notify user of error if applicable
+            // update UI to show final result
+          } else {
+            // update UI to show interim result
           }
         });
+
+        myListener.on('start', function() {
+          // update ui to show listening
+        });
+
+        myListener.on('end', function() {
+          var results = this.results;
+          var lastResult = null;
+          if (results.length > 0) {
+            lastResult = results[results.length - 1];
+          }
+
+          if (!lastResult.final) { // wasn't final when last received onResult
+            // post for the last result
+            postTextEntry(lastResult.transcript);
+            // update UI to show final result
+          }
+        });
+
+        myListener.on('error', function(event) {
+          console.log('listener encountered error: ' + event.error);
+          // notify user of error if applicable
+        });
+
         myListener.start();
       }
    */
@@ -348,11 +353,12 @@
     this.subscriptions[eventName].push(subscription);
   };
 
-  /*
+  /**
    * Emit events to subscribers.  It's not generally necessary to call this; it's
    * primarily used internally.
    *
    * @param {String} eventName One of 'start', 'result', 'end', 'error'.
+   * @private
    */
   Listener.prototype.emit = function (eventName) {
     var subscribers = this.subscriptions[eventName];

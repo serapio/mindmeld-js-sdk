@@ -27,7 +27,7 @@ describe('Listener', function () {
     spyOn(recognizer, 'stop').and.callThrough();
     spyOn(recognizer, 'abort').and.callThrough();
     return recognizer;
-  }
+  };
 
   describe('events', function () {
     var listener;
@@ -76,7 +76,7 @@ describe('Listener', function () {
       MM.support = oldSupport;
     });
 
-    it ('should throw an error if there is no speecRecognition', function () {
+    it ('should throw an error if there is no speechRecognition', function () {
       MM.support = { speechRecognition: false };
       expect(listener.start).toThrow();
     });
