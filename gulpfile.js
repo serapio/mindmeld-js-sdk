@@ -84,6 +84,7 @@ gulp.task('docs', function () {
   // otherwise index.html keeps getting overwritten.
   var docPaths = [
       'src/sdk/main.js',
+      'src/sdk/listener.js',
       'README.md',
       'src/widgets/voiceNavigator/js/widget.js'
   ];
