@@ -32,7 +32,7 @@
       textElement.blur();
       var text = MindMeldSearchInput.getText().trim();
       MindMeldSearchInput.setText(text, true);
-      MindMeldSearchInput.publishEvent('submitText', text);
+      MindMeldSearchInput.emit('submitText', text);
 
       e.preventDefault();
     });
@@ -41,19 +41,19 @@
       //We want to focus on the span inside.
       textElement.querySelector('span').focus();
     });
-    
+
     containerElement.querySelector('.mindmeld-search-glass').addEventListener('click',
       function (e) {
         console.log('Clicking glass');
         MindMeldSearchInput.setFinal(true);
         var text = MindMeldSearchInput.getText().trim();
-        MindMeldSearchInput.publishEvent('submitText', text);
+        MindMeldSearchInput.emit('submitText', text);
 
         return false;
       }
     );
 
-    MindMeldSearchInput.publishEvent('init');
+    MindMeldSearchInput.emit('init');
   };
 
   /**
@@ -105,7 +105,7 @@
   /**
   * Publish microphone events to subscribers
   */
-  MindMeldSearchInput.publishEvent = function publishEvent (eventName /*, args...*/) {
+  MindMeldSearchInput.emit = function emit (eventName /*, args...*/) {
     var subscribers = subscriptions[eventName];
     if (subscribers !== undefined) {
       var args = Array.prototype.slice.call(arguments, 1);
