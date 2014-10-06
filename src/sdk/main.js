@@ -4056,7 +4056,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @name registerListener
          * @memberOf MM.activeSession
-         * @type {MM.Listener}
+         * @property {MM.Listener} listener
          * @instance
          * @example
          if (MM.support.speechRecognition) {
