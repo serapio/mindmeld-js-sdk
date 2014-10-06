@@ -36,82 +36,32 @@
     <script src="../../../dist/widgets/microphone/microphone.js"></script>
 
     <script>
+        /* global MindMeldMicrophone */
         'use strict';
 
         document.addEventListener('DOMContentLoaded', function exampleMindmeldMicrophone () {
 
-            // initialize MM
-            var config = {
-                appid: '7d6d5d9a76691f2dee36dcc28b77ed83a8ba1e1e',
-                onInit: onMMInit
-            };
-            MM.init(config);
-
-            function onMMInit () {
-                MM.setToken('8c79855564e9ac48da1b95c825af1c61148b8a26', onTokenSet);
+          MindMeldMicrophone.on('init',
+            function onMicInit () {
+              console.log('mic init');
             }
+          );
 
-            function onTokenSet () {
-                MM.setActiveUserID('6153');
-                MM.setActiveSessionID('182935');
-                onMMReady();
+          MindMeldMicrophone.on('result',
+            function onMicResult (result, resultIndex, results, event) {
+              console.log('mic result: ' + JSON.stringify(result));
             }
+          );
 
-            function onMMReady () {
-                console.log('MM token and session ready');
-
-                subscribeToMicEvents();
-                var microphoneElement = document.querySelector('.mindmeld-microphone');
-                MindMeldMicrophone.initialize(microphoneElement);
+          MindMeldMicrophone.on('error',
+            function onMicError (error) {
+              console.error('mic error: ' + error);
             }
+          );
 
-            function subscribeToMicEvents () {
-                MindMeldMicrophone.on('init',
-                    function onMicInit () {
-                        console.log('mic init');
-                    }
-                );
+          var microphoneElement = document.querySelector('.mindmeld-microphone');
+          MindMeldMicrophone.initialize(microphoneElement);
 
-                MindMeldMicrophone.on('result',
-                    function onMicResult (result, resultIndex, results, event) {
-                        console.log('mic result: ' + JSON.stringify(result));
-                    }
-                );
-
-                MindMeldMicrophone.on('error',
-                    function onMicError (error) {
-                        console.error('mic error: ' + error);
-                    }
-                )
-            }
-
-
-
-            // Unused helper functions
-
-            function getToken () {
-                var simpleUserCredentials = {
-                    appsecret: '25ba4e936667fe4268fc7b9e3f5a7cf6bf9f6699',
-                    simple: {
-                        userid: 'einstein80',
-                        name: 'Albert Einstein'
-                    }
-                };
-                MM.getToken(simpleUserCredentials, onTokenSet);
-            }
-
-            function createSession () {
-                var newSessionData = {
-                    name: 'new session name',
-                    privacymode: 'inviteonly'
-                };
-                MM.activeUser.sessions.post(newSessionData,
-                    function onSessionCreated (response) {
-                        console.log('session created: ', response);
-                        MM.setActiveSessionID(response.data.sessionid);
-                    }
-                );
-            }
         });
     </script>
 </body>
