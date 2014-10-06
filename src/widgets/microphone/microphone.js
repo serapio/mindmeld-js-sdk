@@ -55,24 +55,22 @@
   // event handlers publish the Listener events like onResult and onEnd
   function initMMListener () {
     listener = MM.listener = new MM.Listener({
-
       interimResults: true,
+    });
+    listener.on('result', function (result, resultIndex, results, event) {
+      MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
+    });
 
-      onResult: function (result, resultIndex, results, event) {
-        MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
-      },
+    listener.on('start', function (event) {
+      MindMeldMicrophone.publishEvent('start', event);
+    });
 
-      onStart: function (event) {
-        MindMeldMicrophone.publishEvent('start', event);
-      },
+    listener.on('end', function (event) {
+      MindMeldMicrophone.publishEvent('end', event);
+    });
 
-      onEnd: function (event) {
-        MindMeldMicrophone.publishEvent('end', event);
-      },
-
-      onError: function (error) {
-        MindMeldMicrophone.publishEvent('error', error);
-      }
+    listener.on('error', function (error) {
+      MindMeldMicrophone.publishEvent('error', error);
     });
   }
 
