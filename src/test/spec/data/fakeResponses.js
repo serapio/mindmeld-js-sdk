@@ -324,6 +324,22 @@ window.FakeResponses = {
         'etag': '25b3284dcfe8a4bd8ff72c590068d13b'
       }
     };
-  }
+  },
+
+  invalidToken: function (options) {
+    return {
+      req: {
+        method: 'GET',
+        url: FakeBaseUrl
+      },
+      res: {
+        error: {
+          code: 19,
+          type: 'InvalidToken',
+          message: 'The token you specified does not exist, has expired or is otherwise invalid.'
+        }
+      }
+    };
+  },
 
 };
