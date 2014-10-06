@@ -4069,9 +4069,8 @@ var MM = ( function (window, ajax, Faye) {
          * when it receives a final {@link ListenerResult} object. 
          * Before using a Listener, check that it is supported with {@link MM.support}.
          *
-         * @name registerListener
          * @memberOf MM.activeSession
-         * @property {MM.Listener} listener
+         * @param {MM.Listener} listener The listener you want to be attached to the activeSession.
          * @instance
          * @example
          if (MM.support.speechRecognition) {
