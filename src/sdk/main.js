@@ -4034,13 +4034,14 @@ var MM = ( function (window, ajax, Faye) {
          */
         constructor: function () {
             MM.models.ActiveSession.superclass.constructor.apply(this, arguments);
-            var session = this;
 
             /**
              * A session's listener is automatically configured to post text entries with type 'speech' and weight of 1.0
              * when it receives a final {@link ListenerResult} object. Use {@link MM.activeSession#setListenerConfig} to
              * register callbacks. Before using a Listener, check that it is supported with {@link MM.support}.
              *
+             * @deprecated Using the default listener is deprecated.
+             *   Instantiate your own listener and use {@link MM.activeSession#registerListener}.
              * @name listener
              * @memberOf MM.activeSession
              * @type {MM.Listener}
@@ -4055,36 +4056,68 @@ var MM = ( function (window, ajax, Faye) {
                  MM.activeSession.listener.start();
              }
              */
-            var listener = this.listener = new MM.Listener({
-                interimResults: true,
-                onResult: function(result, resultIndex, results, event) {
-                    if (result.final || listener.postInterimResults === true) {
-                        MM.activeSession.textentries.submitTextEntry(result);
-                    }
-                    MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
-                },
-                onStart: function (event) {
-                    MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
-                },
-                onEnd: function (event) {
-                    MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
-                },
-                onError: function(error) {
-                    MM.Util.testAndCallThis(session._onListenerError, session.listener, error);
-                }
-            });
-
-
+            this.registerListener(new MM.Listener({
+                interimResults: true
+            }));
 
             // adds support for custom events on session channel
             _extend(this, MM.Internal.customEventHandlers);
         },
+
+        /**
+         * Register a listener with the activeSession to post text entries with type 'speech' and weight of 1.0
+         * when it receives a final {@link ListenerResult} object. 
+         * Before using a Listener, check that it is supported with {@link MM.support}.
+         *
+         * @name registerListener
+         * @memberOf MM.activeSession
+         * @property {MM.Listener} listener
+         * @instance
+         * @example
+         if (MM.support.speechRecognition) {
+             var listener = new MM.Listener({
+               interimResults: true
+             });
+             listener.on('result', function (result) {
+               // These will be automatically posted to the MM API if final
+               // Update the UI
+             });
+             MM.activeSession.registerListener(listener);
+             MM.activeSession.listener.start();
+         }
+         */
+        registerListener: function (listener) {
+          var session = this;
+          this.listener = listener;
+
+          listener.on('result', function (result) {
+            if (result.final || listener.postInterimResults === true) {
+              MM.activeSession.textentries.submitTextEntry(result);
+            }
+          });
+          listener.on('result', function (result, resultIndex, results, event) {
+            MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
+          });
+          listener.on('start', function (event) {
+            MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
+          });
+          listener.on('end', function (event) {
+            MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
+          });
+          listener.on('error', function(error) {
+            MM.Util.testAndCallThis(session._onListenerError, session.listener, error);
+          });
+
+        },
+
         localStoragePath: function () {
             return 'MM.activeSession';
         },
+
         path: function () {
             return('session/' + MM.activeSessionId);
         },
+
         /**
          * Helper function returns the JSON data for the activeSession object
          *
@@ -4105,6 +4138,7 @@ var MM = ( function (window, ajax, Faye) {
         json: function () {
             return this._json();
         },
+
         /**
          * Sets the activeSession's onUpdate handler. Pass null as the updateHandler parameter to
          * deregister a previously set updateHandler. If the updateHandler has been set, it
@@ -4128,10 +4162,12 @@ var MM = ( function (window, ajax, Faye) {
         onUpdate: function (updateHandler) {
             this._onUpdate(updateHandler,  null, null);
         },
+
         /**
          * Sets the listener configuration of the active session. Pass null for callback fields to remove previous callbacks.
          * See {@link MM.Listener#setConfig} for more details.
          *
+         * @deprecated Listen to events emitted by Listener
          * @param {ListenerConfig} config an object containing listener configuration properties
          * @memberOf MM.activeSession
          * @instance
@@ -4147,13 +4183,24 @@ var MM = ( function (window, ajax, Faye) {
 
             for (var configProperty in configProperties) { // only look at safe properties
                 if (config.hasOwnProperty(configProperty)) { // only update property if it is in the config object
-                    this[configProperties[configProperty]] = config[configProperty];
+                    if (configProperty === 'onResult') {
+                      this.listener.on('result', config[configProperty]);
+                    } else if (configProperty === 'onStart') {
+                      this.listener.on('start', config[configProperty]);
+                    } else if (configProperty === 'onEnd') {
+                      this.listener.on('end', config[configProperty]);
+                    } else if (configProperty === 'onError') {
+                      this.listener.on('error', config[configProperty]);
+                    } else { // onTextEntryPosted
+                      this[configProperties[configProperty]] = config[configProperty];
+                    }
                     delete config[configProperty]; // remove from config
                 }
             }
 
             this.listener.setConfig(config); // pass other configuration settings to listener
         },
+
         /**
          * Get information about the active session. User privileges may allow access to this object
          * depending on the privacymode of the session:
@@ -4180,6 +4227,7 @@ var MM = ( function (window, ajax, Faye) {
         get: function (params, onSuccess, onFail) {
             this._get(null, onSuccess, onFail);
         },
+
         /**
          * Updates information about the ActiveSession
          *
@@ -4212,6 +4260,7 @@ var MM = ( function (window, ajax, Faye) {
         post: function (sessionInfo, onSuccess, onFail) {
             this.makeModelRequest('POST', this.path(), sessionInfo, onSuccess, onFail);
         },
+
         /**
          * Publish a new, custom event on the active session's channel
          *
@@ -4240,9 +4289,11 @@ var MM = ( function (window, ajax, Faye) {
             console.log('Received testEvent with payload: ' + payload);
          }
          */
+
         publish: function (event, payload) {
             this._publish(event, payload);
         },
+
         /**
          * Subscribe to a custom event on the active session's channel
          *
@@ -4276,6 +4327,7 @@ var MM = ( function (window, ajax, Faye) {
         subscribe: function (eventName, eventHandler, onSuccess, onError) {
             this._subscribe(eventName, eventHandler, onSuccess, onError);
         },
+
         /**
          * Unsubscribe from a custom event on the active session's channel
          *
@@ -4309,6 +4361,7 @@ var MM = ( function (window, ajax, Faye) {
         unsubscribe: function (eventName) {
             this._unsubscribe(eventName);
         },
+
         /**
          * Subscribes to every event on the active session's channel
          *
@@ -4339,6 +4392,7 @@ var MM = ( function (window, ajax, Faye) {
         subscribeAll: function (eventHandler, onSuccess, onError) {
             this._subscribeAll(eventHandler, onSuccess, onError);
         },
+
         /**
          * Unsubscribe from all events on the active session's channel
          *
@@ -4368,6 +4422,7 @@ var MM = ( function (window, ajax, Faye) {
         unsubscribeAll: function () {
             this._unsubscribeAll();
         },
+
         channelType: 'session'
     });
 

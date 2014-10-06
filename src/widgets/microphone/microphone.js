@@ -57,6 +57,7 @@
     listener = MM.listener = new MM.Listener({
       interimResults: true,
     });
+
     listener.on('result', function (result, resultIndex, results, event) {
       MindMeldMicrophone.emit('result', result, resultIndex, results, event);
     });

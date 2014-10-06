@@ -137,16 +137,17 @@
    *                                               In some cases, a browser's speech service can take over 10 seconds to finalize
    *                                               a result. The earlyFinalResults reduces the time between results.
    *                                               This is enabled by defualt.
-   * @property {ListenerResultCallback} [onResult] [Deprecated: use `listener.on('result', ...)` instead]
+   * @property {ListenerResultCallback} [onResult] [Deprecated: use `listener.on('result', ...)` instead.]
    *                                               The callback that will process listener results. This property must be
    *                                               provided when creating a new {@link MM.Listener}.
-   * @property {function} [onStart=null]           [Deprecated: use `listener.on('start', ...)` instead]
+   * @property {function} [onStart=null]           [Deprecated: use `listener.on('start', ...)` instead.]
    *                                               The event handler which is called when a listening session begins.
-   * @property {function} [onEnd=null]             [Deprecated: use `listener.on('end', ...)` instead]
+   * @property {function} [onEnd=null]             [Deprecated: use `listener.on('end', ...)` instead.]
    *                                               The event handler which is called when a listening session ends.
-   * @property {function} [onError=null]           [Deprecated: use `listener.on('error', ...)` instead]
+   * @property {function} [onError=null]           [Deprecated: use `listener.on('error', ...)` instead.]
    *                                               The event handler which is called when errors are received.
-   * @property {APISuccessCallback} [onTextEntryPosted=null] the event handler which is called when text entries are posted.
+   * @property {APISuccessCallback} [onTextEntryPosted=null] [Deprecated: use {@link MM.activeSession.textentries#addTextEntryPostedHandler} instead.]
+   *                                                         The event handler which is called when text entries are posted.
    *                                                         Note: This is only called when using the activeSession's listener
    */
 
