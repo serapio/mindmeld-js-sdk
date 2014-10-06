@@ -40,7 +40,7 @@
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
       var errorMessage = 'This browser does not support speech recognition';
-      MindMeldMicrophone.publishEvent('error', errorMessage);
+      MindMeldMicrophone.emit('error', errorMessage);
       return;
     }
 
@@ -48,7 +48,7 @@
     initVolumeMonitor();
     initClickHandlers();
     initUIHandlers();
-    MindMeldMicrophone.publishEvent('init');
+    MindMeldMicrophone.emit('init');
   };
 
   // Sets the listener config for a new MM.Listener The mindmeld-microphone's
@@ -57,20 +57,21 @@
     listener = MM.listener = new MM.Listener({
       interimResults: true,
     });
+
     listener.on('result', function (result, resultIndex, results, event) {
-      MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
+      MindMeldMicrophone.emit('result', result, resultIndex, results, event);
     });
 
     listener.on('start', function (event) {
-      MindMeldMicrophone.publishEvent('start', event);
+      MindMeldMicrophone.emit('start', event);
     });
 
     listener.on('end', function (event) {
-      MindMeldMicrophone.publishEvent('end', event);
+      MindMeldMicrophone.emit('end', event);
     });
 
     listener.on('error', function (error) {
-      MindMeldMicrophone.publishEvent('error', error);
+      MindMeldMicrophone.emit('error', error);
     });
   }
 
@@ -95,7 +96,7 @@
 
       // Public microphone error event when there is a volume monitor error
       onError: function onVolumeMonitorError (error) {
-        MindMeldMicrophone.publishEvent('error', error);
+        MindMeldMicrophone.emit('error', error);
       }
     });
   }
@@ -228,7 +229,7 @@
   /**
    * Publish microphone events to subscribers
    */
-  MindMeldMicrophone.publishEvent = function publishEvent (eventName) {
+  MindMeldMicrophone.emit = function emit (eventName) {
     var subscribers = subscriptions[eventName];
     if (subscribers !== undefined) {
       var args = Array.prototype.slice.call(arguments, 1);

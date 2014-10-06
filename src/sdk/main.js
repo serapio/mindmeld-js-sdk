@@ -752,11 +752,13 @@ var MM = ( function (window, ajax, Faye) {
          * @param {Object} config configuration parameters containing developers' application id and
          *                  onInit callback
          *
-         * @param {string} config.appid application id for this MindMeld application
-         * @param {Object=} config.credentials Optional credentials for getting a token.
+         * @param {string} config.appid The application id for this MindMeld application.
+         * @param {Object=} config.credentials Credentials for getting a token using `getToken`.
          * Will use anonymous authentication if no credentials are given.
          * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
-         * @param {string=} config.sessionid sessionid of an existing, active session you wish to join
+         * @param {string=} config.token A valid token to use for `setToken`.  This requires `userid` to be supplied as well, and is instead of `credentials`.
+         * @param {string=} config.userid A valid userid to use for `activeUserID`.  This requires `token` to be supplied as well, and is instead of `credentials`.
+         * @param {string=} config.sessionid The sessionid of an existing, active session you wish to join with `setActiveSessionID`.
          * @param {Object=} config.session Object containing new session data.
          * Will create an `inviteonly` session if no data is given.
          * Please refer to documentation for creating sessions
@@ -838,39 +840,52 @@ var MM = ( function (window, ajax, Faye) {
             };
           };
 
-          config.onInit = function () {
-            //TODO: Also allow to set existing token.
-            // Default action is to make an anonymous session
-            var credentials = config.credentials || makeAnonymousCredentials();
-
-            MM.getToken(credentials, function onToken () {
-              console.log('Token retrieved.');
-
-              if (config.sessionid) {
-                // We already have an id, let's use it
-                MM.setActiveSessionID(config.sessionid, onSuccess, onError);
-              } else {
-                // Make a new session
-                var session = config.session;
-                if ( !session ) {
-                  var date = new Date();
-                  var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
-                  session = {
-                    name: sessionName,
-                    privacymode: 'inviteonly'
-                  };
-                }
-
-                MM.activeUser.sessions.post(
-                  session,
-                  function onSessionCreate(result) {
-                    console.log('Create session results:', result);
-                    MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
-                  },
-                  onError
-                );
+          var handleSession = function () {
+            if (config.sessionid) {
+              // We already have an id, let's use it
+              MM.setActiveSessionID(config.sessionid, onSuccess, onError);
+            } else {
+              // Make a new session
+              var session = config.session;
+              if ( !session ) {
+                var date = new Date();
+                var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
+                session = {
+                  name: sessionName,
+                  privacymode: 'inviteonly'
+                };
               }
-            }, onError);
+
+              MM.activeUser.sessions.post(
+                session,
+                function onSessionCreate(result) {
+                  console.log('Create session results:', result);
+                  MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                },
+                onError
+              );
+            }
+          };
+
+          config.onInit = function () {
+            if (config.token && config.userid) {
+              MM.setToken(config.token, function onSetToken () {
+                MM.setActiveUserID(config.userid);
+                handleSession();
+              }, onError);
+
+            } else {
+              // Default action is to make an anonymous session
+              var credentials = config.credentials || makeAnonymousCredentials();
+
+
+              MM.getToken(credentials, function onToken () {
+                console.log('Token retrieved.');
+
+                handleSession();
+
+              }, onError);
+            }
           };
 
           MM.init(config);
