@@ -125,12 +125,15 @@ gulp.task('sdk.archive', ['sdk.set-version', 'sdk.archive.js', 'sdk.build', 'doc
 
         gulp.src(distDirectory + 'docs/**', {base: distDirectory}),
 
+        gulp.src(distDirectory + 'sdk/*.js', baseDirOption),
+        gulp.src(distDirectory + 'widgets/**', baseDirOption),
+
         gulp.src([
                 archiveDirectory + versionedMindMeldName,
                 archiveDirectory + versionedMinifiedMindMeldName
         ], {base: archiveDirectory}),
 
-        gulp.src(exampleDirectory + 'sdk/HelloWorld.html', {base: exampleDirectory + 'sdk/'})
+        gulp.src(exampleDirectory, baseDirOption)
     )
         .pipe(zip('mindmeld-js-sdk-' + bowerVersion + '.zip'))
         .pipe(gulp.dest(archiveDirectory));
