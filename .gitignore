@@ -1,14 +1,11 @@
-# JSDoc generated documentation
-dist/docs
-
 # Node packages
 node_modules/
 
 # Client-side packages
 bower_components/
 
-# Test files
-dist/test/
+# Distribution files
+dist/
 
 # OS X garbage
 .DS_STORE
@@ -27,15 +24,4 @@ sandbox/
 .sass-cache/
 searchWidget/.sass-cache
 searchWidget/css/*.map
-
-# Microphone Widget
-dist/widgets/microphone/mindmeldMicrophone.min.js.map
-
-# Microphone Web Component
-dist/widgets/microphone/component/mindmeld-microphone-component.js
-dist/widgets/microphone/component/mindmeld-microphone-component.min.js
-dist/widgets/microphone/component/mindmeld-microphone-component.min.js.map
-
-# Search Input
-dist/widgets/searchInput/mindmeldSearchInput.min.js.map
 
