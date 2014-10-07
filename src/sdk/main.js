@@ -18,7 +18,7 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.7.0',
+        value: '2.8.0',
         writable: false
     });
 
@@ -40,7 +40,7 @@ var MM = ( function (window, ajax, Faye) {
         }
 
         if ( obj.constructor &&
-            !hasOwn.call( obj.constructor.prototype, 'isPrototypeOf' ) ) {
+            !obj.constructor.prototype.hasOwnProperty('isPrototypeOf' ) ) {
             return false;
         }
 
@@ -752,11 +752,13 @@ var MM = ( function (window, ajax, Faye) {
          * @param {Object} config configuration parameters containing developers' application id and
          *                  onInit callback
          *
-         * @param {string} config.appid application id for this MindMeld application
-         * @param {Object=} config.credentials Optional credentials for getting a token.
+         * @param {string} config.appid The application id for this MindMeld application.
+         * @param {Object=} config.credentials Credentials for getting a token using `getToken`.
          * Will use anonymous authentication if no credentials are given.
          * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
-         * @param {string=} config.sessionid sessionid of an existing, active session you wish to join
+         * @param {string=} config.token A valid token to use for `setToken`.  This requires `userid` to be supplied as well, and is instead of `credentials`.
+         * @param {string=} config.userid A valid userid to use for `activeUserID`.  This requires `token` to be supplied as well, and is instead of `credentials`.
+         * @param {string=} config.sessionid The sessionid of an existing, active session you wish to join with `setActiveSessionID`.
          * @param {Object=} config.session Object containing new session data.
          * Will create an `inviteonly` session if no data is given.
          * Please refer to documentation for creating sessions
@@ -838,39 +840,52 @@ var MM = ( function (window, ajax, Faye) {
             };
           };
 
-          config.onInit = function () {
-            //TODO: Also allow to set existing token.
-            // Default action is to make an anonymous session
-            var credentials = config.credentials || makeAnonymousCredentials();
-
-            MM.getToken(credentials, function onToken () {
-              console.log('Token retrieved.');
-
-              if (config.sessionid) {
-                // We already have an id, let's use it
-                MM.setActiveSessionID(config.sessionid, onSuccess, onError);
-              } else {
-                // Make a new session
-                var session = config.session;
-                if ( !session ) {
-                  var date = new Date();
-                  var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
-                  session = {
-                    name: sessionName,
-                    privacymode: 'inviteonly'
-                  };
-                }
-
-                MM.activeUser.sessions.post(
-                  session,
-                  function onSessionCreate(result) {
-                    console.log('Create session results:', result);
-                    MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
-                  },
-                  onError
-                );
+          var handleSession = function () {
+            if (config.sessionid) {
+              // We already have an id, let's use it
+              MM.setActiveSessionID(config.sessionid, onSuccess, onError);
+            } else {
+              // Make a new session
+              var session = config.session;
+              if ( !session ) {
+                var date = new Date();
+                var sessionName = 'MindMeld - ' + date.toTimeString() + ' ' + date.toDateString();
+                session = {
+                  name: sessionName,
+                  privacymode: 'inviteonly'
+                };
               }
-            }, onError);
+
+              MM.activeUser.sessions.post(
+                session,
+                function onSessionCreate(result) {
+                  console.log('Create session results:', result);
+                  MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                },
+                onError
+              );
+            }
+          };
+
+          config.onInit = function () {
+            if (config.token && config.userid) {
+              MM.setToken(config.token, function onSetToken () {
+                MM.setActiveUserID(config.userid);
+                handleSession();
+              }, onError);
+
+            } else {
+              // Default action is to make an anonymous session
+              var credentials = config.credentials || makeAnonymousCredentials();
+
+
+              MM.getToken(credentials, function onToken () {
+                console.log('Token retrieved.');
+
+                handleSession();
+
+              }, onError);
+            }
           };
 
           MM.init(config);
@@ -2366,12 +2381,14 @@ var MM = ( function (window, ajax, Faye) {
 
     MM.models.TextEntry = MM.Internal.createSubclass(MM.models.Model, {
         /**
-         * MM.textEntry is a namespace that represents a textentry within the active session. It can only be used after
-         * textentryid has been set. It can be used to keep track of interim speech results that are posted to the API
-         * as a textentry. This namespace provides methods to retrieve, update, and delete a textentry from the MM API.
+         * The MM.models.TextEntry class is used to store and update a given text entry. You may only update
+         * an existing TextEntry if it has a textentryid. To set the textentryid, use the
+         * {@link MM.activeSession.textentries.post} function to post a text entry and use the
+         * textentryid field set in the response.
          *
          * @namespace MM.textEntry
          * @memberOf MM
+         * @private
          */
         constructor: function (data) {
             MM.models.TextEntry.superclass.constructor.apply(this, arguments);
@@ -2607,10 +2624,25 @@ var MM = ( function (window, ajax, Faye) {
                 MM.Util.testAndCall(onSuccess, response);
             }
         },
+
         /**
-         * Submits a text entry that can contain a sessionID and resultID
+         * Submits a text entry that can contain a sessionID and resultID. This is intended to be used when you would
+         * like to submit a text entry and then post incremental updates to it.
+         * {@link MM.activeSession.textentries.submitTextEntry} handles POSTing a new text entry, and POSTing updates
+         * to the new text entry in a reliable fashion.
          *
-         * @param {Object} textResult
+         * @param {Object} textResult           Object containing new text entry data. A superset of textEntryData
+         *                                      used in {@link MM.activeSession.textentries.post}.
+         * @param {string} textResult.text      New text to be submitted
+         * @param {string} textResult.type      A short string that can be used to categorize text entries into
+         *                                      different buckets
+         *
+         * @param {number} textResult.weight    A decimal number indicating how important the text entry is to ranking.
+         * @param {string} [textResult.language]  An ISO 629-2 language code to specify text language
+         * @param {number} [textResult.segmentID] An identifier for a unique text entry. This could be an ID for a new sentence
+         *                                        spoken from MM.Listener or a new chat message
+         * @param {number} [textResult.resultID]  An identifier for a unique update to a given text entry. This could be the ID for
+         *                                        a new result returned from MM.Listener that isn't yet final.
          * @memberOf MM.activeSession.textentries
          * @instance
          */
@@ -2701,17 +2733,19 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         /**
+         *  Use {@link MM.activeSession.textentries.addTextEntryPostedHandler} to add a callback for when new
+         *  text entries are posted.
          *
          * @param {function=} handler
          * @memberOf MM.activeSession.textentries
          * @instance
          */
-
         addTextEntryPostedHandler: function (handler) {
             this.textEntryPostedHandlers.push(handler);
         },
 
         /**
+         * Called every time a text entry is posted and handles calling all textEntryPostedHandlers.
          *
          * @param response
          * @private
@@ -4000,13 +4034,14 @@ var MM = ( function (window, ajax, Faye) {
          */
         constructor: function () {
             MM.models.ActiveSession.superclass.constructor.apply(this, arguments);
-            var session = this;
 
             /**
              * A session's listener is automatically configured to post text entries with type 'speech' and weight of 1.0
              * when it receives a final {@link ListenerResult} object. Use {@link MM.activeSession#setListenerConfig} to
              * register callbacks. Before using a Listener, check that it is supported with {@link MM.support}.
              *
+             * @deprecated Using the default listener is deprecated.
+             *   Instantiate your own listener and use {@link MM.activeSession#registerListener}.
              * @name listener
              * @memberOf MM.activeSession
              * @type {MM.Listener}
@@ -4021,36 +4056,67 @@ var MM = ( function (window, ajax, Faye) {
                  MM.activeSession.listener.start();
              }
              */
-            var listener = this.listener = new MM.Listener({
-                interimResults: true,
-                onResult: function(result, resultIndex, results, event) {
-                    if (result.final || listener.postInterimResults === true) {
-                        MM.activeSession.textentries.submitTextEntry(result);
-                    }
-                    MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
-                },
-                onStart: function (event) {
-                    MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
-                },
-                onEnd: function (event) {
-                    MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
-                },
-                onError: function(error) {
-                    MM.Util.testAndCallThis(session._onListenerError, session.listener, error);
-                }
-            });
-
-
+            this.registerListener(new MM.Listener({
+                interimResults: true
+            }));
 
             // adds support for custom events on session channel
             _extend(this, MM.Internal.customEventHandlers);
         },
+
+        /**
+         * Register a listener with the activeSession to post text entries with type 'speech' and weight of 1.0
+         * when it receives a final {@link ListenerResult} object. 
+         * Before using a Listener, check that it is supported with {@link MM.support}.
+         *
+         * @memberOf MM.activeSession
+         * @param {MM.Listener} listener The listener you want to be attached to the activeSession.
+         * @instance
+         * @example
+         if (MM.support.speechRecognition) {
+             var listener = new MM.Listener({
+               interimResults: true
+             });
+             listener.on('result', function (result) {
+               // These will be automatically posted to the MM API if final
+               // Update the UI
+             });
+             MM.activeSession.registerListener(listener);
+             MM.activeSession.listener.start();
+         }
+         */
+        registerListener: function (listener) {
+          var session = this;
+          this.listener = listener;
+
+          listener.on('result', function (result) {
+            if (result.final || listener.postInterimResults === true) {
+              MM.activeSession.textentries.submitTextEntry(result);
+            }
+          });
+          listener.on('result', function (result, resultIndex, results, event) {
+            MM.Util.testAndCallThis(session._onListenerResult, session.listener, result, resultIndex, results, event);
+          });
+          listener.on('start', function (event) {
+            MM.Util.testAndCallThis(session._onListenerStart, session.listener, event);
+          });
+          listener.on('end', function (event) {
+            MM.Util.testAndCallThis(session._onListenerEnd, session.listener, event);
+          });
+          listener.on('error', function(error) {
+            MM.Util.testAndCallThis(session._onListenerError, session.listener, error);
+          });
+
+        },
+
         localStoragePath: function () {
             return 'MM.activeSession';
         },
+
         path: function () {
             return('session/' + MM.activeSessionId);
         },
+
         /**
          * Helper function returns the JSON data for the activeSession object
          *
@@ -4071,6 +4137,7 @@ var MM = ( function (window, ajax, Faye) {
         json: function () {
             return this._json();
         },
+
         /**
          * Sets the activeSession's onUpdate handler. Pass null as the updateHandler parameter to
          * deregister a previously set updateHandler. If the updateHandler has been set, it
@@ -4094,10 +4161,12 @@ var MM = ( function (window, ajax, Faye) {
         onUpdate: function (updateHandler) {
             this._onUpdate(updateHandler,  null, null);
         },
+
         /**
          * Sets the listener configuration of the active session. Pass null for callback fields to remove previous callbacks.
          * See {@link MM.Listener#setConfig} for more details.
          *
+         * @deprecated Listen to events emitted by Listener
          * @param {ListenerConfig} config an object containing listener configuration properties
          * @memberOf MM.activeSession
          * @instance
@@ -4113,13 +4182,24 @@ var MM = ( function (window, ajax, Faye) {
 
             for (var configProperty in configProperties) { // only look at safe properties
                 if (config.hasOwnProperty(configProperty)) { // only update property if it is in the config object
-                    this[configProperties[configProperty]] = config[configProperty];
+                    if (configProperty === 'onResult') {
+                      this.listener.on('result', config[configProperty]);
+                    } else if (configProperty === 'onStart') {
+                      this.listener.on('start', config[configProperty]);
+                    } else if (configProperty === 'onEnd') {
+                      this.listener.on('end', config[configProperty]);
+                    } else if (configProperty === 'onError') {
+                      this.listener.on('error', config[configProperty]);
+                    } else { // onTextEntryPosted
+                      this[configProperties[configProperty]] = config[configProperty];
+                    }
                     delete config[configProperty]; // remove from config
                 }
             }
 
             this.listener.setConfig(config); // pass other configuration settings to listener
         },
+
         /**
          * Get information about the active session. User privileges may allow access to this object
          * depending on the privacymode of the session:
@@ -4146,6 +4226,7 @@ var MM = ( function (window, ajax, Faye) {
         get: function (params, onSuccess, onFail) {
             this._get(null, onSuccess, onFail);
         },
+
         /**
          * Updates information about the ActiveSession
          *
@@ -4178,6 +4259,7 @@ var MM = ( function (window, ajax, Faye) {
         post: function (sessionInfo, onSuccess, onFail) {
             this.makeModelRequest('POST', this.path(), sessionInfo, onSuccess, onFail);
         },
+
         /**
          * Publish a new, custom event on the active session's channel
          *
@@ -4206,9 +4288,11 @@ var MM = ( function (window, ajax, Faye) {
             console.log('Received testEvent with payload: ' + payload);
          }
          */
+
         publish: function (event, payload) {
             this._publish(event, payload);
         },
+
         /**
          * Subscribe to a custom event on the active session's channel
          *
@@ -4242,6 +4326,7 @@ var MM = ( function (window, ajax, Faye) {
         subscribe: function (eventName, eventHandler, onSuccess, onError) {
             this._subscribe(eventName, eventHandler, onSuccess, onError);
         },
+
         /**
          * Unsubscribe from a custom event on the active session's channel
          *
@@ -4275,6 +4360,7 @@ var MM = ( function (window, ajax, Faye) {
         unsubscribe: function (eventName) {
             this._unsubscribe(eventName);
         },
+
         /**
          * Subscribes to every event on the active session's channel
          *
@@ -4305,6 +4391,7 @@ var MM = ( function (window, ajax, Faye) {
         subscribeAll: function (eventHandler, onSuccess, onError) {
             this._subscribeAll(eventHandler, onSuccess, onError);
         },
+
         /**
          * Unsubscribe from all events on the active session's channel
          *
@@ -4334,6 +4421,7 @@ var MM = ( function (window, ajax, Faye) {
         unsubscribeAll: function () {
             this._unsubscribeAll();
         },
+
         channelType: 'session'
     });
 
@@ -4405,469 +4493,41 @@ var MM = ( function (window, ajax, Faye) {
                 var args = Array.prototype.slice.call(arguments, 2);
                 func.apply(thisArg, args);
             }
+        },
+
+        makeEventEmitter: function(obj) {
+          // Event Dispatcher
+          var subscriptions = {};
+
+          // Subscribe to events
+          obj.on = function on (eventName, callback, context) {
+            if (! subscriptions[eventName]) {
+              subscriptions[eventName] = [];
+            }
+            var subscription = {
+              callback: callback,
+              context: context
+            };
+            subscriptions[eventName].push(subscription);
+          };
+
+          // Emit events to subscribers
+          obj.emit = function emit (eventName) {
+            var subscribers = subscriptions[eventName];
+            if (subscribers) {
+              var args = Array.prototype.slice.call(arguments, 1);
+              subscribers.forEach(
+                function invokeCallback (subscription) {
+                  var context = subscription.context || this;
+                  subscription.callback.apply(context , args);
+                }
+              );
+            }
+          };
+
         }
     });
 
-    MM.Listener = (function () {
-        var Listener = MM.Internal.createSubclass(Object, {
-            /**
-             * An object representing the text result from the speech recognition API.
-             *
-             * @typedef  {Object}  ListenerResult
-             * @property {string}  transcript the text of the speech that was processed
-             * @property {boolean} final      indicates whether the result is final or interim
-             */
-
-            /**
-             * An object representing the configuration of a {@link MM.Listener}
-             *
-             * @typedef  {Object}  ListenerConfig
-             * @property {boolean} [continuous=false]        whether the listener should continue listening until stop() is called.
-             *                                               If false, recording will continue until the speech recognition provider
-             *                                               recognizes a sufficient pause in speech.
-             * @property {boolean} [interimResults=false]    whether the listener should provide interim results
-             * @property {string} [lang=""]                  the 'Simple language sub tag' or 'Language-Region tag' of the [BCP 47](http://tools.ietf.org/html/bcp47)
-             *                                               code for the language the listener should recognize (e.g. 'ko' for Korean,
-             *                                               'en-US' for American English, and 'de-DE' for German). When set to the empty
-             *                                               string "" or unspecified, the listener attempts to use the lang attribute
-             *                                               of the root html element (document.documentElement.lang). A "language-not-supported"
-             *                                               error will be thrown for unsupported languages. Language support depends on
-             *                                               the browser. For Chrome, no official list of supported languages exists.
-             *                                               There is however, a good unofficial list in this question on
-             *                                               [Stack Overflow](http://stackoverflow.com/questions/14257598/what-are-language-codes-for-voice-recognition-languages-in-chromes-implementati).
-             * @property {boolean} [earlyFinalResults=true]  If true, the listener will return final results after shorter gaps in speech.
-             *                                               In some cases, a browser's speech service can take over 10 seconds to finalize
-             *                                               a result. The earlyFinalResults reduces the time between results.
-             *                                               This is enabled by defualt.
-             * @property {ListenerResultCallback} [onResult] the callback that will process listener results. This property must be
-             *                                               provided when creating a new {@link MM.Listener}.
-             * @property {function} [onStart=null]           the event handler which is called when a listening session begins.
-             * @property {function} [onEnd=null]             the event handler which is called when a listening session ends.
-             * @property {function} [onError=null]           the event handler which is called when errors are received.
-             * @property {APISuccessCallback} [onTextEntryPosted=null] the event handler which is called when text entries are posted.
-             *                                                         Note: This is only called when using the activeSession's listener
-             */
-
-            /**
-             * The ListenerResultCallback handles results from the Speech Recognition API. A ListenerResultCallback should at
-             * minimum handle the result parameter.
-             *
-             * @callback ListenerResultCallback
-             * @param {ListenerResult} result result object containing speech recognition result
-             * @param {number} resultIndex the index of the provided result in the results array
-             * @param {Array} results an array of {@link ListenerResult} objects received during the current speech recognition session
-             * @param {Event} event the original event received from the underlying SpeechRecognition instance
-             */
-
-            /**
-             * Constructor for Listener class
-             *
-             * @constructs MM.Listener
-             * @param {ListenerConfig} config an object containing the listener's configuration properties. Any properties that
-             *                         are omitted default to either null or false.
-             *
-             * @classdesc This is the class for the MindMeld speech recognition API. Before using a Listener, check that it
-             *            is supported with {@link MM.support}. Currently the known browsers which support MM.Listener are
-             *            Google Chrome for Desktop (versions 25+) and Android (versions 31+). The MM.Listener class relies
-             *            upon the speech recognition portion of the Web Speech API (https://dvcs.w3.org/hg/speech-api/raw-file/tip/webspeechapi.html)
-             *            which has not yet been implemented by all major browsers. Note that listening won't work when accessing
-             *            locally hosted JavaScript and HTML. Speech recognition is only supported when your JavaScript and
-             *            HTML are served from a web server.
-             *
-             * @property {boolean} listening         indicates whether or not the listener is active. Readonly.
-             * @property {Array} results             array of {@link ListenerResult} objects received during the current or most
-             *                                       recent listening session. Readonly.
-             * @property {boolean} interimResults    indicates whether or not interim results are enabled. Defaults to false.
-             * @property {boolean} continuous        indicates whether or not continuous recognition is enabled. Defaults to false.
-             * @property {string} lang               the 'Simple language sub tag' or 'Language-Region tag' of the [BCP 47](http://tools.ietf.org/html/bcp47)
-             *                                       code for the language the listener should recognize (e.g. 'ko' for Korean, 'en-US'
-             *                                       for American English, and 'de-DE' for German). When set to the empty string "" or
-             *                                       unspecified, the listener attempts to use the lang attribute of the root html
-             *                                       element (document.documentElement.lang). A "language-not-supported" error will
-             *                                       be thrown for unsupported languages. Language support depends on the browser. For
-             *                                       Chrome, no official list of supported languages exists. There is however, a good
-             *                                       unofficial list in this question on
-             *                                       [Stack Overflow](http://stackoverflow.com/questions/14257598/what-are-language-codes-for-voice-recognition-languages-in-chromes-implementati).
-             * @property {boolean} earlyFinalResults indicates whether or not early final results will be sent. Defaults to true.
-             *
-             * @example
-             function postTextEntry(text) {
-                 MM.activeSession.textentries.post({
-                     text: text,
-                     type: 'speech',
-                     weight: 1.0
-                 });
-             }
-
-             if (MM.support.speechRecognition) {
-                 var myListener = new MM.Listener({
-                     continuous: true,
-                     interimResults: true,
-                     lang: 'es-ES' // listen for European Spanish
-                     onResult: function(result) {
-                         if (result.final) {
-                             // post text entry for final results
-                             postTextEntry(result.transcript);
-
-                             // update UI to show final result
-                         } else {
-                             // update UI to show interim result
-                         }
-                     },
-                     onStart: function(event) {
-                         // update ui to show listening
-                     },
-                     onEnd: function(event) {
-                         var results = this.results;
-                         var lastResult = null;
-                         if (results.length > 0) {
-                             lastResult = results[results.length - 1];
-                         }
-
-                         if (!lastResult.final) { // wasn't final when last received onResult
-                             // post for the last result
-                             postTextEntry(lastResult.transcript);
-                             // update UI to show final result
-                         }
-                     },
-                     onError: function(event) {
-                         console.log('listener encountered error: ' + event.error);
-                         // notify user of error if applicable
-                     }
-                 });
-                 myListener.start();
-             }
-             */
-            constructor: function(config) {
-                if (!config.hasOwnProperty('earlyFinalResults')) {
-                    config.earlyFinalResults = true; // on by default
-                }
-                if (! config.hasOwnProperty('postInterimResults')) {
-                    config.postInterimResults = false;
-                }
-                this.setConfig(config);
-
-                this.segmentID = 0;
-                this.resultID = 0;
-            },
-            /**
-             * Sets the listener object's configuration. Pass null for callback fields to deregister previous callbacks.
-             *
-             * @param {ListenerConfig} config an object containing the listener's configuration properties
-             * @memberOf MM.Listener
-             * @instance
-             */
-            setConfig: function(config) {
-                var configProperties = {
-                    onResult: '_onResult',
-                    onStart: '_onStart',
-                    onEnd: '_onEnd',
-                    onError: '_onError',
-                    onTextEntryPosted: '_onTextEntryPosted',
-                    continuous: 'continuous',
-                    interimResults: 'interimResults',
-                    lang: 'lang',
-                    earlyFinalResults: 'earlyFinalResults',
-                    postInterimResults: 'postInterimResults', // undocumented until we decide it's useful
-                    onTrueFinalResult: '_onTrueFinalResult' // undocumented
-                };
-
-                for (var configProperty in configProperties) { // only look at safe properties
-                    if (config.hasOwnProperty(configProperty)) { // only update property if it is in the config object
-                        this[configProperties[configProperty]] = config[configProperty];
-                    }
-                }
-            },
-            /**
-             * The time the listener last begin listening. Defaults to 0.
-             *
-             * @memberOf MM.Listener
-             * @instance
-             * @private
-             */
-            _lastStartTime: 0,
-            /**
-             * Starts a speech recognition session. The onResult callback will begin receiving results as the user's speech
-             * is recognized.
-             *
-             * @throws When speech recognition is not supported in the browser, an error is thrown.
-             * @memberOf MM.Listener
-             * @instance
-             */
-            start: function() {
-                if (!MM.support.speechRecognition) {
-                    MM.Internal.log('Speech recognition is not supported');
-                    throw new Error('Speech recognition is not supported');
-                }
-
-                var listener = this;
-                if (Date.now() - listener._lastStartTime < 1000) {
-                    // TODO(jj): should we throw an error here, or call onError?
-                    return;
-                }
-
-                // This timeout prevents a the listener from falling into a broken state
-                // when the speech recognition backend stops listening after ~60 seconds
-                var longListenStopTimeout = null;
-                function setLongListenStopTimeout() {
-                    window.clearTimeout(longListenStopTimeout);
-                    longListenStopTimeout = window.setTimeout(function() {
-                        recognizer.stop();
-                    }, 59500);
-                }
-
-                // This timeout prevents a the listener from falling into a broken state
-                // abort if the recognition fails to call onEnd (chrome bug hack)
-                var onEndAbortTimeout = null;
-                function setOnEndAbortTimeout() {
-                    window.clearTimeout(onEndAbortTimeout);
-                    onEndAbortTimeout = window.setTimeout(function() {
-                        recognizer.abort();
-                    }, 2000);
-                }
-
-                // This timeout returns a 'final' result after a certain period. Without this, an interim result could
-                // take as long as 15 seconds to become 'final'. Results after the forced final result are ignored until
-                // the speech service sends a 'final' result.
-                var earlyFinalResultTimeout = null;
-                var resultFinalized = false;
-                function setEarlyFinalResultTimeout(event) {
-                    if (!listener.earlyFinalResults) {
-                        return;
-                    }
-                    window.clearTimeout(earlyFinalResultTimeout);
-                    // produce synthetic final result when the recognition takes too long
-                    earlyFinalResultTimeout = window.setTimeout(finalizeResult, 1500);
-                }
-
-                function finalizeResult() {
-                    var results = listener._results;
-                    var lastResult = null;
-                    var resultIndex = results.length - 1;
-                    if (resultIndex >= 0) {
-                        lastResult = results[resultIndex];
-                        if (!lastResult.final) {
-                            resultFinalized = lastResult.final = true;
-                            lastResult.early = true;
-                            MM.Util.testAndCallThis(listener._onResult, listener, lastResult, resultIndex, results, event);
-                        }
-                    }
-                }
-
-                // this variable indicates whether a listening session should be restarted automatically
-                listener._shouldKeepListening = false;
-
-                var recognizer = this._recognizer;
-                if (typeof recognizer === 'undefined') {
-                    recognizer = this._recognizer = new window.SpeechRecognition();
-                    recognizer.onresult = function(event) {
-                        listener.resultID++;
-                        var result = {
-                            final: false,
-                            transcript: '',
-                            segmentID: listener.segmentID,
-                            resultID: listener.resultID
-                        };
-                        var recognizerLanguage = recognizer.lang;
-                        if (recognizerLanguage !== '') {
-                            result.language = MM.Listener.convertLanguageToISO6392(recognizerLanguage);
-                        }
-
-                        // find listener result index
-                        var results = listener._results;
-                        var lastResult = results.length > 0 ? results[results.length - 1] : null;
-                        var resultIndex = results.length;
-                        // decrement index so we overwrite the interim result
-                        if (lastResult !== null && !lastResult.final) {
-                            resultIndex--;
-                        }
-
-                        // Only fire callback if the result is not finalized
-                        var shouldFireCallback = !resultFinalized;
-
-                        for (var i = event.resultIndex; i < event.results.length; ++i) {
-                            var transcript = event.results[i][0].transcript;
-
-                            if (event.results[i].isFinal) {
-                                window.clearTimeout(earlyFinalResultTimeout);
-                                earlyFinalResultTimeout = null;
-                                result.final = true;
-                                listener.segmentID++;
-                                result.transcript = transcript;
-                                resultFinalized = false;
-                                break;
-                            } else {
-                                result.transcript += transcript; // collapse multiple pending results into one
-                            }
-                        }
-
-                        // if we restarted, we'll need to add a space for some results
-                        if (resultIndex >= 0 && !/^\s/.test(result.transcript.charAt(0))) {
-                            result.transcript = ' ' + result.transcript;
-                        }
-
-                        if (onEndAbortTimeout != null) {
-                            setOnEndAbortTimeout();
-                        }
-
-                        if (shouldFireCallback) {
-                            results[resultIndex] = result;
-                            if (!result.final) {
-                                setEarlyFinalResultTimeout(event);
-                            }
-
-                            MM.Util.testAndCallThis(listener._onResult, listener, result, resultIndex, results, event);
-                        } else {
-                            if (result.final) {
-                                MM.Util.testAndCallThis(listener._onTrueFinalResult, listener, result, resultIndex, results, event);
-                            }
-                        }
-                    };
-                    recognizer.onstart = function (event) {
-                        resultFinalized = false;
-                        listener.segmentID++;
-                        listener.resultID = 0;
-
-                        setLongListenStopTimeout();
-                        if (!listener._listening || !listener._shouldKeepListening) {
-                            listener._listening = true;
-                            listener._lastStartTime = Date.now();
-                            MM.Util.testAndCallThis(listener._onStart, listener, event);
-                        }
-                    };
-
-
-                    recognizer.onend = function (event) {
-                        window.clearTimeout(onEndAbortTimeout);
-                        onEndAbortTimeout = null;
-                        window.clearTimeout(longListenStopTimeout);
-                        longListenStopTimeout = null;
-                        window.clearTimeout(earlyFinalResultTimeout);
-                        earlyFinalResultTimeout = null;
-
-                        finalizeResult();
-                        resultFinalized = false;
-
-                        if (listener._shouldKeepListening) {
-                            recognizer.start();
-                        } else {
-                            listener._isStopping = false;
-                            listener._listening = false;
-                            MM.Util.testAndCallThis(listener._onEnd, listener, event);
-                        }
-                    };
-
-
-                    recognizer.onerror = function (event) {
-                        if (listener._shouldKeepListening) {
-                            if (event.error === 'no-speech') {
-                                return;
-                            }
-                        }
-                        if (event.error === 'abort') {
-                            listener._isStopping = false;
-                        }
-                        listener._shouldKeepListening = false;
-                        MM.Util.testAndCallThis(listener._onError, listener, event);
-                    };
-                    recognizer.onaudioend = function (event) {
-                        if (!recognizer.continuous) {
-                            setOnEndAbortTimeout();
-                        }
-                    };
-                }
-                listener._shouldKeepListening = recognizer.continuous = this.continuous;
-                recognizer.interimResults = this.interimResults;
-                var lang = (function () {
-                    var language = '';
-                    if (listener.lang !== '') {
-                        language = listener.lang;
-                    } else if (typeof window.document !== 'undefined' && window.document.documentElement !== null && window.document.documentElement.lang !== '') {
-                        // attempt to retrieve from html element
-                        language = window.document.documentElement.lang;
-                    }
-                    return language;
-                })();
-                recognizer.lang = lang;
-                listener._results = []; // clear previous results
-
-                recognizer.start();
-            },
-            /**
-             * Stops the active speech recognition session. One more result may be send to the onResult callback.
-             *
-             * @memberOf MM.Listener
-             * @instance
-             */
-            stop: function() {
-                this._shouldKeepListening = false;
-                if (this._recognizer) {
-                    if (this._isStopping) {
-                        this._recognizer.abort();
-                    } else {
-                        this._recognizer.stop();
-                        this._isStopping = true;
-                    }
-                }
-            },
-            /**
-             * Cancels the active speech recognition session. No further results will be sent to the onResult callback.
-             *
-             * @memberOf MM.Listener
-             * @instance
-             */
-            cancel: function() {
-                this._shouldKeepListening = false;
-                if (this._recognizer) {
-                    this._recognizer.abort();
-                }
-            }
-        });
-
-
-        Listener.prototype._listening = false;
-        Listener.prototype._results = [];
-        Listener.prototype.continuous = false;
-        Listener.prototype.lang = '';
-        Listener.prototype.interimResults = false;
-        Object.defineProperties(Listener.prototype, {
-            listening: {
-                get: function() {
-                    return this._listening;
-                }
-            },
-            results: {
-                get: function() {
-                    return JSON.parse(JSON.stringify(this._results));
-                }
-            }
-        });
-
-        var languageTags6391To6392 = {'ab':'abk','aa':'aar','af':'afr','sq':'sqi','am':'amh','ar':'ara','an':'arg','hy':'hye','as':'asm','ae':'ave','ay':'aym','az':'aze','ba':'bak','eu':'eus','be':'bel','bn':'ben','bh':'bih','bi':'bis','bs':'bos','br':'bre','bg':'bul','my':'mya','ca':'cat','ch':'cha','ce':'che','zh':'zho','cu':'chu','cv':'chv','kw':'cor','co':'cos','hr':'hrv','cs':'ces','da':'dan','dv':'div','nl':'nld','dz':'dzo','en':'eng','eo':'epo','et':'est','fo':'fao','fj':'fij','fi':'fin','fr':'fra','gd':'gla','gl':'glg','ka':'kat','de':'deu','el':'ell','gn':'grn','gu':'guj','ht':'hat','ha':'hau','he':'heb','hz':'her','hi':'hin','ho':'hmo','hu':'hun','is':'isl','io':'ido','id':'ind','ia':'ina','ie':'ile','iu':'iku','ik':'ipk','ga':'gle','it':'ita','ja':'jpn','jv':'jav','kl':'kal','kn':'kan','ks':'kas','kk':'kaz','km':'khm','ki':'kik','rw':'kin','ky':'kir','kv':'kom','ko':'kor','kj':'kua','ku':'kur','lo':'lao','la':'lat','lv':'lav','li':'lim','ln':'lin','lt':'lit','lb':'ltz','mk':'mkd','mg':'mlg','ms':'msa','ml':'mal','mt':'mlt','gv':'glv','mi':'mri','mr':'mar','mh':'mah','mo':'mol','mn':'mon','na':'nau','nv':'nav','nd':'nde','nr':'nbl','ng':'ndo','ne':'nep','se':'sme','no':'nor','nb':'nob','nn':'nno','ny':'nya','oc':'oci','or':'ori','om':'orm','os':'oss','pi':'pli','pa':'pan','fa':'fas','pl':'pol','pt':'por','ps':'pus','qu':'que','rm':'roh','ro':'ron','rn':'run','ru':'rus','sm':'smo','sg':'sag','sa':'san','sc':'srd','sr':'srp','sn':'sna','ii':'iii','sd':'snd','si':'sin','sk':'slk','sl':'slv','so':'som','st':'sot','es':'spa','su':'sun','sw':'swa','ss':'ssw','sv':'swe','tl':'tgl','ty':'tah','tg':'tgk','ta':'tam','tt':'tat','te':'tel','th':'tha','bo':'bod','ti':'tir','to':'ton','ts':'tso','tn':'tsn','tr':'tur','tk':'tuk','tw':'twi','ug':'uig','uk':'ukr','ur':'urd','uz':'uzb','vi':'vie','vo':'vol','wa':'wln','cy':'cym','fy':'fry','wo':'wol','xh':'xho','yi':'yid','yo':'yor','za':'zha','zu':'zul'};
-
-        /**
-         * Converts language name or tag to the [ISO 639-2](http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) language
-         * code. If the language is unknown, the first three characters of lang parameter are returned.
-         *
-         * @param {String} lang an [ISO 639-1](http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) language code, for example 'en-US'.
-         * @return {String} an [ISO 639-2](http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes) language code, for example 'eng'
-         *
-         * @method
-         * @memberOf MM.Listener
-         * @name convertLanguageToISO6392
-         */
-        Listener.convertLanguageToISO6392 = function(lang) {
-            var key = lang.substring(0, 2);
-            var result = languageTags6391To6392[key]; // attempt to lookup the 639-2 tag
-            if (typeof result === 'undefined') {
-                result = lang.substring(0, 3); // use first 3 letters if language is unknown
-            }
-
-            return result;
-        };
-
-        return Listener;
-    })();
 
     /**
      * An overview of features supported in the browser.

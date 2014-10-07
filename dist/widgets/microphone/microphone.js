@@ -40,7 +40,7 @@
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
       var errorMessage = 'This browser does not support speech recognition';
-      MindMeldMicrophone.publishEvent('error', errorMessage);
+      MindMeldMicrophone.emit('error', errorMessage);
       return;
     }
 
@@ -48,35 +48,32 @@
     initVolumeMonitor();
     initClickHandlers();
     initUIHandlers();
-    MindMeldMicrophone.publishEvent('init');
+    MindMeldMicrophone.emit('init');
   };
 
   // Sets the listener config for a new MM.Listener The mindmeld-microphone's
   // event handlers publish the Listener events like onResult and onEnd
   function initMMListener () {
     listener = MM.listener = new MM.Listener({
-
       interimResults: true,
+    });
 
-      onResult: function (result, resultIndex, results, event) {
-        MindMeldMicrophone.publishEvent('result', result, resultIndex, results, event);
-      },
+    listener.on('result', function (result, resultIndex, results, event) {
+      MindMeldMicrophone.emit('result', result, resultIndex, results, event);
+    });
 
-      onStart: function (event) {
-        MindMeldMicrophone.publishEvent('start', event);
-      },
+    listener.on('start', function (event) {
+      MindMeldMicrophone.emit('start', event);
+    });
 
-      onEnd: function (event) {
-        MindMeldMicrophone.publishEvent('end', event);
-      },
+    listener.on('end', function (event) {
+      MindMeldMicrophone.emit('end', event);
+    });
 
-      onError: function (error) {
-        MindMeldMicrophone.publishEvent('error', error);
-      }
-    }
-
-  );
-}
+    listener.on('error', function (error) {
+      MindMeldMicrophone.emit('error', error);
+    });
+  }
 
   // Initializes the volume monitor used to animate the microphone
   // as the volume changes
@@ -99,7 +96,7 @@
 
       // Public microphone error event when there is a volume monitor error
       onError: function onVolumeMonitorError (error) {
-        MindMeldMicrophone.publishEvent('error', error);
+        MindMeldMicrophone.emit('error', error);
       }
     });
   }
@@ -110,7 +107,19 @@
     var holdDuration = 1000;
 
     var micButton = microphoneElement.querySelector('.icon-container');
-    micButton.addEventListener('mousedown', function onMouseDown () {
+    micButton.addEventListener('mousedown', onMouseDown);
+    micButton.addEventListener('touchstart',
+      // some mobile devices fire both 'touchstart' and 'mousedown'
+      // this prevents trying to start the listener twice at
+      // the same time
+      function onTouchStart (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        onMouseDown();
+      }
+    );
+
+    function onMouseDown () {
       if (listener.listening) {
         MindMeldMicrophone.stop();
       } else {
@@ -122,21 +131,39 @@
           holdDuration
         );
       }
-    });
+    }
 
-    micButton.addEventListener('mouseup', function onMouseUp () {
+    micButton.addEventListener('mouseup', onMouseUp);
+    micButton.addEventListener('touchend',
+      function onTouchEnd (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        onMouseUp();
+      }
+    );
+
+    function onMouseUp () {
       if (holdTimeout !== null) {
         // We have not reached the hold timeout yet, start mic in normal mode
         clearTimeout(holdTimeout);
         holdTimeout = null;
         MindMeldMicrophone.start();
       }
-    });
+    }
 
-    micButton.addEventListener('mouseout', function onMouseOut () {
+    micButton.addEventListener('mouseout', onMouseOut);
+    micButton.addEventListener('touchleave',
+      function onTouchLeave (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        onMouseOut();
+      }
+    );
+
+    function onMouseOut () {
       clearTimeout(holdTimeout);
       holdTimeout = null;
-    });
+    }
   }
 
   // Subscribes to microphone start/stop events to add CSS classes
@@ -202,7 +229,7 @@
   /**
    * Publish microphone events to subscribers
    */
-  MindMeldMicrophone.publishEvent = function publishEvent (eventName) {
+  MindMeldMicrophone.emit = function emit (eventName) {
     var subscribers = subscriptions[eventName];
     if (subscribers !== undefined) {
       var args = Array.prototype.slice.call(arguments, 1);

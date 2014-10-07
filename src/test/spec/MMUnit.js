@@ -56,8 +56,7 @@ describe('MM Unit', function () {
         expect(MM.activeUserId).toEqual(simpleData.userid);
         done();
       }, function onError () {
-        // XXX: Can't find a jasmine.fail
-        expect(false).toBe(true);
+        fail('should not have error');
       });
 
       // Test the immediate properties here, outside of the async block.
@@ -79,6 +78,55 @@ describe('MM Unit', function () {
         expect(error).toBeOk();
         expect(error.code).toEqual(fakeData.res.error.code);
         expect(MM.token).not.toBeOk();
+        done();
+      });
+
+      // Test the immediate properties here, outside of the async block.
+      checkAndRespond(jasmine.Ajax.requests.mostRecent(), fakeData.req, fakeData.res);
+    });
+
+  });
+
+  describe('setToken', function () {
+
+    var appid;
+
+    beforeEach(function (done) {
+      appid = '123456';
+      // First, init MM
+      MM.init( {
+        cleanUrl: baseUrl,
+        appid: appid,
+        onInit: done
+      });
+    });
+
+    afterEach(function () {
+      MM.token = null;
+    });
+
+    it ('should set a token on success', function (done) {
+      var options = { appid: '123456', token: 'ABDE5431FF0' };
+      var fakeData = FakeResponses.getApp(options);
+      MM.setToken(options.token, function onSuccess () {
+        expect(MM.token).toEqual(options.token);
+        done();
+      }, function onError () {
+        fail('should not have error');
+      });
+
+      // Test the immediate properties here, outside of the async block.
+      checkAndRespond(jasmine.Ajax.requests.mostRecent(), fakeData.req, fakeData.res);
+    });
+
+    it ('should return appropriate error on failure', function (done) {
+
+      var fakeData = FakeResponses.invalidToken();
+      var options = { appid: '123456', token: 'ABDE5431FF0' };
+      MM.setToken(options.token, function onSuccess () {
+        fail('setToken should not succeed');
+      }, function onError () {
+        expect(MM.token).toEqual(options.token);
         done();
       });
 
@@ -228,6 +276,37 @@ describe('MM Unit', function () {
             name: options.name
           }
         }
+      }, function onSuccess () {
+        expect(MM.token).toEqual(options.token);
+        expect(MM.activeUserId).toEqual(options.userid);
+        expect(MM.activeSessionId).toEqual(options.sessionid);
+        done();
+      }, function onFail (err) {
+        console.error('Got error', err);
+        fail('Should not have an error');
+      });
+    });
+
+    it ('with token and userid should set data', function (done) {
+      var options = {
+        appid: 'AD453472232',
+        userid: '12457',
+        name: 'aladdin',
+        sessionid: '83a34231',
+        token: 'ABCDEF12FFFF18b859c5f682c7406e'
+      };
+
+      var fakeAppData = FakeResponses.getApp(options);
+      stubAjax(fakeAppData);
+      var fakePostSessionData = FakeResponses.postSession(options);
+      stubAjax(fakePostSessionData);
+      var fakeGetSessionData = FakeResponses.getSession(options);
+      stubAjax(fakeGetSessionData);
+
+      MM.start({
+        appid: options.appid,
+        token: options.token,
+        userid: options.userid
       }, function onSuccess () {
         expect(MM.token).toEqual(options.token);
         expect(MM.activeUserId).toEqual(options.userid);
