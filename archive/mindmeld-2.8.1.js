@@ -2928,7 +2928,7 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.8.0',
+        value: '2.8.1',
         writable: false
     });
 
@@ -7749,6 +7749,9 @@ var MM = ( function (window, ajax, Faye) {
     // Event Dispatcher, needs to go before setConfig call
     this.subscriptions = {};
 
+    this.continuous = false;
+    this.lang = '';
+    this.interimResults = false;
     if (!config.hasOwnProperty('earlyFinalResults')) {
       config.earlyFinalResults = true; // on by default
     }
@@ -7765,9 +7768,6 @@ var MM = ( function (window, ajax, Faye) {
 
     this._listening = false;
     this._results = [];
-    this.continuous = false;
-    this.lang = '';
-    this.interimResults = false;
   };
 
 

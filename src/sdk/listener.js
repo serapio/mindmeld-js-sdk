@@ -250,6 +250,9 @@
     // Event Dispatcher, needs to go before setConfig call
     this.subscriptions = {};
 
+    this.continuous = false;
+    this.lang = '';
+    this.interimResults = false;
     if (!config.hasOwnProperty('earlyFinalResults')) {
       config.earlyFinalResults = true; // on by default
     }
@@ -266,9 +269,6 @@
 
     this._listening = false;
     this._results = [];
-    this.continuous = false;
-    this.lang = '';
-    this.interimResults = false;
   };
 
 
