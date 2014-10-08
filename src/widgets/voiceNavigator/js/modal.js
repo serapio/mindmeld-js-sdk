@@ -1149,6 +1149,7 @@ var MMVoice = {
     _listenerError: false,
 
     _listenerConfig: {
+	lang: 'nl-NL',
         onTrueFinalResult: function(result, resultIndex, results) {
             var timeDelta = Date.now() - MMVoice._listenerFinalResultTime;
             if (MMVoice._useMixPanel) {
