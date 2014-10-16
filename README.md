@@ -88,8 +88,8 @@ You can supply optional `onSuccess` and `onFail` callbacks:
 
 ```javascript
 MM.start( { appid: "<your application id>" }, function onSuccess () {
-  console.log('MindMeld started with active user id', MM.activeUserId,
-    'and session id', MM.activeSessionId);
+  console.log('MindMeld started with active user id', MM.activeUserID,
+    'and session id', MM.activeSessionID);
 }, function onFail (error) {
   console.error('MindMeld failed to start:', error);
 });
@@ -110,8 +110,8 @@ MM.start({
     privacymode: "inviteonly"
   }
 }, function onSuccess () {
-  console.log('MindMeld started with active user id', MM.activeUserId,
-    'and session id', MM.activeSessionId);
+  console.log('MindMeld started with active user id', MM.activeUserID,
+    'and session id', MM.activeSessionID);
 }, function onFail (error) {
   console.error('MindMeld failed to start:', error);
 });
@@ -158,7 +158,7 @@ MM.getToken(credentials, onTokenSuccess, onTokenError);
 
 function onTokenSuccess () {
     console.log('Your access token was successfully retrieved: ' + MM.token + '.');
-    console.log('The active user id has been set to: ' + MM.activeUserId);
+    console.log('The active user id has been set to: ' + MM.activeUserID);
 }
 
 function onTokenError (error) {

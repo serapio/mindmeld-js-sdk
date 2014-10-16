@@ -168,8 +168,8 @@ var MM = ( function (window, ajax, Faye) {
          * @memberOf MM.Internal
          */
         setup: function () {
-            MM.activeSessionId = null;
-            MM.activeUserId = null;
+            MM.activeSessionID = null;
+            MM.activeUserID = null;
         },
 
         /**
@@ -778,7 +778,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          # To start a new MindMeld session with anonymous user
          MM.start( { appid: "<your application id>" }, function onSuccess () {
-           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
+           console.log('MindMeld started with active user id', MM.activeUserID, 'and session id', MM.activeSessionID);
          }, function onFail (error) {
            console.error('MindMeld failed to start:', error);
          });
@@ -797,7 +797,7 @@ var MM = ( function (window, ajax, Faye) {
              privacymode: "inviteonly"
            }
          }, function onSuccess () {
-           console.log('MindMeld started with active user id', MM.activeUserId, 'and session id', MM.activeSessionId);
+           console.log('MindMeld started with active user id', MM.activeUserID, 'and session id', MM.activeSessionID);
          }, function onFail (error) {
            console.error('MindMeld failed to start:', error);
          });
@@ -1079,9 +1079,9 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         setActiveSessionID: function (sessionid, onSuccess, onError) {
-            var sessionEventChannel = MM.config.appid + '/session/' + MM.activeSessionId;
+            var sessionEventChannel = MM.config.appid + '/session/' + MM.activeSessionID;
             MM.Internal.EventHandler.clearAllEventsForChannel(sessionEventChannel, 'session');
-            MM.activeSessionId = sessionid;
+            MM.activeSessionID = sessionid;
             MM.Internal.clearSessionData();
             MM.activeSession.get(null, onSuccess, onError);
         },
@@ -1124,9 +1124,9 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         setActiveUserID: function (userid, onSuccess, onError) {
-            var userEventChannel = MM.config.appid + '/user/' + MM.activeUserId;
+            var userEventChannel = MM.config.appid + '/user/' + MM.activeUserID;
             MM.Internal.EventHandler.clearAllEventsForChannel(userEventChannel, 'user');
-            MM.activeUserId = userid;
+            MM.activeUserID = userid;
             MM.Internal.clearUserData();
             MM.activeUser.get(null, onSuccess, onError);
         },
@@ -1554,12 +1554,12 @@ var MM = ( function (window, ajax, Faye) {
 
                 case 'session':
                     channelConfig.type = this.channelType;
-                    channelConfig.channel = channelString + '/session/' + MM.activeSessionId;
+                    channelConfig.channel = channelString + '/session/' + MM.activeSessionID;
                     break;
 
                 case 'user':
                     channelConfig.type = this.channelType;
-                    channelConfig.channel = channelString + '/user/' + MM.activeUserId;
+                    channelConfig.channel = channelString + '/user/' + MM.activeUserID;
                     break;
             }
             return channelConfig;
@@ -1910,7 +1910,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeUser';
         },
         path: function () {
-            return('user/' + MM.activeUserId);
+            return('user/' + MM.activeUserID);
         },
         /**
          * Helper function returns the JSON data for the activeUser object
@@ -2212,7 +2212,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeUser.sessions';
         },
         path: function () {
-            return('user/' + MM.activeUserId + '/sessions');
+            return('user/' + MM.activeUserID + '/sessions');
         },
         /**
          * Helper function returns the JSON data for the sessions collection
@@ -2451,7 +2451,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeSession.textentries';
         },
         path: function () {
-            return('session/' + MM.activeSessionId + '/textentries');
+            return('session/' + MM.activeSessionID + '/textentries');
         },
         /**
          * Helper function returns the JSON data for the textentries collection
@@ -2799,7 +2799,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeSession.entities';
         },
         path: function () {
-            return('session/' + MM.activeSessionId + '/entities');
+            return('session/' + MM.activeSessionID + '/entities');
         },
         /**
          * Helper function returns the JSON data for the entities collection
@@ -3002,7 +3002,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeSession.articles';
         },
         path: function () {
-            return('session/' + MM.activeSessionId + '/articles');
+            return('session/' + MM.activeSessionID + '/articles');
         },
         /**
          * Helper function returns the JSON data for the articles collection
@@ -3111,7 +3111,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeSession.documents';
         },
         path: function () {
-            return('session/' + MM.activeSessionId + '/documents');
+            return('session/' + MM.activeSessionID + '/documents');
         },
         /**
          * Helper function returns the JSON data for the session documents collection
@@ -3484,7 +3484,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeSession.liveusers';
         },
         path: function () {
-            return('session/' + MM.activeSessionId + '/liveusers');
+            return('session/' + MM.activeSessionID + '/liveusers');
         },
         /**
          * Helper function returns the JSON data for the live users list
@@ -3658,7 +3658,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeSession.invitedusers';
         },
         path: function () {
-            return('session/' + MM.activeSessionId + '/invitedusers');
+            return('session/' + MM.activeSessionID + '/invitedusers');
         },
         /**
          * Helper function returns the JSON data for the invited users list
@@ -3838,7 +3838,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'MM.activeSession.activities';
         },
         path: function () {
-            return('session/' + MM.activeSessionId + '/activities');
+            return('session/' + MM.activeSessionID + '/activities');
         },
         /**
          * Helper function returns the JSON data for the activities collection
@@ -4065,8 +4065,26 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         /**
+         * Returns the id of the `activeSession`.
+         *
+         * @type {String}
+         * @instance
+         * @memberOf MM
+         * @name activeSessionID
+         */
+
+        /**
+         * Returns the id of the `activeUser`.
+         *
+         * @type {String}
+         * @instance
+         * @memberOf MM
+         * @name activeUserID
+         */
+
+        /**
          * Register a listener with the activeSession to post text entries with type 'speech' and weight of 1.0
-         * when it receives a final {@link ListenerResult} object. 
+         * when it receives a final {@link ListenerResult} object.
          * Before using a Listener, check that it is supported with {@link MM.support}.
          *
          * @memberOf MM.activeSession
@@ -4114,7 +4132,7 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         path: function () {
-            return('session/' + MM.activeSessionId);
+            return('session/' + MM.activeSessionID);
         },
 
         /**
