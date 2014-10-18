@@ -12,7 +12,7 @@ machine:
   # Install node for building tools
   node:
     version:
-      0.10.21
+      0.10.28
 
   # Add some environment variables
   # Sensitive env variables go into the circle ui directly
