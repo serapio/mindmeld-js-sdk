@@ -41,7 +41,7 @@ gulp.task('tests.data', function () {
     .pipe(gulp.dest(distTestDirectory + 'spec/data'));
 });
 
-gulp.task('tests.build', ['tests.html', 'tests.spec', 'tests.data', 'tests.bower']);
+gulp.task('tests.build', ['sdk.build', 'tests.html', 'tests.spec', 'tests.data', 'tests.bower']);
 
 gulp.task('tests.watch', ['tests.build'], function () {
   gulp.watch(paths.specRunner, ['tests.html']);
