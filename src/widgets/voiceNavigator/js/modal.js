@@ -985,18 +985,13 @@ var MMVoice = {
         return numCols;
     },
 
-    _numDocumentsToRender : function (resultsLength) {
-        var self = this;
-        if (typeof self.config.numResults !== 'undefined') {
-            return self.config.numResults;
-        }
-
-        var numCols = self._numColumns();
-        var numDocs = Math.max(numCols * 4, 8);
-        if (resultsLength <= numDocs) {
-            return resultsLength;
+    _numDocumentsToRender : function (numFetched) {
+        var numCols = this._numColumns();
+        if (numFetched < numCols) {
+            return numFetched
         } else {
-            return numDocs;
+            var less = numFetched % numCols;
+            return numFetched - less;
         }
     },
 
@@ -1004,7 +999,7 @@ var MMVoice = {
         UTIL.log('getting documents');
         var self = this;
 
-        var queryParams = { limit: self.config.numResults || 14 };
+        var queryParams = { limit: self.config.numResults || 24 };
         if (self.config.highlight !== undefined) {
             queryParams['highlight'] = JSON.stringify(self.config.highlight);
         }
