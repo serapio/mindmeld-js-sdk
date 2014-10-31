@@ -407,10 +407,11 @@
       }
       window.clearTimeout(earlyFinalResultTimeout);
       // produce synthetic final result when the recognition takes too long
-      earlyFinalResultTimeout = window.setTimeout(finalizeResult, 1500);
+      earlyFinalResultTimeout = window.setTimeout(finalizeResult, 2000);
     }
 
     function finalizeResult () {
+      console.log('called finalize result');
       var results = listener._results;
       var lastResult = null;
       var resultIndex = results.length - 1;
@@ -452,6 +453,9 @@
       for (var i = event.resultIndex; i < event.results.length; ++i) {
         var transcript = event.results[i][0].transcript;
         //console.log(listener.segmentID + '.' + i, event.results[i].isFinal, transcript);
+        console.error('Result ' + '.' + i + ' [final ' + event.results[i].isFinal +
+        ' confidence ' + event.results[i][0].confidence + '] ' +
+        transcript);
 
         if (event.results[i].isFinal) {
           window.clearTimeout(earlyFinalResultTimeout);
