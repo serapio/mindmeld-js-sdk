@@ -453,7 +453,7 @@
       for (var i = event.resultIndex; i < event.results.length; ++i) {
         var transcript = event.results[i][0].transcript;
         //console.log(listener.segmentID + '.' + i, event.results[i].isFinal, transcript);
-        console.error('Result ' + '.' + i + ' [final ' + event.results[i].isFinal +
+        console.log('Result ' + '.' + i + ' [final ' + event.results[i].isFinal +
         ' confidence ' + event.results[i][0].confidence + '] ' +
         transcript);
 
