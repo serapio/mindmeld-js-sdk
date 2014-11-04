@@ -708,15 +708,21 @@ var MMVoice = {
         }
     },
 
-    _createCard : function(doc) {
+    _createCard : function(doc, $existingCard) {
         var self = this;
-        var $card = $('<a>', {
-            class: 'card new',
-            id: 'doc_' + doc.documentid,
-            href: doc.originurl,
-            target: self.config.cardLinkBehavior || '_parent'
-        });
-        $card.attr('data-document-id', doc.documentid);
+        var $card;
+        if ($existingCard !== undefined) {
+            $card = $existingCard;
+        } else {
+            $card = $('<a>', {
+                class: 'card new',
+                id: 'doc_' + doc.documentid,
+                href: doc.originurl,
+                target: self.config.cardLinkBehavior || '_parent'
+            });
+            $card.attr('data-document-id', doc.documentid);
+        }
+
 
         if (self.config.cardLayout === 'custom') {
             var html = self.cardTemplate(doc);
@@ -825,14 +831,17 @@ var MMVoice = {
         });
 
         $.each(data, function(k, doc) {
+            var $card;
             // Card exists, so update sort order and keep it
             if ($('#doc_' + doc.documentid).length) {
-                $('#doc_' + doc.documentid).removeClass('to-delete').attr('data-sort', k);
+                $card = $('#doc_' + doc.documentid);
+                $card.removeClass('to-delete').attr('data-sort', k);
+                self._createCard(doc, $card);
                 return true;
             }
 
             // Card doesn't exist, so create it. (TODO: Maybe use a templating system?)
-            var $card = self._createCard(doc);
+            $card = self._createCard(doc);
             $card.attr('data-sort', k);
             newCards.push($card);
         });
