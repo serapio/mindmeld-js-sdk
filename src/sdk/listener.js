@@ -269,6 +269,10 @@
 
     this._listening = false;
     this._results = [];
+
+    // We can save the results from the recognizer for debugging and testing
+    this._rawResults = [];
+    this._captureRaw = false;
   };
 
 
@@ -425,6 +429,10 @@
     }
 
     recognizer.onresult = function(event) {
+      if (listener._captureRaw) {
+        listener._rawResults.push(event);
+      }
+
       listener.resultID++;
       var result = {
         final: false,
