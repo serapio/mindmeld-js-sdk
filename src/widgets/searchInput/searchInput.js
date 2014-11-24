@@ -30,7 +30,7 @@
 
       // User pressed return
       textElement.blur();
-      var text = MindMeldSearchInput.getText().trim();
+      var text = MindMeldSearchInput.getText();
       MindMeldSearchInput.setText(text, true);
       MindMeldSearchInput.emit('submitText', text);
 
@@ -46,7 +46,7 @@
       function (e) {
         console.log('Clicking glass');
         MindMeldSearchInput.setFinal(true);
-        var text = MindMeldSearchInput.getText().trim();
+        var text = MindMeldSearchInput.getText();
         MindMeldSearchInput.emit('submitText', text);
 
         return false;
@@ -72,7 +72,11 @@
    * Get the text of the search input.
    */
   MindMeldSearchInput.getText = function getText () {
-    return textElement.querySelector('span').innerHTML;
+    var text = textElement.querySelector('span').innerHTML;
+    // contentEditable divs encode spaces as '&nbsp;'
+    text = text.replace(/&nbsp;/g, ' ');
+    if (text.trim) text = text.trim();
+    return text;
   };
 
   /**
