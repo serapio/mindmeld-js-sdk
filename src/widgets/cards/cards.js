@@ -1,5 +1,5 @@
 /* global Handlebars, jQuery, Spinner */
-/* exported Cards */
+/* exported MindMeldCards */
 
 ;(function (Handlebars, $, Spinner) {
 
@@ -160,8 +160,13 @@
         var $card = $('#' + card.documentid);
 
         if ($card.length) {
-          // Existing card; place correctly.
-          placeCardInDom($card, i);
+          // Existing card; We need to replace it with new data and place correctly.
+          var $newCard = $( render( options.templatePath, card ) );
+          $newCard.css('left', $card.css('left'));
+          $newCard.css('top', $card.css('top'));
+          $card.replaceWith($newCard);
+
+          placeCardInDom($newCard, i);
         } else {
           // New card; render and place in DOM
           $card = $( render( options.templatePath, card ) );
