@@ -166,6 +166,9 @@
           $newCard.css('top', $card.css('top'));
           $card.replaceWith($newCard);
 
+          $newCard.imagesLoaded( function () {
+            $newCard.find('.not-loaded').removeClass('not-loaded');
+          });
           placeCardInDom($newCard, i);
         } else {
           // New card; render and place in DOM
@@ -179,11 +182,10 @@
             return onClick(e);
           });
 
-          placeCardInDom($card, i);
           $card.imagesLoaded( function () {
             $card.find('.not-loaded').removeClass('not-loaded');
-            //layoutCard($card, i);
           });
+          placeCardInDom($card, i);
         }
       });
       // Delete the old cards still in the DOM.  They will all be at the end.
