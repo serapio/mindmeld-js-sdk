@@ -20,6 +20,24 @@ $search-inner-height: $search-height - 4*$search-border-width;
 $search-border-radius: $search-height / 2;
 $icon-size: 32px;
 
+/*
+  This CSS sets the size of the searchInput based on the viewport.  If you
+  want to change the width, the easiest way is to set the size of
+  the .mindmeld-search element.  For example:
+
+  .mindmeld-search {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
+
+  If you are having trouble with the precedence of CSS rules, remember that
+  more specific rules take precedence, so you can add an id to your
+  div.mindmeld-search, and add the CSS rules by id.
+*/
+
 .mindmeld-search {
   &, & * {
     box-sizing: border-box;

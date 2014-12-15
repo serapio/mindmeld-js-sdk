@@ -44,7 +44,7 @@ describe('MM Unit', function () {
       MM.token = null;
     });
 
-    it ('should set a token and activeUserId on success', function (done) {
+    it ('should set a token and activeUserID on success', function (done) {
       var simpleData = { userid: '700', name: 'Jerry the cat'};
       var fakeData = FakeResponses.getToken(simpleData);
       MM.getToken({
@@ -53,7 +53,7 @@ describe('MM Unit', function () {
       }, function onSuccess (response) {
         expect(response.token).toBeOk();
         expect(MM.token).toEqual(response.token);
-        expect(MM.activeUserId).toEqual(simpleData.userid);
+        expect(MM.activeUserID).toEqual(simpleData.userid);
         done();
       }, function onError () {
         fail('should not have error');
@@ -157,13 +157,13 @@ describe('MM Unit', function () {
       MM.token = null;
     });
 
-    it ('should set activeSessionId on success', function (done) {
+    it ('should set activeSessionID on success', function (done) {
       var sessionid = '34521';
       var fakeData = FakeResponses.getSession({sessionid: sessionid});
 
       MM.setActiveSessionID(sessionid,
         function onSessionStart () {
-          expect(MM.activeSessionId).toEqual(sessionid);
+          expect(MM.activeSessionID).toEqual(sessionid);
           done();
       }, function onError () {
         fail('Should not have error');
@@ -241,8 +241,8 @@ describe('MM Unit', function () {
 
       MM.start({appid: APP_ID}, function onSuccess () {
         expect(MM.token).toEqual(options.token);
-        expect(MM.activeUserId).toEqual(options.userid);
-        expect(MM.activeSessionId).toEqual(options.sessionid);
+        expect(MM.activeUserID).toEqual(options.userid);
+        expect(MM.activeSessionID).toEqual(options.sessionid);
         done();
       }, function onFail (err) {
         fail('Should not have an error', err);
@@ -278,8 +278,8 @@ describe('MM Unit', function () {
         }
       }, function onSuccess () {
         expect(MM.token).toEqual(options.token);
-        expect(MM.activeUserId).toEqual(options.userid);
-        expect(MM.activeSessionId).toEqual(options.sessionid);
+        expect(MM.activeUserID).toEqual(options.userid);
+        expect(MM.activeSessionID).toEqual(options.sessionid);
         done();
       }, function onFail (err) {
         console.error('Got error', err);
@@ -309,8 +309,8 @@ describe('MM Unit', function () {
         userid: options.userid
       }, function onSuccess () {
         expect(MM.token).toEqual(options.token);
-        expect(MM.activeUserId).toEqual(options.userid);
-        expect(MM.activeSessionId).toEqual(options.sessionid);
+        expect(MM.activeUserID).toEqual(options.userid);
+        expect(MM.activeSessionID).toEqual(options.sessionid);
         done();
       }, function onFail (err) {
         console.error('Got error', err);
@@ -346,8 +346,8 @@ describe('MM Unit', function () {
         }
       }, function onSuccess () {
         expect(MM.token).toEqual(options.token);
-        expect(MM.activeUserId).toEqual(options.userid);
-        expect(MM.activeSessionId).toEqual(options.sessionid);
+        expect(MM.activeUserID).toEqual(options.userid);
+        expect(MM.activeSessionID).toEqual(options.sessionid);
         done();
       }, function onFail (err) {
         console.error('Got error', err);

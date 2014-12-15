@@ -5,7 +5,13 @@ node_modules/
 bower_components/
 
 # Distribution files
-dist/
+dist/docs/
+dist/sdk/examples/
+dist/sdk/mindmeld-js-sdk.zip
+dist/test/
+dist/widgets/
+dist/embed.js
+dist/README.md
 
 # OS X garbage
 .DS_STORE

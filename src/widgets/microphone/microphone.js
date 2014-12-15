@@ -8,6 +8,7 @@
  * - start(): starts recording
  * - stop(): stops recording
  * - listening(): returns a boolean indicating whether the mic is listening
+ * - isContinuous(): returns a boolean indicating whether the mic is in continuous mode
  * - on(event, callback, context): register for a MindMeldMicrophone event. Events exposed:
  *  - 'init': fired after initialize() finishes
  *  - 'result': there is a speech-to-text result.  Passes a result object:
@@ -206,7 +207,7 @@
    * Stops recording
    */
   MindMeldMicrophone.stop = function stop () {
-    listener.stop();
+    listener.cancel();
   };
 
   // Event Dispatcher
@@ -240,6 +241,13 @@
         }
       );
     }
+  };
+
+  /**
+   * Check if microphone is in continuous mode.
+   */
+  MindMeldMicrophone.isContinuous = function () {
+    return listener && listener.continuous;
   };
 
 }(MM));

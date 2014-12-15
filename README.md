@@ -28,12 +28,12 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.8.1.js"></script>
+<script type="text/javascript" src="https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.8.2.js"></script>
 ```
 
-* Un-minified: [mindmeld-2.8.1.js][versionedSDKDownloadLink]
-* Minified: [mindmeld-2.8.1.min.js][versionedMinifiedSDKDownloadLink]
-* Both + Hello World + Documentation: [mindmeld-js-sdk-2.8.1.zip][versionedSDKZIPDownloadLink]
+* Un-minified: [mindmeld-2.8.2.js][versionedSDKDownloadLink]
+* Minified: [mindmeld-2.8.2.min.js][versionedMinifiedSDKDownloadLink]
+* Both + Hello World + Documentation: [mindmeld-js-sdk-2.8.2.zip][versionedSDKZIPDownloadLink]
 
 ### Clone git repository
 Both files are also available directly from the mindmeld-js-sdk git repository. Simply clone the repo:
@@ -88,8 +88,8 @@ You can supply optional `onSuccess` and `onFail` callbacks:
 
 ```javascript
 MM.start( { appid: "<your application id>" }, function onSuccess () {
-  console.log('MindMeld started with active user id', MM.activeUserId,
-    'and session id', MM.activeSessionId);
+  console.log('MindMeld started with active user id', MM.activeUserID,
+    'and session id', MM.activeSessionID);
 }, function onFail (error) {
   console.error('MindMeld failed to start:', error);
 });
@@ -110,8 +110,8 @@ MM.start({
     privacymode: "inviteonly"
   }
 }, function onSuccess () {
-  console.log('MindMeld started with active user id', MM.activeUserId,
-    'and session id', MM.activeSessionId);
+  console.log('MindMeld started with active user id', MM.activeUserID,
+    'and session id', MM.activeSessionID);
 }, function onFail (error) {
   console.error('MindMeld failed to start:', error);
 });
@@ -144,7 +144,7 @@ Once the JavaScript SDK has been initialized, the MM object is your interface to
 ### Request an Access Token
 
 With your application's app secret you can generate a new user token. You can find the app secret on the
-[Management Console](https://developer.expectlabs.com/console).
+[Management Console](https://www.expectlabs.com/console).
 
 ```javascript
 var credentials = {
@@ -158,7 +158,7 @@ MM.getToken(credentials, onTokenSuccess, onTokenError);
 
 function onTokenSuccess () {
     console.log('Your access token was successfully retrieved: ' + MM.token + '.');
-    console.log('The active user id has been set to: ' + MM.activeUserId);
+    console.log('The active user id has been set to: ' + MM.activeUserID);
 }
 
 function onTokenError (error) {
@@ -399,7 +399,7 @@ widgets together in a standalone app.  With this application,
 you'll see how to build natural-language voice search into your application
 with very few lines of code.  We've explained the structure of the app, and how
 to run and modify it, in the
-[developer center](https://developer.expectlabs.com/docs/sdks/js/starterApp).
+[developer center](https://www.expectlabs.com/docs/sdks/js/starterApp).
 
 ## Repository Contents ([mindmeld-js-sdk](https://github.com/expectlabs/mindmeld-js-sdk))
 * *src/*: Directory containing all source files for SDK and widgets
@@ -427,13 +427,13 @@ to run and modify it, in the
 * *bump.txt*: Add garbage to this file and and check it in when you just want a new SHA for this repo
 
 
-[sdkDocsLink]:https://developer.expectlabs.com/docs/sdks/js/referenceDocs/
-[apiDocsLink]:https://developer.expectlabs.com/docs
-[developerSite]:https://developer.expectlabs.com
+[sdkDocsLink]:https://www.expectlabs.com/docs/sdks/js/referenceDocs/
+[apiDocsLink]:https://www.expectlabs.com/docs
+[developerSite]:https://www.expectlabs.com
 [repoUrl]:https://github.com/expectlabs/mindmeld-js-sdk
-[latestSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld.js
-[latestMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld.min.js
-[latestSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/mindmeld-js-sdk.zip
-[versionedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.8.1.js
-[versionedMinifiedSDKDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-2.8.1.min.js
-[versionedSDKZIPDownloadLink]:https://developer.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.8.1.zip
+[latestSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld.js
+[latestMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld.min.js
+[latestSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld-js-sdk.zip
+[versionedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.8.2.js
+[versionedMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.8.2.min.js
+[versionedSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.8.2.zip

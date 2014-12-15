@@ -1,5 +1,5 @@
 /* global Handlebars, jQuery, Spinner */
-/* exported Cards */
+/* exported MindMeldCards */
 
 ;(function (Handlebars, $, Spinner) {
 
@@ -30,7 +30,7 @@
       render.tmplCache[templateUrl] = Handlebars.compile(templateString);
     }
 
-    return render.tmplCache[templateUrl](templateData);
+    return render.tmplCache[templateUrl](templateData, {helpers: options.handlebarsHelpers});
   };
 
   /*
@@ -120,6 +120,7 @@
      *
      * options: {
      *   templatePath: (String) path to Handlebars template for the card.
+     *   handlebarsHelpers: ({name:function}) Object of helpers for Handlebars rendering.
      *   parentSelector: (String) jQuery selector for parent element of cards, eg '#cards'.
      *     This element must have a non-zero width.
      *   cardSelector: (String) jQuery selector for the cards, eg '.card'.
@@ -159,8 +160,13 @@
         var $card = $('#' + card.documentid);
 
         if ($card.length) {
-          // Existing card; place correctly.
-          placeCardInDom($card, i);
+          // Existing card; We need to replace it with new data and place correctly.
+          var $newCard = $( render( options.templatePath, card ) );
+          $newCard.css('left', $card.css('left'));
+          $newCard.css('top', $card.css('top'));
+          $card.replaceWith($newCard);
+
+          placeCardInDom($newCard, i);
         } else {
           // New card; render and place in DOM
           $card = $( render( options.templatePath, card ) );
