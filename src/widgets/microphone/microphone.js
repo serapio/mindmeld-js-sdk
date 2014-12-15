@@ -207,7 +207,7 @@
    * Stops recording
    */
   MindMeldMicrophone.stop = function stop () {
-    listener.stop();
+    listener.cancel();
   };
 
   // Event Dispatcher
