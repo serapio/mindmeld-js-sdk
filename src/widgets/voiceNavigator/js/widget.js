@@ -41,7 +41,7 @@ var MM = window.MM = window.MM || {};
  * @property {Object.<string, number>} [highlight] the highlight parameter for {@link VoiceNavigatorConfig} specifies the
  *                                                 document fields to return snippets showing matching results. The field
  *                                                 is the same as the field used in the API to show highlighted text in the
- *                                                 API as documented [here](https://developer.expectlabs.com/docs/endpointSession#getSessionSessionidDocuments).
+ *                                                 API as documented [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidDocuments).
  *
  */
 
@@ -93,8 +93,8 @@ var MM = window.MM = window.MM || {};
  * the 'mm-voice-nav-text-init' receive an enter keypress.
  *
  * @see {@link VoiceNavigatorConfig} for full documentation of configuration options.
- * @see {@link https://developer.expectlabs.com/docs/voiceWidget|MindMeld Voice Navigator} to get started with Voice Navigator.
- * @see {@link https://developer.expectlabs.com/demos|MindMeld Demos} to see the Voice Navigator in action.
+ * @see {@link https://www.expectlabs.com/docs/voiceWidget|MindMeld Voice Navigator} to get started with Voice Navigator.
+ * @see {@link https://www.expectlabs.com/demos|MindMeld Demos} to see the Voice Navigator in action.
  *
  *
  * @example <caption> Loading the voice navigator </caption>
@@ -103,7 +103,7 @@ var MM = window.MM = window.MM || {};
  var MM = window.MM || {};
      ( function () {
          MM.loader = {
-             rootURL: 'https://developer.expectlabs.com/public/sdks/js/'
+             rootURL: 'https://www.expectlabs.com/public/sdks/js/'
          ,   widgets: ['voice']
          };
          MM.widgets = {
@@ -310,7 +310,7 @@ var MM = window.MM = window.MM || {};
      var MM = window.MM || {};
      ( function () {
          MM.loader = {
-             rootURL: 'https://developer.expectlabs.com/public/sdks/js/'
+             rootURL: 'https://www.expectlabs.com/public/sdks/js/'
          ,   widgets: ['voice']
          };
          MM.widgets = {
@@ -338,7 +338,7 @@ var MM = window.MM = window.MM || {};
  */
 MM.voiceNavigator = MM.voiceNavigator || {};
 MM.loader = MM.loader || {};
-MM.loader.rootURL = MM.loader.rootURL || 'https://developer.expectlabs.com/public/sdks/js/';
+MM.loader.rootURL = MM.loader.rootURL || 'https://www.expectlabs.com/public/sdks/js/';
 
 /**
  * The 'div#mindmeld-modal' element which contains all of the voice navigator html

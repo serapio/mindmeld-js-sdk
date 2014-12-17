@@ -1,7 +1,7 @@
 var MM = window.MM || {};
 ( function (MM) {
     MM.loader = MM.loader || {};
-    MM.loader.rootURL = MM.loader.rootURL || 'https://developer.expectlabs.com/public/sdks/js/';
+    MM.loader.rootURL = MM.loader.rootURL || 'https://www.expectlabs.com/public/sdks/js/';
 
     // Internal loader state
 

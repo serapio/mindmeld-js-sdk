@@ -3665,14 +3665,14 @@ var MM = ( function (window, ajax, Faye) {
          * @param {string} config.appid The application id for this MindMeld application.
          * @param {Object=} config.credentials Credentials for getting a token using `getToken`.
          * Will use anonymous authentication if no credentials are given.
-         * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
+         * Please refer to [documentation here](https://www.expectlabs.com/docs/authentication) for details
          * @param {string=} config.token A valid token to use for `setToken`.  This requires `userid` to be supplied as well, and is instead of `credentials`.
          * @param {string=} config.userid A valid userid to use for `activeUserID`.  This requires `token` to be supplied as well, and is instead of `credentials`.
          * @param {string=} config.sessionid The sessionid of an existing, active session you wish to join with `setActiveSessionID`.
          * @param {Object=} config.session Object containing new session data.
          * Will create an `inviteonly` session if no data is given.
          * Please refer to documentation for creating sessions
-         * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
+         * [here](https://www.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
          * @param {string} config.session.name name of the new session
          * @param {string} config.session.privacymode the privacy mode for the session. The supported privacy modes
          * are `friendsonly`, `inviteonly`, and `public`.  Sessions that are `inviteonly` can be accessed only
@@ -3807,7 +3807,7 @@ var MM = ( function (window, ajax, Faye) {
          * automatically calls {@link MM#setActiveUserID} with the appropriate user id
          *
          * @param {Object} credentials credentials for obtaining an API token.
-         * Please refer to [documentation here](https://developer.expectlabs.com/docs/authentication) for details
+         * Please refer to [documentation here](https://www.expectlabs.com/docs/authentication) for details
          * @param onSuccess {function=} callback for when token obtained successfully
          * @param onError   {function=} callback for when there was an error obtaining token
          * @memberOf MM
@@ -4101,7 +4101,7 @@ var MM = ( function (window, ajax, Faye) {
          * @param {Object} result.request contains information about the request made
          * @param {string} result.timestamp timestamp of the request
          * @param {number} result.responsetime amount of time the API call took in seconds
-         * @param {string} result.etag  ETag for request. Please refer to our [documentation here](https://developer.expectlabs.com/docs/sendingRequest) for more information on ETags
+         * @param {string} result.etag  ETag for request. Please refer to our [documentation here](https://www.expectlabs.com/docs/sendingRequest) for more information on ETags
          */
 
         /**
@@ -4143,7 +4143,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @typedef {Object} QueryParameters
          * @property {string=} query search query string to retrieve specific objects that match the query. See the
-         * documentation on [search query syntax](https://developer.expectlabs.com/docs/searchQuerySyntax)
+         * documentation on [search query syntax](https://www.expectlabs.com/docs/searchQuerySyntax)
          * for more information
          * @property {number=} start The index of the first object in the returned list of objects. This can
          * be used for paging through large collections of objects.
@@ -4177,7 +4177,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @example <caption> Example GET request
          * to the
-         * [session text entries endpoint](https://developer.expectlabs.com/docs/endpointSession#getSessionSessionidTextentries)
+         * [session text entries endpoint](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidTextentries)
          * </caption>
          *
          function callAPI () {
@@ -4188,7 +4188,7 @@ var MM = ( function (window, ajax, Faye) {
          }
 
          * @example <caption> Example POST request to the application's
-         * [publish event endpoint](https://developer.expectlabs.com/docs/endpointApp#postEvents) </caption>
+         * [publish event endpoint](https://www.expectlabs.com/docs/endpointApp#postEvents) </caption>
          *
          function callAPI () {
             var eventData = {
@@ -4893,7 +4893,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @param {Object} userInfo Object containing updated user data. Currently, this function permits
          * the 'location' attribute for the user to be updated. Please see User endpoints documentation
-         * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUserid) for more info
+         * [here](https://www.expectlabs.com/docs/endpointUser#postUserUserid) for more info
          * @param {Location} userInfo.location location object containing lat/long
          * @param {APISuccessCallback=} onSuccess callback for when updating user info was successful
          * @param {APIErrorCallback=} onFail callback for when updating user info failed
@@ -5210,7 +5210,7 @@ var MM = ( function (window, ajax, Faye) {
          * can get the session list for any user of your application.
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the sessions returned.
-         * See documentation [here](https://developer.expectlabs.com/docs/endpointUser#getUserUseridSessions) for more details
+         * See documentation [here](https://www.expectlabs.com/docs/endpointUser#getUserUseridSessions) for more details
          * @param {APISuccessCallback=} onSuccess callback for when getting the session list was successful
          * @param {APIErrorCallback=} onFail callback for when getting the session list failed
          * @memberOf MM.activeUser.sessions
@@ -5236,7 +5236,7 @@ var MM = ( function (window, ajax, Faye) {
          * of any user of the application.
          *
          * @param {Object} sessionInfo Object containing new session data. Please refer to documentation for creating sessions
-         * [here](https://developer.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
+         * [here](https://www.expectlabs.com/docs/endpointUser#postUserUseridSessions) for more info
          * @param {string} sessionInfo.name name of the new session
          * @param {string} sessionInfo.privacymode the privacy mode for the session. The supported privacy modes
          * are 'friendsonly', 'inviteonly', and 'public'.  Sessions that are 'inviteonly' can be accessed only
@@ -5457,7 +5457,7 @@ var MM = ( function (window, ajax, Faye) {
          * with your application.
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the text entries returned.
-         * See documentation [here](https://developer.expectlabs.com/docs/endpointSession#getSessionSessionidTextentries) for more details
+         * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidTextentries) for more details
          * @param {APISuccessCallback=} onSuccess callback for when getting the text entry list was successful
          * @param {APIErrorCallback=} onFail callback for when getting the text entry list failed
          * @memberOf MM.activeSession.textentries
@@ -5806,7 +5806,7 @@ var MM = ( function (window, ajax, Faye) {
          * token can access this collection for any session associated with your application.
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the entities returned.
-         * See documentation [here](https://developer.expectlabs.com/docs/endpointSession#getSessionSessionidEntities) for more details
+         * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidEntities) for more details
          * @param {APISuccessCallback=} onSuccess callback for when getting the entity list was successful
          * @param {APIErrorCallback=} onFail callback for when getting the entity list failed
          * @memberOf MM.activeSession.entities
@@ -5831,7 +5831,7 @@ var MM = ( function (window, ajax, Faye) {
          * (e.g. 'Barack Obama', 'Paris'), or it could be a noun phrase representing a distinct
          * concept (e.g. 'minestrone soup'). Entities are automatically derived from submitted
          * text entries, however this endpoint can be used to explicitly post entities to a session.
-         * Refer to documentation [here](https://developer.expectlabs.com/docs/endpointSession#postSessionSessionidEntities)
+         * Refer to documentation [here](https://www.expectlabs.com/docs/endpointSession#postSessionSessionidEntities)
          * for more information
          *
          *
@@ -5843,7 +5843,7 @@ var MM = ( function (window, ajax, Faye) {
          * by type. This can be an arbitrary string that can be used in subsequent searches on
          * the entities collection to filter entities by type. There are several entitytype
          * values, however, that the MindMeld platform uses. They are listed
-         * [here](https://developer.expectlabs.com/docs/reservedEntityTypes)
+         * [here](https://www.expectlabs.com/docs/reservedEntityTypes)
          * @param {number} entityData.score A decimal number between 0 and 1 indicating the relative importance of
          * this entity in the overall context of the session. A value of 0 indicates that this entity has no
          * impact on the session context. A value of 1 indicates that this entity is very important
@@ -5974,7 +5974,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the articles returned.
-         * See documentation [here](https://developer.expectlabs.com/docs/endpointSession#getSessionSessionidArticles) for more details
+         * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidArticles) for more details
          * For this function, the following additional parameters are also available:
          * @param {(string[]|string)=} params.entityids An array of entityid values or a single entityid value
          * If specified, only articles related to the specified entities will be returned in the response.
@@ -6109,7 +6109,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the documents returned.
-         * See documentation [here](https://developer.expectlabs.com/docs/endpointSession#getSessionSessionidDocuments)
+         * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidDocuments)
          * for more details
          * For this function, the following additional parameters are also available:
          * @param {(string[]|string)=} params.entityids An array of entityid values or a single entityid value.
@@ -6121,11 +6121,11 @@ var MM = ( function (window, ajax, Faye) {
          * value. If specified, only documents related to the specified text entries will be returned in the response
          * @param {string=} params.query A search query string to retrieve specific
          * objects that match the query. See the documentation on [search query
-         * syntax](https://developer.expectlabs.com/docs/customRankingFactors)
+         * syntax](https://www.expectlabs.com/docs/customRankingFactors)
          * for more information.
          * @param {string=} params.document-ranking-factors A JSON string containing custom factors that will be
          * used to rank the documents returned by this request. Read the section on
-         * [custom ranking factors](https://developer.expectlabs.com/docs/customRankingFactors) to learn more about how you can adjust the search ranking factors to customize the document results for your application.
+         * [custom ranking factors](https://www.expectlabs.com/docs/customRankingFactors) to learn more about how you can adjust the search ranking factors to customize the document results for your application.
          * @param {(number|string)=} params.history-since A Unix timestamp or
          * [strtotime](http://php.net/manual/en/function.strtotime.php) date value that specifies the beginning of
          * the contextual history time window that will be used to influence the document results. Any contextual
@@ -6257,11 +6257,11 @@ var MM = ( function (window, ajax, Faye) {
          *
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the documents returned.
-         * See documentation [here](https://developer.expectlabs.com/docs/endpointApp#getDocuments) for more details. For
+         * See documentation [here](https://www.expectlabs.com/docs/endpointApp#getDocuments) for more details. For
          * this function, the following additional parameters are also available:
          * @param {string=} params.document-ranking-factors A JSON string containing custom factors that will be
          * used to rank the documents returned by this request. Read the section on
-         * [custom ranking factors](https://developer.expectlabs.com/docs/customRankingFactors) to learn more about
+         * [custom ranking factors](https://www.expectlabs.com/docs/customRankingFactors) to learn more about
          * how you can adjust the search ranking factors to customize the document results for your application
          * @param {APISuccessCallback=} onSuccess callback for when getting the application document list was successful
          * @param {APIErrorCallback=} onFail callback for when getting the application document list failed
@@ -6296,7 +6296,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @param {Object} document object containing document data. The only required parameters are 'title'
          * and 'originurl'. Please see Document documentation
-         * [here](https://developer.expectlabs.com/docs/endpointApp#postDocuments) for more info
+         * [here](https://www.expectlabs.com/docs/endpointApp#postDocuments) for more info
          * @param {string} document.title The title of the document
          * @param {string} document.originurl The fully qualified link to the webpage containing the
          * original document. Note that this url will be stored, but not returned in subsequent GET
@@ -6327,13 +6327,13 @@ var MM = ( function (window, ajax, Faye) {
          * @param {Location=} document.location The location associated with this document
          * @param {number=} document.customrank1 A custom numerical rank value that can be used in the document ranking
          * calculation. See the documentation on
-         * [custom ranking factors](https://developer.expectlabs.com/docs/customRankingFactors) for more information
+         * [custom ranking factors](https://www.expectlabs.com/docs/customRankingFactors) for more information
          * @param {number=} document.customrank2 A custom numerical rank value that can be used in the document ranking
          * calculation. See the documentation on
-         * [custom ranking factors](https://developer.expectlabs.com/docs/customRankingFactors) for more information
+         * [custom ranking factors](https://www.expectlabs.com/docs/customRankingFactors) for more information
          * @param {number=} document.customrank3 A custom numerical rank value that can be used in the document ranking
          * calculation. See the documentation on
-         * [custom ranking factors](https://developer.expectlabs.com/docs/customRankingFactors) for more information
+         * [custom ranking factors](https://www.expectlabs.com/docs/customRankingFactors) for more information
          *
          * @param {APISuccessCallback=} onSuccess callback for when posting data to collection was successful
          * @param {APIErrorCallback=} onFail callback for when posting data to collection failed
@@ -7160,7 +7160,7 @@ var MM = ( function (window, ajax, Faye) {
          *
          * @param {Object} sessionInfo Object containing updated session data. The only fields
          * that can be updated are 'name' and 'privacymode'. Please see the Session endpoints
-         * documentation [here](https://developer.expectlabs.com/docs/endpointSession#postSessionSessionid)
+         * documentation [here](https://www.expectlabs.com/docs/endpointSession#postSessionSessionid)
          * for more info
          * @param {string=} sessionInfo.name updated name of active session
          * @param {string=} sessionInfo.privacymode update privacy mode of the active session. The supported privacy modes

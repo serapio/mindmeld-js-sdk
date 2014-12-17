@@ -12,7 +12,7 @@
         "applicationName": "Expect Labs mindmeld-js-sdk",
         "openGraph": {
             "type": "website",
-            "image": "http://developer.expectlabs.com/public/images/ogImgDevCenter.jpg",
+            "image": "http://www.expectlabs.com/public/images/ogImgDevCenter.jpg",
             "site_name": "Expect Labs - MindMeld"
         },
         "meta": {
