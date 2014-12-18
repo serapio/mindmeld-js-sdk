@@ -29,6 +29,7 @@ elif [ "$CHEF_ENVIRONMENT" = "west-prod-a" ]; then
 fi
 
 #Set specific params from the circle params
+REPO=$CIRCLE_PROJECT_REPONAME
 PREFIX="$REPO/"
 GIT_COMMIT=$CIRCLE_SHA1
 BUILD_ID="$CIRCLE_BUILD_NUM"_`date +"%Y-%m-%d_%H-%M-%S"`
