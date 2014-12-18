@@ -46,7 +46,11 @@
     }
 
     initMMListener();
-    initVolumeMonitor();
+
+    /* The volume monitor started causing "audio-capture" errors from webkitSpeechRecognition between
+     * Chrome 40.0.2214.38 beta (64-bit) and 40.0.2214.45 beta (64-bit). We are disabling it for now.
+     */
+    //initVolumeMonitor();
     initClickHandlers();
     initUIHandlers();
     MindMeldMicrophone.emit('init');
