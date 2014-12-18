@@ -369,7 +369,7 @@
          * A ListenerConfig object specifying the session
          *
          *  See the documentation for more information
-         *  https://developer.expectlabs.com/docs/sdks/js/referenceDocs/global.html#ListenerConfig
+         *  https://www.expectlabs.com/docs/sdks/js/referenceDocs/global.html#ListenerConfig
          */
         listenerConfig: {
             continuous: true,

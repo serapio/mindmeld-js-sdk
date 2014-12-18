@@ -72,7 +72,7 @@
    * Get the text of the search input.
    */
   MindMeldSearchInput.getText = function getText () {
-    var text = textElement.querySelector('span').innerHTML;
+    var text = textElement.querySelector('span').textContent;
     // contentEditable divs encode spaces as '&nbsp;'
     text = text.replace(/&nbsp;/g, ' ');
     if (text.trim) text = text.trim();

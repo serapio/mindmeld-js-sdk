@@ -1,6 +1,6 @@
 # MindMeld API Server Side Authentication
 
-This is a basic NodeJS server which implements authentication for the MindMeld API using simple authentication. You can read the documentation on authentication [here](https://developer.expectlabs.com/docs/authentication)
+This is a basic NodeJS server which implements authentication for the MindMeld API using simple authentication. You can read the documentation on authentication [here](https://www.expectlabs.com/docs/authentication)
 
 ## Using the server
 
