@@ -1135,7 +1135,11 @@ var MMVoice = {
                 MMVoice.is_first_start = false;
                 MMVoice.status = 'listening';
                 MMVoice._updateUI();
-                startVolumeMonitor();
+
+                /* The volume monitor started causing "audio-capture" errors from webkitSpeechRecognition between
+                 * Chrome 40.0.2214.38 beta (64-bit) and 40.0.2214.45 beta (64-bit). We are disabling it for now.
+                 */
+                //startVolumeMonitor();
                 MMVoice.$cards.addClass('loading');
             }
         },

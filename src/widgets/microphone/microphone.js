@@ -8,6 +8,7 @@
  * - start(): starts recording
  * - stop(): stops recording
  * - listening(): returns a boolean indicating whether the mic is listening
+ * - isContinuous(): returns a boolean indicating whether the mic is in continuous mode
  * - on(event, callback, context): register for a MindMeldMicrophone event. Events exposed:
  *  - 'init': fired after initialize() finishes
  *  - 'result': there is a speech-to-text result.  Passes a result object:
@@ -45,7 +46,11 @@
     }
 
     initMMListener();
-    initVolumeMonitor();
+
+    /* The volume monitor started causing "audio-capture" errors from webkitSpeechRecognition between
+     * Chrome 40.0.2214.38 beta (64-bit) and 40.0.2214.45 beta (64-bit). We are disabling it for now.
+     */
+    //initVolumeMonitor();
     initClickHandlers();
     initUIHandlers();
     MindMeldMicrophone.emit('init');
@@ -192,7 +197,11 @@
   MindMeldMicrophone.start = function start (continuous) {
     listener.continuous = continuous;
     listener.start();
-    volumeMonitor.start();
+
+    /* The volume monitor started causing "audio-capture" errors from webkitSpeechRecognition between
+     * Chrome 40.0.2214.38 beta (64-bit) and 40.0.2214.45 beta (64-bit). We are disabling it for now.
+     */
+    //volumeMonitor.start();
   };
 
   /**
@@ -206,7 +215,7 @@
    * Stops recording
    */
   MindMeldMicrophone.stop = function stop () {
-    listener.stop();
+    listener.cancel();
   };
 
   // Event Dispatcher
@@ -240,6 +249,13 @@
         }
       );
     }
+  };
+
+  /**
+   * Check if microphone is in continuous mode.
+   */
+  MindMeldMicrophone.isContinuous = function () {
+    return listener && listener.continuous;
   };
 
 }(MM));
