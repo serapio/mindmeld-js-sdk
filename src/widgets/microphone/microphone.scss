@@ -155,10 +155,10 @@ $disabled-mic-color: #aaa;
 
     &.hold {
       display: block;
-    }
 
-    &.hold:after {
-      content: "hold to lock";
+      &:after {
+        content: "hold to lock";
+      }
     }
   }
 

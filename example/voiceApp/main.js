@@ -151,7 +151,7 @@ var processRawCardData = function (card) {
   card.description = card.description || '';
   card.description = card.description.substr(0, 150) + (card.description.length > 150 ? '…' : '');
 
-  card.price = card.price && card.price.trim();
+  card.price = card.price && card.price.toString().trim();
 
   if (card.categories) {
     card.category = card.categories[0];

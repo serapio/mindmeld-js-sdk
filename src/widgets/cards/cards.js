@@ -144,6 +144,9 @@
           MindMeldCards.layoutCards();
         }
       });
+
+      var $msg = $('<div>', {id: 'no-result-message'});
+      $(options.parentSelector).append($msg);
     },
 
     /**
@@ -153,7 +156,7 @@
      */
     setCards: function (cards, onClick) {
       console.log('Appending cards', cards);
-      //TODO: Handle no cards case.
+      $(options.parentSelector).removeClass('no-result');
 
       // First set the DOM correctly
       cards.forEach( function (card, i) {
@@ -206,6 +209,10 @@
         MindMeldCards.layoutCards();
       });
 
+      // If no cards are returned, display "No results" message
+      if (cards.length === 0) {
+        $(options.parentSelector).addClass('no-result');
+      }
     },
 
     /**
