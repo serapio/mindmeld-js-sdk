@@ -132,6 +132,36 @@ $disabled-mic-color: #aaa;
     }
   }
 
+  .mic-message {
+    color: #2fbbfb;
+    position: absolute;
+    bottom: -20px;
+    width: 110px;
+    text-align: center;
+    left: 50%;
+    margin-left: -55px;
+    font-size: 13px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    pointer-events: none;
+    -webkit-transition: opacity 0.3s linear 0.3s;
+    -moz-transition: opacity 0.3s linear 0.3s;
+    -o-transition: opacity 0.3s linear 0.3s;
+    -ms-transition: opacity 0.3s linear 0.3s;
+    transition: opacity 0.3s linear 0.3s;
+    opacity: 0.5;
+    -ms-filter: none;
+    filter: none;
+
+    &.hold {
+      display: block;
+    }
+
+    &.hold:after {
+      content: "hold to lock";
+    }
+  }
+
   &.listening {
     .icon-container {
       box-shadow: 0 0 0 8px $dark-grey inset;
@@ -155,6 +185,9 @@ $disabled-mic-color: #aaa;
       background-size: 100px auto;
     }
 
+    .mic-message.hold {
+      display: none;
+    }
   }
 
   &.listening.lock {
@@ -184,6 +217,10 @@ $disabled-mic-color: #aaa;
       &:hover {
         cursor: default;
       }
+    }
+
+    .mic-message.hold {
+      display: none;
     }
   }
 
