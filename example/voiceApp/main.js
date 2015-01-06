@@ -17,6 +17,7 @@ MM.start(config, function onSuccess () {
 var Cards = window.MindMeldCards;
 var SearchInput = window.MindMeldSearchInput;
 var Microphone = window.MindMeldMicrophone;
+var currentTextEntries = [];
 
 $(function () {
   Cards.initialize({
@@ -40,6 +41,7 @@ $(function () {
 
 Microphone.on('start', function () {
   console.log('Microphone started');
+  currentTextEntries = [];
 });
 
 Microphone.on('end', function () {
@@ -51,14 +53,14 @@ Microphone.on('end', function () {
  * of the problem.  For a full list, please see
  * https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
  */
-Microphone.on('error', function (event) {
+Microphone.on('error', function (error) {
   // Some errors are benign
-  if (event.error === 'aborted') {
+  if (error === 'aborted') {
     console.log('Microphone aborted');
-  } else if (event.error === 'no-speech') {
+  } else if (error === 'no-speech') {
     console.log('Microphone did not receive any speech.');
   } else {
-    console.error('Microphone error', event.error);
+    console.error('Microphone error: ' + error);
   }
 });
 
@@ -87,6 +89,7 @@ Microphone.on('result', function(result) {
  * `<Return>` in the text box.
  */
 SearchInput.on('submitText', function (text) {
+  currentTextEntries = [];
   submitText(text);
 });
 
@@ -104,6 +107,7 @@ var submitText = function(text) {
     type: 'text',
     weight: 1.0
   }, function onSuccess (textEntryResult) {
+    currentTextEntries.push(textEntryResult.data.textentryid);
     getDocuments();
   }, function onFail (error) {
     console.error('Error posting textEntry:', error);
@@ -117,7 +121,8 @@ var submitText = function(text) {
  */
 var getDocuments = function () {
   MM.activeSession.documents.get({
-    limit: 12
+        limit: 12,
+        textentryids: JSON.stringify(currentTextEntries)
   },
   function onSuccess (documentResult) {
     var cards = documentResult.data.map(processRawCardData);

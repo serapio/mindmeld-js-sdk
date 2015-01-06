@@ -26,6 +26,7 @@
   var listener;
   var volumeMonitor;
   var microphoneElement;
+  var hasVoiceResult;
 
   /**
    * `initialize()` checks for speech recognition support, initializes
@@ -40,8 +41,7 @@
     microphoneElement = element;
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
-      var errorMessage = 'This browser does not support speech recognition';
-      MindMeldMicrophone.emit('error', errorMessage);
+      MindMeldMicrophone.emit('error', 'speech-not-supported');
       return;
     }
 
@@ -60,23 +60,33 @@
   // event handlers publish the Listener events like onResult and onEnd
   function initMMListener () {
     listener = MM.listener = new MM.Listener({
-      interimResults: true,
+      interimResults: true
     });
 
     listener.on('result', function (result, resultIndex, results, event) {
+      hasVoiceResult = true;
       MindMeldMicrophone.emit('result', result, resultIndex, results, event);
     });
 
     listener.on('start', function (event) {
+      hasVoiceResult = false;
       MindMeldMicrophone.emit('start', event);
     });
 
     listener.on('end', function (event) {
+      // Check if we received any listener results.
+      if (!hasVoiceResult) {
+        MindMeldMicrophone.emit('error', 'no-speech');
+      }
       MindMeldMicrophone.emit('end', event);
     });
 
-    listener.on('error', function (error) {
-      MindMeldMicrophone.emit('error', error);
+    listener.on('error', function (event) {
+      if (event.error == 'not-allowed' || event.error == 'service-not-allowed') {
+        var holdMessage = microphoneElement.querySelector('.hold-message');
+        holdMessage.style.display = "none";
+      }
+      MindMeldMicrophone.emit('error', event.error);
     });
   }
 

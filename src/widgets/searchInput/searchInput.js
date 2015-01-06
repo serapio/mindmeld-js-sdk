@@ -8,6 +8,13 @@
   var containerElement;
   var textElement;
 
+  var errorMessages = {
+    'not-allowed': 'Microphone access was denied. Please grant access and try again.',
+    'service-not-allowed': 'Microphone access was denied. Please grant access and try again.',
+    'no-speech': 'We did not hear you. Please try again.',
+    'speech-not-supported': 'This browser does not support speech recognition'
+  };
+
 
   /**
    * Initialize the search element.  Pass in the DOM (not jQuery) element
@@ -88,6 +95,12 @@
     textElement.querySelector('span').innerHTML = text;
   };
 
+  /**
+   * Get the error message when given an error name.
+   */
+  MindMeldSearchInput.getErrorMessage = function getErrorMessage (error) {
+    return errorMessages[error];
+  };
 
   // Event Dispatcher
   var subscriptions = {};

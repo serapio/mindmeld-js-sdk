@@ -132,7 +132,8 @@ $disabled-mic-color: #aaa;
     }
   }
 
-  .mic-message {
+  .hold-message {
+    display: block;
     color: #2fbbfb;
     position: absolute;
     bottom: -20px;
@@ -153,12 +154,8 @@ $disabled-mic-color: #aaa;
     -ms-filter: none;
     filter: none;
 
-    &.hold {
-      display: block;
-
-      &:after {
-        content: "hold to lock";
-      }
+    &:after {
+      content: "hold to lock";
     }
   }
 
@@ -185,7 +182,7 @@ $disabled-mic-color: #aaa;
       background-size: 100px auto;
     }
 
-    .mic-message.hold {
+    .hold-message {
       display: none;
     }
   }
@@ -219,7 +216,7 @@ $disabled-mic-color: #aaa;
       }
     }
 
-    .mic-message.hold {
+    .hold-message {
       display: none;
     }
   }
