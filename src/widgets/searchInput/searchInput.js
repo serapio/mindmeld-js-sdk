@@ -83,13 +83,16 @@
       }
     );
 
-    var $warningMessage = $('<p>', {id: 'warning-message'});
-    $(warningElement).append($warningMessage);
-    var $warningButtonContainer = $('<div>', {id: 'close-warning'});
-    var $warningButton = $('<a>', {id: 'close-warning-button'});
-    $warningButtonContainer.append($warningButton);
-    $(warningElement).append($warningButtonContainer);
-    warningElement.querySelector('#warning-message').innerHTML = 'Your browser does not support speech input. Try using a&nbsp;<a id="supported-browser-link" href="http://caniuse.com/web-speech" target="_blank">supported browser.</a>';
+    var warningMessage = document.createElement('p');
+    warningMessage.setAttribute('id', 'warning-message');
+    warningElement.appendChild(warningMessage);
+    var warningButtonContainer = document.createElement('div');
+    warningButtonContainer.setAttribute('id', 'close-warning');
+    var warningButton = document.createElement('a');
+    warningButton.setAttribute('id', 'close-warning-button');
+    warningButtonContainer.appendChild(warningButton);
+    warningElement.appendChild(warningButtonContainer);
+    warningMessage.innerHTML = 'Your browser does not support speech input. Try using a&nbsp;<a id="supported-browser-link" href="http://caniuse.com/web-speech" target="_blank">supported browser.</a>';
 
     MindMeldSearchInput.emit('init');
   };

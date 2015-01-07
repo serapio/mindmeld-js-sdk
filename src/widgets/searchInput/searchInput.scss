@@ -74,12 +74,12 @@ $icon-size: 32px;
     position: relative;
     border-radius: $search-border-radius;
     border: $search-border-width solid $grey;
+    $search-text-left: 30px;
 
     .mindmeld-search-text {
       display: block;
       position: relative;
       top: $search-border-width;
-      $search-text-left: 30px;
       left: $search-text-left;
 
       width: calc(100% - #{$search-text-left} - #{$search-height});
@@ -121,7 +121,6 @@ $icon-size: 32px;
       display: none;
       position: relative;
       top: $search-border-width;
-      $search-text-left: 30px;
       left: $search-text-left;
 
       width: calc(100% - #{$search-text-left} - #{$search-height});

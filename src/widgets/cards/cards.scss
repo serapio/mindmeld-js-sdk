@@ -119,7 +119,7 @@ body {
         &.not-loaded {
           height: 311px; /* Approximate size of future images */
           overflow: hidden;
-          background: $white url('images/spinner.gif')  no-repeat center;
+          background: $white url('images/spinner.gif') no-repeat center;
           img {
             opacity: 0;
           }
@@ -130,7 +130,6 @@ body {
         }
       }
     }
-
 
     .row {
 
@@ -171,11 +170,13 @@ body {
     }
   }
 
-  &.no-result #no-result-message {
-    display: block;
-  }
+  &.no-result {
+    #no-result-message {
+      display: block;
+    }
 
-  &.no-result.no-docs #no-result-message:after {
+    &.no-docs #no-result-message:after {
       content: 'No documents in the app'
+    }
   }
 }
