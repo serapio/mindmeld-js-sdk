@@ -32,20 +32,21 @@ $(function () {
   });
 
   // Pass in DOM (not jQuery) elements to these initializers.
-  Microphone.initialize($('.mindmeld-microphone')[0]);
   SearchInput.initialize($('.mindmeld-search')[0]);
-
+  Microphone.initialize($('.mindmeld-microphone')[0]);
 });
 
 /* Set up widget events */
 
 Microphone.on('start', function () {
   console.log('Microphone started');
+  SearchInput.showPromptMessage();
   currentTextEntries = [];
 });
 
 Microphone.on('end', function () {
   console.log('Microphone stopped');
+  SearchInput.clearPromptMessage();
 });
 
 /*
@@ -55,10 +56,15 @@ Microphone.on('end', function () {
  */
 Microphone.on('error', function (error) {
   // Some errors are benign
-  if (error === 'aborted') {
-    console.log('Microphone aborted');
-  } else if (error === 'no-speech') {
+  if (error === 'no-speech') {
     console.log('Microphone did not receive any speech.');
+    SearchInput.showErrorMessage(SearchInput.getErrorMessage(error));
+  } else if (error === 'not-allowed' || error === 'service-not-allowed') {
+    console.log('Microphone disabled.');
+    SearchInput.showErrorMessage(SearchInput.getErrorMessage(error));
+  } else if (error === 'speech-not-supported') {
+    console.log("Browser doesn't support speech.");
+    SearchInput.showWarningMessage();
   } else {
     console.error('Microphone error: ' + error);
   }
@@ -77,6 +83,7 @@ Microphone.on('error', function (error) {
  * many interim results that have minimal signal value.
  */
 Microphone.on('result', function(result) {
+  SearchInput.clearAllMessage();
   SearchInput.setText(result.transcript, result.final);
   if (result.final) {
     submitText(result.transcript);

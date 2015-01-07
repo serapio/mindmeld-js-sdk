@@ -7,6 +7,9 @@
 
   var containerElement;
   var textElement;
+  var inputElement;
+  var messageElement;
+  var warningElement;
 
   var errorMessages = {
     'not-allowed': 'Microphone access was denied. Please grant access and try again.',
@@ -24,6 +27,10 @@
   MindMeldSearchInput.initialize = function initialize (element) {
     containerElement = element;
     textElement = containerElement.querySelector('.mindmeld-search-text');
+    inputElement = containerElement.querySelector('.mindmeld-search-input');
+    messageElement = containerElement.querySelector('.mindmeld-message');
+    warningElement = containerElement.querySelector('.mindmeld-warning');
+
     textElement.addEventListener('focus', function() {
       MindMeldSearchInput.setFinal(false);
     });
@@ -49,6 +56,22 @@
       textElement.querySelector('span').focus();
     });
 
+    textElement.addEventListener('focusin', function (e) {
+      textElement.classList.add('editing');
+    });
+
+    textElement.addEventListener('focusout', function (e) {
+      textElement.classList.remove('editing');
+    });
+
+    messageElement.addEventListener('click', function (e) {
+      if (inputElement.classList.contains('prompt')) {
+        return;
+      }
+      MindMeldSearchInput.clearAllMessage();
+      textElement.querySelector('span').focus();
+    });
+
     containerElement.querySelector('.mindmeld-search-glass').addEventListener('click',
       function (e) {
         console.log('Clicking glass');
@@ -59,6 +82,14 @@
         return false;
       }
     );
+
+    var $warningMessage = $('<p>', {id: 'warning-message'});
+    $(warningElement).append($warningMessage);
+    var $warningButtonContainer = $('<div>', {id: 'close-warning'});
+    var $warningButton = $('<a>', {id: 'close-warning-button'});
+    $warningButtonContainer.append($warningButton);
+    $(warningElement).append($warningButtonContainer);
+    warningElement.querySelector('#warning-message').innerHTML = 'Your browser does not support speech input. Try using a&nbsp;<a id="supported-browser-link" href="http://caniuse.com/web-speech" target="_blank">supported browser.</a>';
 
     MindMeldSearchInput.emit('init');
   };
@@ -100,6 +131,42 @@
    */
   MindMeldSearchInput.getErrorMessage = function getErrorMessage (error) {
     return errorMessages[error];
+  };
+
+  MindMeldSearchInput.showPromptMessage = function showPromptMessage() {
+    MindMeldSearchInput.setText('', true);
+    inputElement.classList.remove('error');
+    inputElement.classList.add('prompt');
+    messageElement.innerHTML = 'Start speaking now...';
+  };
+
+  MindMeldSearchInput.showErrorMessage = function showErrorMessage(text) {
+    MindMeldSearchInput.setText('', true);
+    inputElement.classList.remove('prompt');
+    inputElement.classList.add('error');
+    messageElement.innerHTML = text;
+  };
+
+  MindMeldSearchInput.clearPromptMessage = function clearPromptMessage() {
+    inputElement.classList.remove('prompt');
+  };
+
+  MindMeldSearchInput.clearAllMessage = function clearAllMessage() {
+    inputElement.classList.remove('prompt');
+    inputElement.classList.remove('error');
+  };
+
+  MindMeldSearchInput.showWarningMessage = function showWarningMessage() {
+    // Show a warning message
+    containerElement.classList.add('no-speech');
+    containerElement.classList.add('warning');
+    textElement.click();
+
+    warningElement = containerElement.querySelector('.mindmeld-warning');
+    warningElement.querySelector('a#close-warning-button').addEventListener('click', function (e) {
+      containerElement.classList.remove('warning');
+      textElement.click();
+    });
   };
 
   // Event Dispatcher

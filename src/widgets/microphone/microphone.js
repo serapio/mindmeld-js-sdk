@@ -27,6 +27,7 @@
   var volumeMonitor;
   var microphoneElement;
   var hasVoiceResult;
+  var notAllowed;
 
   /**
    * `initialize()` checks for speech recognition support, initializes
@@ -39,6 +40,9 @@
    */
   MindMeldMicrophone.initialize = function initialize (element) {
     microphoneElement = element;
+    hasVoiceResult = false;
+    notAllowed = false;
+
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
       MindMeldMicrophone.emit('error', 'speech-not-supported');
@@ -70,12 +74,13 @@
 
     listener.on('start', function (event) {
       hasVoiceResult = false;
+      notAllowed = false;
       MindMeldMicrophone.emit('start', event);
     });
 
     listener.on('end', function (event) {
       // Check if we received any listener results.
-      if (!hasVoiceResult) {
+      if (!notAllowed && !hasVoiceResult) {
         MindMeldMicrophone.emit('error', 'no-speech');
       }
       MindMeldMicrophone.emit('end', event);
@@ -83,6 +88,7 @@
 
     listener.on('error', function (event) {
       if (event.error == 'not-allowed' || event.error == 'service-not-allowed') {
+        notAllowed = true;
         var holdMessage = microphoneElement.querySelector('.hold-message');
         holdMessage.style.display = "none";
       }

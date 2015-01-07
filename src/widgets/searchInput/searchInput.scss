@@ -8,6 +8,7 @@
 
 $narrow-device: "only screen and (max-device-width : 600px)";
 $narrow-window: "only screen and (max-width : 600px)";
+$narrow-device-or-window: $narrow-device + ", " + $narrow-window;
 
 $light-grey: #888;
 $grey: #636363;
@@ -74,7 +75,8 @@ $icon-size: 32px;
     border-radius: $search-border-radius;
     border: $search-border-width solid $grey;
 
-    div.mindmeld-search-text {
+    .mindmeld-search-text {
+      display: block;
       position: relative;
       top: $search-border-width;
       $search-text-left: 30px;
@@ -102,14 +104,65 @@ $icon-size: 32px;
       }
 
       span {
+        width: 100%;
         display: inline-block;
         vertical-align: middle;
         line-height: normal;
         outline: none;
         padding-left: 2px; //This ensures the cursor will appear, even when the span is empty.
       }
+
+      &.editing span {
+        background-color: #eee;
+      }
     }
 
+    .mindmeld-message {
+      display: none;
+      position: relative;
+      top: $search-border-width;
+      $search-text-left: 30px;
+      left: $search-text-left;
+
+      width: calc(100% - #{$search-text-left} - #{$search-height});
+      height: $search-inner-height;
+      min-height: 0;
+      border: none;
+      padding: 0;
+
+      color: $dark-grey;
+      font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-size: 18px;
+      font-weight: 300;
+      line-height: $search-inner-height;
+
+      resize: none;
+      box-shadow: none;
+
+      overflow: hidden;
+    }
+
+    &.prompt {
+      .mindmeld-search-text {
+        display: none;
+      }
+
+      .mindmeld-message {
+        display: block;
+        color: #bbb;
+      }
+    }
+
+    &.error {
+      .mindmeld-search-text {
+        display: none;
+      }
+
+      .mindmeld-message {
+        display: block;
+        color: #a24a4a;
+      }
+    }
   }
 
   .mindmeld-search-glass {
@@ -142,4 +195,76 @@ $icon-size: 32px;
     }
   }
 
+  .mindmeld-warning {
+    display: none;
+    text-align: center;
+    color: #c91818;
+    background-color: #eedada;
+    border: 1px solid #fdbcbc;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    width: 73%;
+    margin: 0 auto 5px auto;
+    zoom: 1;
+    position: relative;
+    bottom: -15px;
+
+    @media #{$narrow-device-or-window} {
+      margin: 0 auto 2px auto;
+    }
+
+    &:before, &:after {
+      content: "";
+      display: table;
+    }
+
+    &:after {
+      clear: both;
+    }
+
+    p#warning-message {
+      float: left;
+      font-weight: 300;
+      font-style: italic;
+      margin: 0;
+      width: 95%;
+      padding-top: 3px;
+
+      @media #{$narrow-device-or-window} {
+        font-size: 10px;
+      }
+
+      a#supported-browser-link {
+        text-emphasis: none;
+        font-weight: 600;
+        color: #d86b6b;
+      }
+    }
+
+    div#close-warning {
+      float: right;
+      padding-right: 5px;
+
+      a#close-warning-button {
+        color: #c92727;
+
+        &:after {
+          content: '\D7';
+        }
+
+        &:hover {
+          color: #8a1212;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  &.no-speech.warning {
+    height: 115px;
+
+    .mindmeld-warning {
+      display: block;
+    }
+  }
 }
