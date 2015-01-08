@@ -64,7 +64,7 @@
       textElement.classList.remove('editing');
     });
 
-    messageElement.addEventListener('click', function (e) {
+    messageElement && messageElement.addEventListener('click', function (e) {
       if (inputElement.classList.contains('prompt')) {
         return;
       }
@@ -85,13 +85,13 @@
 
     var warningMessage = document.createElement('p');
     warningMessage.setAttribute('id', 'warning-message');
-    warningElement.appendChild(warningMessage);
+    warningElement && warningElement.appendChild(warningMessage);
     var warningButtonContainer = document.createElement('div');
     warningButtonContainer.setAttribute('id', 'close-warning');
     var warningButton = document.createElement('a');
     warningButton.setAttribute('id', 'close-warning-button');
     warningButtonContainer.appendChild(warningButton);
-    warningElement.appendChild(warningButtonContainer);
+    warningElement && warningElement.appendChild(warningButtonContainer);
     warningMessage.innerHTML = 'Your browser does not support speech input. Try using a&nbsp;<a id="supported-browser-link" href="http://caniuse.com/web-speech" target="_blank">supported browser.</a>';
 
     MindMeldSearchInput.emit('init');
@@ -140,14 +140,18 @@
     MindMeldSearchInput.setText('', true);
     inputElement.classList.remove('error');
     inputElement.classList.add('prompt');
-    messageElement.innerHTML = 'Start speaking now...';
+    if (messageElement) {
+      messageElement.innerHTML = 'Start speaking now...';
+    }
   };
 
   MindMeldSearchInput.showErrorMessage = function showErrorMessage(text) {
     MindMeldSearchInput.setText('', true);
     inputElement.classList.remove('prompt');
     inputElement.classList.add('error');
-    messageElement.innerHTML = text;
+    if (messageElement) {
+      messageElement.innerHTML = text;
+    }
   };
 
   MindMeldSearchInput.clearPromptMessage = function clearPromptMessage() {
@@ -165,8 +169,7 @@
     containerElement.classList.add('warning');
     textElement.click();
 
-    warningElement = containerElement.querySelector('.mindmeld-warning');
-    warningElement.querySelector('a#close-warning-button').addEventListener('click', function (e) {
+    warningElement && warningElement.querySelector('a#close-warning-button').addEventListener('click', function (e) {
       containerElement.classList.remove('warning');
       textElement.click();
     });

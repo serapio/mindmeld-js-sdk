@@ -54,19 +54,19 @@ Microphone.on('end', function () {
  * of the problem.  For a full list, please see
  * https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
  */
-Microphone.on('error', function (error) {
+Microphone.on('error', function (event) {
   // Some errors are benign
-  if (error === 'no-speech') {
+  if (event.error === 'no-speech') {
     console.log('Microphone did not receive any speech.');
-    SearchInput.showErrorMessage(SearchInput.getErrorMessage(error));
-  } else if (error === 'not-allowed' || error === 'service-not-allowed') {
+    SearchInput.showErrorMessage(SearchInput.getErrorMessage(event.error));
+  } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
     console.log('Microphone disabled.');
-    SearchInput.showErrorMessage(SearchInput.getErrorMessage(error));
-  } else if (error === 'speech-not-supported') {
+    SearchInput.showErrorMessage(SearchInput.getErrorMessage(event.error));
+  } else if (event.error === 'speech-not-supported') {
     console.log("Browser doesn't support speech.");
     SearchInput.showWarningMessage();
   } else {
-    console.error('Microphone error: ' + error);
+    console.error('Microphone error: ' + event.error);
   }
 });
 

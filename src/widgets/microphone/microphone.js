@@ -45,7 +45,7 @@
 
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
-      MindMeldMicrophone.emit('error', 'speech-not-supported');
+      MindMeldMicrophone.emit('error', {error: 'speech-not-supported'});
       return;
     }
 
@@ -81,7 +81,7 @@
     listener.on('end', function (event) {
       // Check if we received any listener results.
       if (!notAllowed && !hasVoiceResult) {
-        MindMeldMicrophone.emit('error', 'no-speech');
+        MindMeldMicrophone.emit('error', {error: 'no-speech'});
       }
       MindMeldMicrophone.emit('end', event);
     });
@@ -90,9 +90,11 @@
       if (event.error == 'not-allowed' || event.error == 'service-not-allowed') {
         notAllowed = true;
         var holdMessage = microphoneElement.querySelector('.hold-message');
-        holdMessage.style.display = "none";
+        if (holdMessage) {
+          holdMessage.style.display = "none";
+        }
       }
-      MindMeldMicrophone.emit('error', event.error);
+      MindMeldMicrophone.emit('error', event);
     });
   }
 
