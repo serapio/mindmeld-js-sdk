@@ -26,6 +26,8 @@
   var listener;
   var volumeMonitor;
   var microphoneElement;
+  var hasVoiceResult;
+  var notAllowed;
 
   /**
    * `initialize()` checks for speech recognition support, initializes
@@ -38,15 +40,21 @@
    */
   MindMeldMicrophone.initialize = function initialize (element) {
     microphoneElement = element;
+    hasVoiceResult = false;
+    notAllowed = false;
+
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
-      var errorMessage = 'This browser does not support speech recognition';
-      MindMeldMicrophone.emit('error', errorMessage);
+      MindMeldMicrophone.emit('error', {error: 'speech-not-supported'});
       return;
     }
 
     initMMListener();
-    initVolumeMonitor();
+
+    /* The volume monitor started causing "audio-capture" errors from webkitSpeechRecognition between
+     * Chrome 40.0.2214.38 beta (64-bit) and 40.0.2214.45 beta (64-bit). We are disabling it for now.
+     */
+    //initVolumeMonitor();
     initClickHandlers();
     initUIHandlers();
     MindMeldMicrophone.emit('init');
@@ -56,23 +64,37 @@
   // event handlers publish the Listener events like onResult and onEnd
   function initMMListener () {
     listener = MM.listener = new MM.Listener({
-      interimResults: true,
+      interimResults: true
     });
 
     listener.on('result', function (result, resultIndex, results, event) {
+      hasVoiceResult = true;
       MindMeldMicrophone.emit('result', result, resultIndex, results, event);
     });
 
     listener.on('start', function (event) {
+      hasVoiceResult = false;
+      notAllowed = false;
       MindMeldMicrophone.emit('start', event);
     });
 
     listener.on('end', function (event) {
+      // Check if we received any listener results.
+      if (!notAllowed && !hasVoiceResult) {
+        MindMeldMicrophone.emit('error', {error: 'no-speech'});
+      }
       MindMeldMicrophone.emit('end', event);
     });
 
-    listener.on('error', function (error) {
-      MindMeldMicrophone.emit('error', error);
+    listener.on('error', function (event) {
+      if (event.error == 'not-allowed' || event.error == 'service-not-allowed') {
+        notAllowed = true;
+        var holdMessage = microphoneElement.querySelector('.hold-message');
+        if (holdMessage) {
+          holdMessage.style.display = "none";
+        }
+      }
+      MindMeldMicrophone.emit('error', event);
     });
   }
 
@@ -193,7 +215,11 @@
   MindMeldMicrophone.start = function start (continuous) {
     listener.continuous = continuous;
     listener.start();
-    volumeMonitor.start();
+
+    /* The volume monitor started causing "audio-capture" errors from webkitSpeechRecognition between
+     * Chrome 40.0.2214.38 beta (64-bit) and 40.0.2214.45 beta (64-bit). We are disabling it for now.
+     */
+    //volumeMonitor.start();
   };
 
   /**

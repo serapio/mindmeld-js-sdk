@@ -144,6 +144,9 @@
           MindMeldCards.layoutCards();
         }
       });
+
+      var $msg = $('<div>', {id: 'no-result-message'});
+      $(options.parentSelector).append($msg);
     },
 
     /**
@@ -153,7 +156,7 @@
      */
     setCards: function (cards, onClick) {
       console.log('Appending cards', cards);
-      //TODO: Handle no cards case.
+      $(options.parentSelector).removeClass('no-result');
 
       // First set the DOM correctly
       cards.forEach( function (card, i) {
@@ -166,6 +169,9 @@
           $newCard.css('top', $card.css('top'));
           $card.replaceWith($newCard);
 
+          $newCard.imagesLoaded( function () {
+            $newCard.find('.not-loaded').removeClass('not-loaded');
+          });
           placeCardInDom($newCard, i);
         } else {
           // New card; render and place in DOM
@@ -179,11 +185,10 @@
             return onClick(e);
           });
 
-          placeCardInDom($card, i);
           $card.imagesLoaded( function () {
             $card.find('.not-loaded').removeClass('not-loaded');
-            //layoutCard($card, i);
           });
+          placeCardInDom($card, i);
         }
       });
       // Delete the old cards still in the DOM.  They will all be at the end.
@@ -204,6 +209,10 @@
         MindMeldCards.layoutCards();
       });
 
+      // If no cards are returned, display "No results" message
+      if (cards.length === 0) {
+        $(options.parentSelector).addClass('no-result');
+      }
     },
 
     /**

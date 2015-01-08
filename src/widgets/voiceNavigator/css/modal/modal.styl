@@ -2,6 +2,7 @@
 
 baseZ = 100000
 buttonBGColor = #ca6b37
+closedHeight = 105px
 
 narrow-device = "only screen and (max-device-width : 600px)"
 narrow-window = "only screen and (max-width : 600px)"
@@ -215,11 +216,13 @@ body
     cursor pointer
 
   #mindmeld-parent
-    height 100%
+    height closedHeight
     position relative
     opacity 0
     &.open
       opacity 1
+    &.results
+      height 100%
 
 #mindmeld-alert
   border 1px solid #bbb
@@ -310,7 +313,7 @@ body
   border-radius 10px
   overflow hidden
   position absolute
-  height 105px
+  height closedHeight
   left 50%
   transition height 0.3s ease-out
   .results &
