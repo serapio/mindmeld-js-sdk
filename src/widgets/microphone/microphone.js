@@ -27,6 +27,7 @@
   var volumeMonitor;
   var microphoneElement;
   var hasVoiceResult;
+  // notAllowed == true if the browser doesn't support microphones.
   var notAllowed;
 
   /**
@@ -46,6 +47,7 @@
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
       MindMeldMicrophone.emit('error', {error: 'speech-not-supported'});
+      notAllowed = true;
       return;
     }
 
@@ -213,6 +215,10 @@
    * Start recording
    */
   MindMeldMicrophone.start = function start (continuous) {
+    if (notAllowed) {
+      return;
+    }
+
     listener.continuous = continuous;
     listener.start();
 
@@ -226,6 +232,10 @@
    * Returns if the microphone is currently listening
    */
   MindMeldMicrophone.listening = function listening () {
+    if (notAllowed) {
+      return false;
+    }
+
     return listener.listening;
   };
 
@@ -233,6 +243,10 @@
    * Stops recording
    */
   MindMeldMicrophone.stop = function stop () {
+    if (notAllowed) {
+      return;
+    }
+
     listener.cancel();
   };
 
@@ -273,6 +287,10 @@
    * Check if microphone is in continuous mode.
    */
   MindMeldMicrophone.isContinuous = function () {
+    if (notAllowed) {
+      return false;
+    }
+
     return listener && listener.continuous;
   };
 
