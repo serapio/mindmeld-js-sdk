@@ -19,8 +19,8 @@ fi
 ZIP_FILE_NAME=mindmeld-js-sdk-${ARCHIVE_VERSION}.zip
 JS_FILE_NAME=mindmeld-${ARCHIVE_VERSION}.js
 JS_MIN_FILE_NAME=mindmeld-${ARCHIVE_VERSION}.min.js
-aws $PROFILE s3 cp \
-  "$ROOT_DIR/archive/$JS_FILE_NAME" \
-  "$ROOT_DIR/archive/$JS_MIN_FILE_NAME" \
-  "$ROOT_DIR/archive/$ZIP_FILE_NAME" \
-  "s3://elabs-archive/js-sdk/$ARCHIVE_VERSION/"
+for file in $JS_FILE_NAME $JS_MIN_FILE_NAME $ZIP_FILE_NAME; do
+  aws $PROFILE s3 cp "$ROOT_DIR/archive/$file" \
+    "s3://elabs-archive/js-sdk/$ARCHIVE_VERSION/"
+done
+
