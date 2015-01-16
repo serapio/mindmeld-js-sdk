@@ -60,9 +60,6 @@ deployment:
     branch: master
     commands:
       - bash deployScripts/deploy_artifact.sh
-  archiver:
-    branch: /feature\/archiver/
-    commands:
       - gulp archive
       # The last part of the command is to get the current version.
       - bash deployScripts/deploy_archive.sh `node -e "console.log(require('./package.json').version)"`
