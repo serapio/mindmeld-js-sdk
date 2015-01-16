@@ -8,7 +8,7 @@
 var gulp = require('gulp');
 var sass = require('gulp-sass');
 var minifyCSS = require('gulp-minify-css');
-var concat = require('gulp-concat');
+//var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 var sourcemaps = require('gulp-sourcemaps');
@@ -49,12 +49,12 @@ gulp.task('mic.css', function () {
 gulp.task('mic.js', function () {
   return gulp.src(paths.js)
     .pipe(sourcemaps.init())
-      // .pipe(concat(paths.js))
-      .pipe(gulp.dest(distDirectory))
-      .pipe(uglify(), {
-        mangle: true
-      })
-      .pipe(rename({ extname: '.min.js' }))
+    // .pipe(concat(paths.js))
+    .pipe(gulp.dest(distDirectory))
+    .pipe(uglify(), {
+      mangle: true
+    })
+    .pipe(rename({ extname: '.min.js' }))
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(distDirectory));
 });
@@ -62,13 +62,13 @@ gulp.task('mic.js', function () {
 // Copy HTML
 gulp.task('mic.html', function () {
     return gulp.src(paths.html)
-        .pipe(gulp.dest(distDirectory));
+      .pipe(gulp.dest(distDirectory));
 });
 
 // Copy Images
 gulp.task('mic.images', function () {
     return gulp.src(paths.images)
-        .pipe(gulp.dest(distDirectory + 'images/'));
+      .pipe(gulp.dest(distDirectory + 'images/'));
 });
 
 
