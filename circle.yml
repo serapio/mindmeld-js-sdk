@@ -64,8 +64,8 @@ deployment:
     branch: /feature\/archiver/
     commands:
       - gulp archive
-      - ARCHIVE_VERSION=`node -e "console.log(require('./package.json').version)"`
-      - bash deployScripts/deploy_archive.sh $ARCHIVE_VERSION
+      - ARCHIVE_VERSION=`node -e "console.log(require('./package.json').version)"` \
+          bash deployScripts/deploy_archive.sh $ARCHIVE_VERSION
   feature:
     branch: /feature\/.*/
     commands:
