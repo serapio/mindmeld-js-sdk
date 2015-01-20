@@ -191,7 +191,6 @@ function subscribeToSessionChannel(response) {
     MM.activeSession.textentries.onUpdate(handleUpdate);
     MM.activeSession.entities.onUpdate(handleUpdate);
     MM.activeSession.documents.onUpdate(handleUpdate);
-    MM.activeSession.activities.onUpdate(handleUpdate);
     MM.activeSession.liveusers.onUpdate(handleUpdate);
     MM.activeSession.invitedusers.onUpdate(handleUpdate);
     MM.activeSession.subscribe("CustomSessionEvent", handleUpdate); 

@@ -205,9 +205,7 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession = new MM.models.ActiveSession();
             MM.activeSession.textentries = new MM.models.TextEntryList();
             MM.activeSession.entities = new MM.models.EntityList();
-            MM.activeSession.articles = new MM.models.ArticleList();
             MM.activeSession.documents = new MM.models.SessionDocumentList();
-            MM.activeSession.activities = new MM.models.ActivityList();
             MM.activeSession.liveusers = new MM.models.LiveUserList();
             MM.activeSession.invitedusers = new MM.models.InvitedUserList();
         },
@@ -231,9 +229,7 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.clearAllData();
             MM.activeSession.textentries.clearAllData();
             MM.activeSession.entities.clearAllData();
-            MM.activeSession.articles.clearAllData();
             MM.activeSession.documents.clearAllData();
-            MM.activeSession.activities.clearAllData();
             MM.activeSession.liveusers.clearAllData();
             MM.activeSession.invitedusers.clearAllData();
         },
@@ -2986,116 +2982,6 @@ var MM = ( function (window, ajax, Faye) {
         updateEventName: 'entitiesUpdate'
     });
 
-    MM.models.ArticleList = MM.Internal.createSubclass(MM.models.Model, {
-        /**
-         * MM.activeSession.articles represents the Articles collection in the MindMeld API. This searchable collection
-         * contains Article objects that are relevant to the contextual history of the active session
-         * (Available for Enterprise developer accounts only).
-         *
-         * @namespace MM.activeSession.articles
-         * @memberOf MM.activeSession
-         */
-        constructor: function () {
-            MM.models.ArticleList.superclass.constructor.apply(this, arguments);
-        },
-        localStoragePath: function () {
-            return 'MM.activeSession.articles';
-        },
-        path: function () {
-            return('session/' + MM.activeSessionID + '/articles');
-        },
-        /**
-         * Helper function returns the JSON data for the articles collection
-         *
-         * @returns {Array.<Object>}
-         * @memberOf MM.activeSession.articles
-         * @instance
-         *
-         * @example
-         *
-         function getArticles () {
-            MM.activeSession.articles.get(null, onGetArticles);
-         }
-         function onGetArticles () {
-            var articles =  MM.activeSession.articles.json();
-            // MM.activeSession.articles.json() returns a JSON object
-            // containing data received from MM.activeSession.articles.get()
-         }
-         */
-        json: function () {
-            return this._json();
-        },
-        /**
-         * Sets the activeSession's articles' onUpdate handler. Pass null as the updateHandler parameter to
-         * deregister a previously set updateHandler. Note that there are no push events for the articles
-         * collection so it must be polled instead. The update handler will be called automatically when
-         * calling {@link MM.activeSession.articles#get}
-         *
-         * @param {APISuccessCallback=} updateHandler callback for when the activeSession's article list updates.
-         *
-         * @memberOf MM.activeSession.articles
-         * @instance
-         *
-         * @example
-         *
-         function getArticles () {
-            MM.activeSession.articles.onUpdate(onGetArticles); // Set the updateHandler
-            MM.activeSession.articles.get(); // Fetch articles
-         }
-         function onGetArticles (response) {
-            var articles = response.data;
-            console.log(articles);
-         }
-         */
-        onUpdate: function (updateHandler) {
-            this._onUpdate(updateHandler, null, null);
-        },
-        /**
-         * Get a list of articles from third-party data sources that are relevant to the context
-         * of the session. Articles typically include web pages, images, videos, and documents
-         * from data sources on the Internet. For example, articles might include pages from
-         * Wikipedia, videos from YouTube, or local business listings from Yelp. When enabled,
-         * relevant articles are automatically identified based on the contextual history of
-         * the session. Article sources can be configured for each application. A request with
-         * a user token can retrieve articles only if the associated user is permitted to access
-         * the session object itself. A request with an admin token can retrieve articles for
-         * any session associated with your application. Custom configuration of article
-         * sources is available for Enterprise developer accounts only.
-         *
-         *
-         * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the articles returned.
-         * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidArticles) for more details
-         * For this function, the following additional parameters are also available:
-         * @param {(string[]|string)=} params.entityids An array of entityid values or a single entityid value
-         * If specified, only articles related to the specified entities will be returned in the response.
-         * @param {number=} params.numentities The number of most recent entities to include in the request. If specified,
-         * only articles related to the specified number of most recent entities will be returned in the response.
-         * @param {(string[]|string)=} params.textentryids An array of textentryid values or a single textentryid
-         * value. If specified, only articles related to the specified text entries will be returned in the response
-         * @param {APISuccessCallback=} onSuccess callback for when getting the article list was successful
-         * @param {APIErrorCallback=} onFail callback for when getting the article list failed
-         * @memberOf MM.activeSession.articles
-         * @instance
-         *
-         * @example
-         *
-         function getArticles () {
-            var queryParams = {
-                limit: 5, // only return 5 articles
-                entityids: "[54321, 432432]" // only return articles related to these 2 entities
-                                             // note that the entityids array is a JSON string
-            };
-            MM.activeSession.articles.get(queryParams, onGetArticles);
-         }
-         function onGetArticles (response) {
-            var articles = response.data;
-         }
-         */
-        get: function (params, onSuccess, onFail) {
-            this._get(params, onSuccess, onFail);
-        }
-    });
-
     MM.models.SessionDocumentList = MM.Internal.createSubclass(MM.models.Model, {
         /**
          * MM.activeSession.documents represents the Documents collection related to a session in the MindMeld API.
@@ -3519,8 +3405,8 @@ var MM = ( function (window, ajax, Faye) {
          * @memberOf MM.activeSession.liveusers
          * @instance
          *
-         * @example <caption> Setting the onUpdate handler, creating a new activity, and
-         * obtaining the latest activities list </caption>
+         * @example <caption> Setting the onUpdate handler, adding a live user, and
+         * obtaining the latest live user list </caption>
          *
          function liveUsersOnUpdateExample () {
             // set the onUpdate handler for the liveusers list
@@ -3821,203 +3707,6 @@ var MM = ( function (window, ajax, Faye) {
         },
         channelType: 'session',
         updateEventName: 'invitedusersUpdate'
-    });
-
-    MM.models.ActivityList = MM.Internal.createSubclass(MM.models.Model, {
-        /**
-         * MM.activeSession.activities represents the Activities collection in the MindMeld API. This collection captures
-         * the history of user actions and other non-text contextual signals associated with the active session
-         *
-         * @namespace MM.activeSession.activities
-         * @memberOf MM.activeSession
-         */
-        constructor: function () {
-            MM.models.ActivityList.superclass.constructor.apply(this, arguments);
-        },
-        localStoragePath: function () {
-            return 'MM.activeSession.activities';
-        },
-        path: function () {
-            return('session/' + MM.activeSessionID + '/activities');
-        },
-        /**
-         * Helper function returns the JSON data for the activities collection
-         *
-         * @returns {Array.<Object>}
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function getActivities () {
-            MM.activeSession.activities.get(null, onGetActivities);
-         }
-         function onGetActivities () {
-            var activities =  MM.activeSession.activities.json();
-            // MM.activeSession.activities.json() returns a JSON object
-            // containing data received from MM.activeSession.activities.get()
-         }
-         */
-        json: function () {
-            return this._json();
-        },
-        /**
-         * Sets the activeSession's activities' onUpdate handler. The onUpdate handler is called once
-         * there is an update to the active session's activities list AND the latest
-         * activities list is fetched successfully. If no updateHandler is passed in,
-         * {@link MM.activeSession.activities#onUpdate} unsubscribes from push events.
-         *
-         * @param {APISuccessCallback=} updateHandler callback for when the activeSession's activity list updates
-         * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
-         * @param {function=} onError callback for when subscription to onUpdate event fails
-         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
-         * in get() request when collection updates
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example <caption> Setting the onUpdate handler, creating a new activity, and
-         * obtaining the latest activities list </caption>
-         *
-         function activitiesOnUpdateExample () {
-            // set the onUpdate handler for the activities list
-            MM.activeSession.activities.onUpdate(
-                onActivitiesUpdate,
-                onSubscribedToActivitiesUpdates,
-                onSubscribeToActivityUpdatesError,
-                getActivitiesParams
-            );
-         }
-         function onSubscribedToActivitiesUpdates () {
-            // successfully subscribed to updates to the session's activities list
-            // now, create a new activity
-            createNewActivity();
-         }
-         function onSubscribeToActivityUpdatesError () {
-            console.log('error subscribing to activity list updates');
-         }
-         function getActivitiesParams () {
-            // When the activity list updates, only fetch 5 objects
-            return {
-                limit: 5
-            };
-         }
-         function onActivitiesUpdate () {
-            // there was an update to the activities list
-            var activities = MM.activeSession.activities.json();
-            // activities contains the latest list of activities
-         }
-         function createNewActivity () {
-            var newActivityData = {
-                activitytype: 'status update',
-                title: 'hello world'
-            };
-            MM.activeSession.activities.post(newActivityData);
-         }
-         *
-         * @example <caption> Deregistering the onUpdate handler </caption>
-         *
-         function deregisterActivitiesOnUpdate () {
-            MM.activeSession.activities.onUpdate(null);
-         }
-         */
-        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
-            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
-        },
-        /**
-         * Get and search through the activity stream for the specified session. The activity stream is designed to
-         * capture non-text contextual signals important to your application. For example, the activity stream could
-         * be used keep track of the location history for a given user; it could be used to log the time when a user
-         * joins or leaves a session; or it could be used to track when users select certain documents, articles or
-         * entities. Currently, the activites collection provides a consistent data representation to capture and search
-         * through a history of non-text contextual signals. As we enhance the MindMeld Platform in the coming months,
-         * we will add capabilities to recognize patterns and make recommendations based on commonly observed
-         * activity histories. A request with a user token can retrieve activites only if the associated user
-         * is permitted to access the session object itself. A request with an admin token can retrieve activites
-         * for any session associated with your application.
-         *
-         * @param {QueryParameters=} params query parameters when fetching the activities list
-         * @param {APISuccessCallback=} onSuccess callback for when getting activities list was successful
-         * @param {APIErrorCallback=} onFail callback for when getting activities list failed
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function getActivities () {
-            MM.activeSession.activities.get(null, onGetActivities);
-         }
-         function onGetActivities (response) {
-            var activities = response.data;
-            console.log(activities);
-         }
-         */
-        get: function (params, onSuccess, onFail) {
-            this._get(params, onSuccess, onFail);
-        },
-        /**
-         * Adds a new activity to the activity stream of the active session. The activity
-         * stream is designed to capture non-text contextual signals important to your
-         * application. This endpoint can be used to create new activities when your
-         * users take specific actions in your app
-         *
-         * @param {Object} activityData Object containing new activity data.
-         * @param {string} activityData.activitytype A short string
-         * identifying the type of activity this object represents. For example, if the activity
-         * corresponds to a user selecting an entity, this attribute could be set to 'select entity'.
-         * If the activity is an update in user status, such as joining or leaving a session,
-         * this attribute could be 'user status update'
-         * @param {string} activityData.title A short text string that can be displayed as the title for the activity
-         * @param {Location=} activityData.location A location object containing the longitude and
-         * latitude coordinates associated with the activity. This can be used to keep track
-         * of location history for a user
-         * @param {string=} activityData.documentid The id of a document, if any, associated with the activity
-         * @param {string=} activityData.articleid The id of an article, if any, associated with the activity
-         * @param {string=} activityData.entityid The id of an entity, if any, associated with the activity
-         * @param {string=} activityData.textentryid The id of a textentry, if any, associated with the activity
-         * @param {APISuccessCallback=} onSuccess callback for when creating new activity was successful
-         * @param {APIErrorCallback=} onFail callback for when creating new activity failed
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function createNewActivity () {
-            var newActivityData = {
-                activitytype: 'status update',
-                title: 'hello world'
-            };
-            MM.activeSession.activities.post(newActivityData, onCreateNewActivity);
-         }
-         function onCreateNewActivity () {
-            // New activity created
-         }
-         */
-        post: function (activityData, onSuccess, onFail) {
-            this.makeModelRequest('POST', this.path(), activityData, onSuccess, onFail);
-        },
-        /**
-         * Delete an activity from the active session
-         *
-         * @param {string} activityid id of the activity to delete
-         * @param {APISuccessCallback=} onSuccess callback for when deleting the activity was successful
-         * @param {APIErrorCallback=} onFail callback for when deleting the activity failed
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function deleteActivity () {
-            MM.activeSession.activities.delete('<activity id>', onActivityDeleted);
-         }
-         function onActivityDeleted () {
-            // activity deleted
-         }
-         */
-        delete: function (activityid, onSuccess, onFail) {
-            this.makeModelRequest('DELETE', 'activity/' + activityid, null, onSuccess, onFail);
-        },
-        channelType: 'session',
-        updateEventName: 'activitiesUpdate'
     });
 
     MM.models.ActiveSession = MM.Internal.createSubclass(MM.models.Model, {
