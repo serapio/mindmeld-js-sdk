@@ -420,7 +420,6 @@ to run and modify it, in the
 * *dist/widgets/voiceNavigator/modal/*: Directory containing voice navigator modal files loaded in the iframe modal
 * *dist/embed.js*: Minified embed script used in prod
 * *example/*: Directory mirroring src/ and dist/ directories containing example HTML pages showing basic usage of SDK and widgets
-* *archive/*: Directory containing all previous versions of mindmeld.js
 * *gulp/*: Directory containing gulpfiles for building SDK and widgets
 * *gulpfile.js*: Main gulpfile used to orchestrate build processes
 * *Gruntfile.js*: Legacy grunt file currently only used for building JS Doc because gulp-js doc does not support our JS doc template
