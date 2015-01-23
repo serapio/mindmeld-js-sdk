@@ -35,7 +35,7 @@
 <script>
     var MM = window.MM || {};
     MM.loader = MM.loader || {};
-    MM.loader.rootURL = 'http://' + window.location.host + '/dist/';
+    MM.loader.rootURL = '//' + window.location.host + '/dist/';
     var DEMO_ENVIRONMENT = 'west-dev-e';
 </script>
 <script>
@@ -46,6 +46,7 @@
     MM.widgets = MM.widgets || {};
     MM.widgets.config = {
         appID: 'ad666f13daeb5c36f6f2c3a11ec8b5d3d01467a0', // ENTER YOUR APPID
+        // domainID: '', // ENTER YOUR DOMAINID if you have multiple in your app
         cleanUrl: 'https://api-' + DEMO_ENVIRONMENT + '.expectlabs.com/',
         fayeClientUrl: 'https://push-' + DEMO_ENVIRONMENT + '.expectlabs.com:443/faye'
     };
