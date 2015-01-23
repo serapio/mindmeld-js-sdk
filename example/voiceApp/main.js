@@ -17,6 +17,7 @@ MM.start(config, function onSuccess () {
 var Cards = window.MindMeldCards;
 var SearchInput = window.MindMeldSearchInput;
 var Microphone = window.MindMeldMicrophone;
+var currentTextEntries = [];
 
 $(function () {
   Cards.initialize({
@@ -31,19 +32,21 @@ $(function () {
   });
 
   // Pass in DOM (not jQuery) elements to these initializers.
-  Microphone.initialize($('.mindmeld-microphone')[0]);
   SearchInput.initialize($('.mindmeld-search')[0]);
-
+  Microphone.initialize($('.mindmeld-microphone')[0]);
 });
 
 /* Set up widget events */
 
 Microphone.on('start', function () {
   console.log('Microphone started');
+  SearchInput.showPromptMessage();
+  currentTextEntries = [];
 });
 
 Microphone.on('end', function () {
   console.log('Microphone stopped');
+  SearchInput.clearPromptMessage();
 });
 
 /*
@@ -53,12 +56,17 @@ Microphone.on('end', function () {
  */
 Microphone.on('error', function (event) {
   // Some errors are benign
-  if (event.error === 'aborted') {
-    console.log('Microphone aborted');
-  } else if (event.error === 'no-speech') {
+  if (event.error === 'no-speech') {
     console.log('Microphone did not receive any speech.');
+    SearchInput.showErrorMessage(SearchInput.getErrorMessage(event.error));
+  } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+    console.log('Microphone disabled.');
+    SearchInput.showErrorMessage(SearchInput.getErrorMessage(event.error));
+  } else if (event.error === 'speech-not-supported') {
+    console.log("Browser doesn't support speech.");
+    SearchInput.showWarningMessage();
   } else {
-    console.error('Microphone error', event.error);
+    console.error('Microphone error: ' + event.error);
   }
 });
 
@@ -75,6 +83,7 @@ Microphone.on('error', function (event) {
  * many interim results that have minimal signal value.
  */
 Microphone.on('result', function(result) {
+  SearchInput.clearAllMessage();
   SearchInput.setText(result.transcript, result.final);
   if (result.final) {
     submitText(result.transcript);
@@ -87,6 +96,7 @@ Microphone.on('result', function(result) {
  * `<Return>` in the text box.
  */
 SearchInput.on('submitText', function (text) {
+  currentTextEntries = [];
   submitText(text);
 });
 
@@ -104,6 +114,7 @@ var submitText = function(text) {
     type: 'text',
     weight: 1.0
   }, function onSuccess (textEntryResult) {
+    currentTextEntries.push(textEntryResult.data.textentryid);
     getDocuments();
   }, function onFail (error) {
     console.error('Error posting textEntry:', error);
@@ -117,7 +128,8 @@ var submitText = function(text) {
  */
 var getDocuments = function () {
   MM.activeSession.documents.get({
-    limit: 12
+        limit: 12,
+        textentryids: JSON.stringify(currentTextEntries)
   },
   function onSuccess (documentResult) {
     var cards = documentResult.data.map(processRawCardData);
@@ -151,7 +163,7 @@ var processRawCardData = function (card) {
   card.description = card.description || '';
   card.description = card.description.substr(0, 150) + (card.description.length > 150 ? '…' : '');
 
-  card.price = card.price && card.price.trim();
+  card.price = card.price && card.price.toString().trim();
 
   if (card.categories) {
     card.category = card.categories[0];

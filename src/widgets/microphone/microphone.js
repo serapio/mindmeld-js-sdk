@@ -26,6 +26,9 @@
   var listener;
   var volumeMonitor;
   var microphoneElement;
+  var hasVoiceResult;
+  // notAllowed == true if the browser doesn't support microphones.
+  var notAllowed;
 
   /**
    * `initialize()` checks for speech recognition support, initializes
@@ -38,10 +41,13 @@
    */
   MindMeldMicrophone.initialize = function initialize (element) {
     microphoneElement = element;
+    hasVoiceResult = false;
+    notAllowed = false;
+
     if (! MM.support.speechRecognition) {
       microphoneElement.classList.add('disabled');
-      var errorMessage = 'This browser does not support speech recognition';
-      MindMeldMicrophone.emit('error', errorMessage);
+      MindMeldMicrophone.emit('error', {error: 'speech-not-supported'});
+      notAllowed = true;
       return;
     }
 
@@ -60,23 +66,37 @@
   // event handlers publish the Listener events like onResult and onEnd
   function initMMListener () {
     listener = MM.listener = new MM.Listener({
-      interimResults: true,
+      interimResults: true
     });
 
     listener.on('result', function (result, resultIndex, results, event) {
+      hasVoiceResult = true;
       MindMeldMicrophone.emit('result', result, resultIndex, results, event);
     });
 
     listener.on('start', function (event) {
+      hasVoiceResult = false;
+      notAllowed = false;
       MindMeldMicrophone.emit('start', event);
     });
 
     listener.on('end', function (event) {
+      // Check if we received any listener results.
+      if (!notAllowed && !hasVoiceResult) {
+        MindMeldMicrophone.emit('error', {error: 'no-speech'});
+      }
       MindMeldMicrophone.emit('end', event);
     });
 
-    listener.on('error', function (error) {
-      MindMeldMicrophone.emit('error', error);
+    listener.on('error', function (event) {
+      if (event.error == 'not-allowed' || event.error == 'service-not-allowed') {
+        notAllowed = true;
+        var holdMessage = microphoneElement.querySelector('.hold-message');
+        if (holdMessage) {
+          holdMessage.style.display = "none";
+        }
+      }
+      MindMeldMicrophone.emit('error', event);
     });
   }
 
@@ -195,6 +215,10 @@
    * Start recording
    */
   MindMeldMicrophone.start = function start (continuous) {
+    if (notAllowed) {
+      return;
+    }
+
     listener.continuous = continuous;
     listener.start();
 
@@ -208,6 +232,10 @@
    * Returns if the microphone is currently listening
    */
   MindMeldMicrophone.listening = function listening () {
+    if (notAllowed) {
+      return false;
+    }
+
     return listener.listening;
   };
 
@@ -215,6 +243,10 @@
    * Stops recording
    */
   MindMeldMicrophone.stop = function stop () {
+    if (notAllowed) {
+      return;
+    }
+
     listener.cancel();
   };
 
@@ -255,6 +287,10 @@
    * Check if microphone is in continuous mode.
    */
   MindMeldMicrophone.isContinuous = function () {
+    if (notAllowed) {
+      return false;
+    }
+
     return listener && listener.continuous;
   };
 
