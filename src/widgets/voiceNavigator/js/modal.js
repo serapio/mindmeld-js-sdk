@@ -838,18 +838,7 @@ var MMVoice = {
             });
             bestNumFilters = Math.round(bestFilterScore * numFilters);
         }
-        $.each(data, function(k, doc) {
-            // Card exists, so update sort order and keep it
-            if ($('#doc_' + doc.documentid).length) {
-                $('#doc_' + doc.documentid).removeClass('to-delete').attr('data-sort', k);
-                return true;
-            }
-
-            // Card doesn't exist, so create it. (TODO: Maybe use a templating system?)
-            var $card = self._createCard(doc);
-            $card.attr('data-sort', k);
-            newCards.push($card);
-
+        function setFilterClasses(doc, $card) {
             if (numFilters) {
                 // reset filter classes
                 $card.removeClass('bad-match exact-match near-exact-match best-match near-best-match');
@@ -878,7 +867,24 @@ var MMVoice = {
 
                 // add new filter classes
                 $card.addClass(filterClasses.join(' '));
-           }
+            }
+        }
+
+        $.each(data, function(k, doc) {
+            var $card = null;
+            // Card exists, so update sort order and keep it
+            if ($('#doc_' + doc.documentid).length) {
+                $card = $('#doc_' + doc.documentid);
+                $card.removeClass('to-delete').attr('data-sort', k);
+                setFilterClasses(doc, $card);
+                return true;
+            }
+
+            // Card doesn't exist, so create it. (TODO: Maybe use a templating system?)
+            $card = self._createCard(doc);
+            $card.attr('data-sort', k);
+            newCards.push($card);
+            setFilterClasses(doc, $card);
         });
 
         // Filter out unused cards (we don't delete yet b/c we want them to fade out)
