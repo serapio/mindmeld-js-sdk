@@ -824,6 +824,20 @@ var MMVoice = {
             $card.attr('data-sort', k + 1000);
         });
 
+        var numFilters = 0;
+        if (typeof data[0].filtermatches !== 'undefined') {
+            $.each(data[0].filtermatches, function(key) {
+                numFilters++;
+            });
+        }
+        var bestFilterScore = 0;
+        var bestNumFilters = 0;
+        if (numFilters) {
+            $.each(data, function(k, doc) {
+                bestFilterScore = Math.max(bestFilterScore, doc.filterscore);
+            });
+            bestNumFilters = Math.round(bestFilterScore * numFilters);
+        }
         $.each(data, function(k, doc) {
             // Card exists, so update sort order and keep it
             if ($('#doc_' + doc.documentid).length) {
@@ -835,6 +849,36 @@ var MMVoice = {
             var $card = self._createCard(doc);
             $card.attr('data-sort', k);
             newCards.push($card);
+
+            if (numFilters) {
+                // reset filter classes
+                $card.removeClass('bad-match exact-match near-exact-match best-match near-best-match');
+
+                // calculate new filter classes
+                var filterClasses = [];
+                var numFiltersMatched = Math.round(doc.filterscore * numFilters);
+                if (numFilters === numFiltersMatched) {
+                    filterClasses.push('exact-match');
+                }
+                if (bestNumFilters === numFiltersMatched ) {
+                    filterClasses.push('best-match');
+                }
+                if (numFilters > 1) {
+                    // only do near matching when one less still matches some filters
+                    if (numFilters - 1 === numFiltersMatched) {
+                        filterClasses.push('near-exact-match');
+                    }
+                    if (bestNumFilters - 1 === numFiltersMatched) {
+                        filterClasses.push('near-best-match');
+                    }
+                }
+                if (filterClasses.length === 0) {
+                    filterClasses.push('bad-match');
+                }
+
+                // add new filter classes
+                $card.addClass(filterClasses.join(' '));
+           }
         });
 
         // Filter out unused cards (we don't delete yet b/c we want them to fade out)
