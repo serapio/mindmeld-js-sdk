@@ -437,7 +437,7 @@
       // This means we've set the onEndAbortTimeout, but it's finished
       // processing a result.  Thus it might not be stuck, so we'll
       // give it more time.
-      if (onEndAbortTimeout != null) {
+      if (onEndAbortTimeout !== null) {
         setOnEndAbortTimeout();
       }
 
