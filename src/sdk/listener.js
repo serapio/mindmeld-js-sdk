@@ -379,15 +379,17 @@
   Listener.prototype._initializeRecognizer = function (recognizer) {
     var listener = this;
 
-    // This timeout prevents a the listener from falling into a broken state
-    // when the speech recognition backend stops listening after ~60 seconds
-    var longListenStopTimeout = null;
-    function setLongListenStopTimeout () {
-      window.clearTimeout(longListenStopTimeout);
-      longListenStopTimeout = window.setTimeout(function() {
-        recognizer.stop();
-      }, 59500);
-    }
+    // XXX: This was needed for the google api timeout.
+    // That seems to no longer exist, so we're disabling.
+    // // This timeout prevents a the listener from falling into a broken state
+    // // when the speech recognition backend stops listening after ~60 seconds
+    // var longListenStopTimeout = null;
+    // function setLongListenStopTimeout () {
+    //   window.clearTimeout(longListenStopTimeout);
+    //   longListenStopTimeout = window.setTimeout(function() {
+    //     recognizer.stop();
+    //   }, 59500);
+    // }
 
     // This timeout prevents a the listener from falling into a broken state
     // abort if the recognition fails to call onEnd (chrome bug hack)
@@ -515,7 +517,9 @@
       listener.segmentID++;
       listener.resultID = 0;
 
-      setLongListenStopTimeout();
+      // XXX: This was needed for the google api timeout.
+      // That seems to no longer exist, so we're disabling.
+      // setLongListenStopTimeout();
       if (!listener._listening || !listener._shouldKeepListening) {
         listener._listening = true;
         listener.lastStartTime = Date.now();

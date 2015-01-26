@@ -7954,7 +7954,7 @@ var MM = ( function (window, ajax, Faye) {
       // This means we've set the onEndAbortTimeout, but it's finished
       // processing a result.  Thus it might not be stuck, so we'll
       // give it more time.
-      if (onEndAbortTimeout != null) {
+      if (onEndAbortTimeout !== null) {
         setOnEndAbortTimeout();
       }
 
@@ -8032,7 +8032,8 @@ var MM = ( function (window, ajax, Faye) {
       listener.segmentID++;
       listener.resultID = 0;
 
-      setLongListenStopTimeout();
+      // XXX: Disabling for testing
+      // setLongListenStopTimeout();
       if (!listener._listening || !listener._shouldKeepListening) {
         listener._listening = true;
         listener.lastStartTime = Date.now();
