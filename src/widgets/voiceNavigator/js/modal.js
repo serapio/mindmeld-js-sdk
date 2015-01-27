@@ -824,43 +824,36 @@ var MMVoice = {
             $card.attr('data-sort', k + 1000);
         });
 
-        var numFilters = 0;
-        if (typeof data[0].filtermatches !== 'undefined') {
-            $.each(data[0].filtermatches, function(key) {
-                numFilters++;
-            });
-        }
+        var filtersPresent = typeof data[0].filtermatches !== 'undefined';
         var bestFilterScore = 0;
-        var bestNumFilters = 0;
-        if (numFilters) {
+        var nextBestFilterScore = 0;
+        if (filtersPresent) {
             $.each(data, function(k, doc) {
-                bestFilterScore = Math.max(bestFilterScore, doc.filterscore);
+                if (doc.filterscore > bestFilterScore) {
+                    nextBestFilterScore = bestFilterScore;
+                    bestFilterScore = doc.filterscore;
+                }
             });
-            bestNumFilters = Math.round(bestFilterScore * numFilters);
         }
         function setFilterClasses(doc, $card) {
-            if (numFilters) {
+            if (filtersPresent) {
                 // reset filter classes
-                $card.removeClass('bad-match exact-match near-exact-match best-match near-best-match');
+                $card.removeClass('bad-match exact-match best-match near-best-match');
 
                 // calculate new filter classes
                 var filterClasses = [];
-                var numFiltersMatched = Math.round(doc.filterscore * numFilters);
-                if (numFilters === numFiltersMatched) {
+                if (doc.filterscore === 1) {
                     filterClasses.push('exact-match');
                 }
-                if (bestNumFilters === numFiltersMatched ) {
+                if (doc.filterscore === bestFilterScore) {
                     filterClasses.push('best-match');
                 }
-                if (numFilters > 1) {
-                    // only do near matching when one less still matches some filters
-                    if (numFilters - 1 === numFiltersMatched) {
-                        filterClasses.push('near-exact-match');
-                    }
-                    if (bestNumFilters - 1 === numFiltersMatched) {
-                        filterClasses.push('near-best-match');
-                    }
+                // only do near matching when the second best filter score is better than 0
+                if (nextBestFilterScore > 0 &&
+                    doc.filterscore === nextBestFilterScore) {
+                    filterClasses.push('near-best-match');
                 }
+                // if doc is not exact, best or near-best, it is bad
                 if (filterClasses.length === 0) {
                     filterClasses.push('bad-match');
                 }
