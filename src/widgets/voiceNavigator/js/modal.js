@@ -824,7 +824,7 @@ var MMVoice = {
             $card.attr('data-sort', k + 1000);
         });
 
-        var filtersPresent = typeof data[0].filtermatches !== 'undefined';
+        var filtersPresent = data.length && typeof data[0].filtermatches !== 'undefined';
         var bestFilterScore = 0;
         var nextBestFilterScore = 0;
         if (filtersPresent) {
@@ -836,19 +836,21 @@ var MMVoice = {
             });
         }
         function setFilterClasses(doc, $card) {
-            if (filtersPresent) {
-                // reset filter classes
-                $card.removeClass('bad-match exact-match best-match near-best-match');
+            // reset filter classes
+            $card.removeClass('bad-match exact-match best-match near-best-match');
 
+            if (filtersPresent) {
+                $card.attr('data-filters-score', doc.filterscore);
                 // calculate new filter classes
                 var filterClasses = [];
+                // if exact matches
                 if (doc.filterscore === 1) {
                     filterClasses.push('exact-match');
                 }
                 if (doc.filterscore === bestFilterScore) {
                     filterClasses.push('best-match');
                 }
-                // only do near matching when the second best filter score is better than 0
+                // only do near-best matching when the second best filter score is better than 0
                 if (nextBestFilterScore > 0 &&
                     doc.filterscore === nextBestFilterScore) {
                     filterClasses.push('near-best-match');
