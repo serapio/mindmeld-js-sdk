@@ -2928,7 +2928,7 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.9.1',
+        value: '2.9.2',
         writable: false
     });
 
@@ -7932,8 +7932,8 @@ var MM = ( function (window, ajax, Faye) {
     }
 
     function finalizeResult () {
-      var results = listener._results;
       var lastResult = null;
+      var results = listener._results;
       var resultIndex = results.length - 1;
       if (resultIndex >= 0) {
         lastResult = results[resultIndex];
@@ -7946,8 +7946,16 @@ var MM = ( function (window, ajax, Faye) {
     }
 
     recognizer.onresult = function(event) {
+      // If the debug flag is set, capture this for debugging.
       if (listener._captureRaw) {
         listener._rawResults.push(event);
+      }
+
+      // This means we've set the onEndAbortTimeout, but it's finished
+      // processing a result.  Thus it might not be stuck, so we'll
+      // give it more time.
+      if (onEndAbortTimeout != null) {
+        setOnEndAbortTimeout();
       }
 
       listener.resultID++;
@@ -7971,8 +7979,19 @@ var MM = ( function (window, ajax, Faye) {
         resultIndex--;
       }
 
-      // Only fire callback if the result is not finalized
-      var shouldFireCallback = !resultFinalized;
+      // If resultFinalized, then we've made a non-final result
+      // into a final result and submitted it.  In this case, we want to
+      // ignore successive non-final results (because they are modifying
+      // something we've already finalized), and ignore final results (
+      // because they are duplicates) but when we get final results we
+      // want to start listening again.  This, when the result is final
+      // set resultFinalzed = false.
+      if (resultFinalized) {
+        if (result.final) {
+          resultFinalized = false;
+        }
+        return;
+      }
 
       for (var i = event.resultIndex; i < event.results.length; ++i) {
         var transcript = event.results[i][0].transcript;
@@ -7998,22 +8017,13 @@ var MM = ( function (window, ajax, Faye) {
         result.transcript = ' ' + result.transcript;
       }
 
-      // This means we've set the onEndAbortTimeout, but it's finished
-      // processing a result.  Thus it might not be stuck, so we'll
-      // give it more time.
-      if (onEndAbortTimeout != null) {
-        setOnEndAbortTimeout();
-      }
-
       if (result.final || listener.interimResults) {
         listener.emit('result', result);
       }
 
-      if (shouldFireCallback) {
-        results[resultIndex] = result;
-        if (!result.final) {
-          setEarlyFinalResultTimeout(event);
-        }
+      results[resultIndex] = result;
+      if (!result.final) {
+        setEarlyFinalResultTimeout();
       }
     };
 
@@ -8091,28 +8101,31 @@ var MM = ( function (window, ajax, Faye) {
       return;
     }
 
-    // this variable indicates whether a listening session should be restarted automatically
-    listener._shouldKeepListening = false;
-
     var recognizer = this._recognizer;
     if (typeof recognizer === 'undefined') {
       recognizer = this._recognizer = new window.SpeechRecognition();
       listener._initializeRecognizer(recognizer);
     }
 
+    // this variable indicates whether a listening session should be restarted automatically
+    listener._shouldKeepListening = false;
     listener._shouldKeepListening = recognizer.continuous = this.continuous;
     recognizer.interimResults = this.interimResults;
-    var lang = (function () {
+
+    // Find language, if it's set
+    recognizer.lang = (function () {
       var language = '';
       if (listener.lang !== '') {
         language = listener.lang;
-      } else if (typeof window.document !== 'undefined' && window.document.documentElement !== null && window.document.documentElement.lang !== '') {
+      } else if (window.document &&
+          window.document.documentElement &&
+          window.document.documentElement.lang) {
         // attempt to retrieve from html element
         language = window.document.documentElement.lang;
       }
       return language;
     })();
-    recognizer.lang = lang;
+
     listener._results = []; // clear previous results
 
     recognizer.start();
