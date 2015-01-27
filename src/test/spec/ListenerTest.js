@@ -40,7 +40,7 @@ describe('Listener', function () {
       listener.emit('start');
     });
 
-    it('should be able to have two listeners', function (done) {
+    it('should be able to have two result consumers', function (done) {
       var firstDone = false, secondDone = false;
 
       listener.on('result', function () {
