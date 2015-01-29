@@ -12,6 +12,10 @@
 
   // Thanks koorchik, from http://stackoverflow.com/questions/8366733/external-template-in-underscore
   var render = function(templateUrl, templateData) {
+    if ( !templateUrl ) {
+      throw new Error('render got invalid templateUrl: ' + templateUrl + '; aborting.');
+    }
+
     if ( !render.tmplCache ) {
       render.tmplCache = {};
     }
