@@ -8,7 +8,7 @@ describe('MM Unit', function () {
     expect(fakeAjax.url).toBe(fakeReq.url);
     expect(fakeAjax.method).toBe(fakeReq.method);
 
-    fakeAjax.response({
+    fakeAjax.respondWith({
       status: 200,
       contentType: 'text/html',
       responseText: JSON.stringify(fakeRes)

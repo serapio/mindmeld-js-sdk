@@ -2,6 +2,14 @@
 
 (function (MM) {
 
+  var shallowClone = function (obj) {
+    var clone = {};
+    for (var k in obj) {
+      clone[k] = obj[k];
+    }
+    return clone;
+  };
+
   /*
    * A Listener has four states: stopped, listening, continuous (listening), and stopping.
    * (we'll handling pending/not-supported later).
@@ -268,11 +276,15 @@
     this.lastStartTime = 0;
 
     this._listening = false;
+
+    // Accumulated final results
     this._results = [];
+    // Current pending result, if any.
+    this._pendingResult = null;
 
     // We can save the results from the recognizer for debugging and testing
-    this._rawResults = [];
-    this._captureRaw = false;
+    this._rawEvents = [];
+    this._captureEvents = false;
   };
 
 
@@ -404,7 +416,7 @@
     // take as long as 15 seconds to become 'final'. Results after the forced final result are ignored until
     // the speech service sends a 'final' result.
     var earlyFinalResultTimeout = null;
-    var resultFinalized = false;
+    var pendingResultFinalized = false;
     function setEarlyFinalResultTimeout () {
       if (!listener.earlyFinalResults) {
         return;
@@ -414,34 +426,40 @@
       earlyFinalResultTimeout = window.setTimeout(finalizeResult, 1500);
     }
 
-    function finalizeResult () {
-      var lastResult = null;
-      var results = listener._results;
-      var resultIndex = results.length - 1;
-      if (resultIndex >= 0) {
-        lastResult = results[resultIndex];
-        if (!lastResult.final) {
-          resultFinalized = lastResult.final = true;
-          lastResult.early = true;
-          listener.emit('result', lastResult, resultIndex, results, event);
-        }
+    var finalizeResult = function () {
+      if (listener._pendingResult) {
+        var result = shallowClone(listener._pendingResult);
+        var results = listener._results;
+        listener._pendingResult = null;
+        result.final = true;
+        result.early = true;
+        results.push(result);
+        var resultIndex = results.length - 1;
+        listener.emit('result', result, resultIndex, results, event);
+        // Mark that we have finalized a pending result; this means that
+        // we will ignore results up to and including the next final result,
+        // since we've already emitted something in its place.
+        pendingResultFinalized = true;
       }
-    }
+    };
 
-    recognizer.onresult = function(event) {
-      // If the debug flag is set, capture this for debugging.
-      if (listener._captureRaw) {
-        listener._rawResults.push(event);
+    // If the debug flag _captureEvents is set, record this event for later
+    // playback.  Several events (eg audiostart) don't have additional data, so
+    // just record their name and timestamp.  You can also supply additional
+    // data that will be recorded.
+    var registerEvent = function (name, e) {
+      e = e || {};
+      e.type = name;
+      e.timestamp = Date.now();
+
+      if (listener._captureEvents) {
+        listener._rawEvents.push(e);
       }
+    };
 
-      // This means we've set the onEndAbortTimeout, but it's finished
-      // processing a result.  Thus it might not be stuck, so we'll
-      // give it more time.
-      if (onEndAbortTimeout !== null) {
-        setOnEndAbortTimeout();
-      }
-
-      listener.resultID++;
+    // Parse the result event that comes from the recognizer into
+    // the result that the listener will emit.
+    var parseResult = function (event) {
       var result = {
         final: false,
         transcript: '',
@@ -453,42 +471,15 @@
         result.language = MM.Listener.convertLanguageToISO6392(recognizerLanguage);
       }
 
-      // find listener result index
-      var results = listener._results;
-      var lastResult = results.length > 0 ? results[results.length - 1] : null;
-      var resultIndex = results.length;
-      // decrement index so we overwrite the interim result
-      if (lastResult !== null && !lastResult.final) {
-        resultIndex--;
-      }
-
-      // If resultFinalized, then we've made a non-final result
-      // into a final result and submitted it.  In this case, we want to
-      // ignore successive non-final results (because they are modifying
-      // something we've already finalized), and ignore final results (
-      // because they are duplicates) but when we get final results we
-      // want to start listening again.  This, when the result is final
-      // set resultFinalzed = false.
-      if (resultFinalized) {
-        if (result.final) {
-          resultFinalized = false;
-        }
-        return;
-      }
-
       for (var i = event.resultIndex; i < event.results.length; ++i) {
         var transcript = event.results[i][0].transcript;
         //console.log(listener.segmentID + '.' + i, event.results[i].isFinal, transcript);
 
         if (event.results[i].isFinal) {
-          window.clearTimeout(earlyFinalResultTimeout);
-          earlyFinalResultTimeout = null;
           result.final = true;
           result._trueFinal = true;
           listener.segmentID++;
           result.transcript = transcript;
-          // We now will fire the results callback for future results.
-          resultFinalized = false;
           break;
         } else {
           result.transcript += transcript; // collapse multiple pending results into one
@@ -496,22 +487,63 @@
       }
 
       // if we restarted, we'll need to add a space for some results
-      if (resultIndex >= 0 && !/^\s/.test(result.transcript.charAt(0))) {
+      if (listener._results.length > 0 && !/^\s/.test(result.transcript.charAt(0))) {
         result.transcript = ' ' + result.transcript;
+      }
+
+      return result;
+    };
+
+    recognizer.onresult = function(event) {
+      // If the debug flag is set, capture this for debugging.
+      if (listener._captureEvents) {
+        // This doesn't use registerEvent because event has the info,
+        // and we don't want to modify it.
+        listener._rawEvents.push(event);
+      }
+
+      listener.resultID++;
+
+      // This means we've set the onEndAbortTimeout, but it's finished
+      // processing a result.  Thus it might not be stuck, so we'll
+      // give it more time.
+      if (onEndAbortTimeout !== null) {
+        setOnEndAbortTimeout();
+      }
+
+      var result = parseResult(event);
+
+      // If pendingResultFinalized, then we've made a non-final result
+      // into a final result and submitted it.  In this case, we want to
+      // ignore successive non-final results (because they are modifying
+      // something we've already finalized), and ignore final results (
+      // because they are duplicates) but when we get final results we
+      // want to start listening again.  This, when the result is final
+      // set resultFinalzed = false.
+      if (pendingResultFinalized && result.final) {
+        pendingResultFinalized = false;
+        return;
+      }
+
+      if (result.final) {
+        window.clearTimeout(earlyFinalResultTimeout);
+        earlyFinalResultTimeout = null;
+        listener._pendingResult = null;
+        listener._results.push(result);
+      } else {
+        // Remember this in case we need to finalize it.
+        listener._pendingResult = result;
+        setEarlyFinalResultTimeout();
       }
 
       if (result.final || listener.interimResults) {
         listener.emit('result', result);
       }
-
-      results[resultIndex] = result;
-      if (!result.final) {
-        setEarlyFinalResultTimeout();
-      }
     };
 
-    recognizer.onstart = function (event) {
-      resultFinalized = false;
+    recognizer.onstart = function () {
+      registerEvent('start');
+      pendingResultFinalized = false;
       listener.segmentID++;
       listener.resultID = 0;
 
@@ -523,7 +555,8 @@
       }
     };
 
-    recognizer.onend = function (event) {
+    recognizer.onend = function () {
+      registerEvent('end');
       window.clearTimeout(onEndAbortTimeout);
       onEndAbortTimeout = null;
       window.clearTimeout(longListenStopTimeout);
@@ -532,7 +565,7 @@
       earlyFinalResultTimeout = null;
 
       finalizeResult();
-      resultFinalized = false;
+      pendingResultFinalized = false;
 
       if (listener._shouldKeepListening) {
         recognizer.start();
@@ -544,6 +577,13 @@
     };
 
     recognizer.onerror = function (event) {
+      // If the debug flag is set, capture this for debugging.
+      if (listener._captureEvents) {
+        // This doesn't use registerEvent because event has the info,
+        // and we don't want to modify it.
+        listener._rawEvents.push(event);
+      }
+
       if (listener._shouldKeepListening) {
         if (event.error === 'no-speech') {
           return;
@@ -559,10 +599,31 @@
     };
 
     recognizer.onaudioend = function () {
+      registerEvent('audioend');
       if (!recognizer.continuous) {
         setOnEndAbortTimeout();
       }
     };
+
+    recognizer.onaudiostart = function () {
+      registerEvent('audiostart');
+    };
+    recognizer.onsoundstart = function () {
+      registerEvent('soundstart');
+    };
+    recognizer.onspeechstart = function () {
+      registerEvent('speechstart');
+    };
+    recognizer.onspeechend = function () {
+      registerEvent('speechend');
+    };
+    recognizer.onsoundend = function () {
+      registerEvent('soundend');
+    };
+    recognizer.onnomatch = function () {
+      registerEvent('nomatch');
+    };
+
   };
 
   /**

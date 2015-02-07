@@ -1,33 +1,7 @@
 /* global describe, xdescribe, it, xit, expect, beforeEach, afterEach, jasmine, fail, spyOn */
-/* global window, MM, FakeResponses, FakeBaseUrl */
+/* global window, MM, FakeResponses, FakeBaseUrl, FakeRecognizer */
 
 describe('Listener', function () {
-
-  var makeMockRecognizer = function () {
-    var recognizer = {
-      start: function () {
-        setTimeout(function () {
-          recognizer.onstart && recognizer.onstart();
-        }, 0);
-      },
-      stop: function () {
-        setTimeout(function () {
-          recognizer.onend && recognizer.onend();
-        }, 0);
-      },
-      abort: function () {
-        setTimeout(function () {
-          recognizer.onerror && recognizer.onerror('aborted');
-          recognizer.onend && recognizer.onend();
-        }, 0);
-      },
-      lang: ''
-    };
-    spyOn(recognizer, 'start').and.callThrough();
-    spyOn(recognizer, 'stop').and.callThrough();
-    spyOn(recognizer, 'abort').and.callThrough();
-    return recognizer;
-  };
 
   describe('events', function () {
     var listener;
@@ -36,8 +10,13 @@ describe('Listener', function () {
     });
 
     it('start should work', function (done) {
-      listener.on('start', done);
+      listener.on('start', function () {
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
+        done();
+      });
       listener.emit('start');
+
     });
 
     it('should be able to have two result consumers', function (done) {
@@ -45,6 +24,8 @@ describe('Listener', function () {
 
       listener.on('result', function () {
         firstDone = true;
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
         if (firstDone && secondDone) done();
       });
 
@@ -63,7 +44,7 @@ describe('Listener', function () {
     var oldSupport = MM.support;
 
     beforeEach(function () {
-      recognizer = makeMockRecognizer();
+      recognizer = new FakeRecognizer();
 
       listener = new MM.Listener({});
       listener._recognizer = recognizer;
@@ -87,7 +68,11 @@ describe('Listener', function () {
     });
 
     it('should emit start event', function (done) {
-      listener.on('start', done);
+      listener.on('start', function () {
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
+        done();
+      });
       listener.start();
     });
   });
@@ -98,7 +83,7 @@ describe('Listener', function () {
     var oldSupport = MM.support;
 
     beforeEach(function () {
-      recognizer = makeMockRecognizer();
+      recognizer = new FakeRecognizer();
 
       listener = new MM.Listener({});
       listener._recognizer = recognizer;
@@ -118,23 +103,31 @@ describe('Listener', function () {
     });
 
     it('should emit start event', function (done) {
-      listener.on('start', done);
+      listener.on('start', function () {
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
+        done();
+      });
       listener.start();
     });
 
     it('should restart on recognizer.onend', function (done) {
+      listener.start();
+      expect(recognizer.start.calls.count()).toEqual(1);
+      listener.on('start', function () {
+        // Need to fake internal state.
+        recognizer._isStarting = false;
+        recognizer.onend();
+      });
       listener.on('end', function () {
         fail('should not call end');
       });
-      listener.start();
-      expect(recognizer.start.calls.count()).toEqual(1);
-      recognizer.onend();
 
       // HACK: want to ensure 'end' has a chance to fire
       setTimeout(function () {
         expect(recognizer.start.calls.count()).toEqual(2);
         done();
-      }, 1);
+      }, 11);
     });
 
     xit('should call longListenTimeout after 60 seconds');
@@ -146,7 +139,7 @@ describe('Listener', function () {
     var oldSupport = MM.support;
 
     beforeEach(function () {
-      recognizer = makeMockRecognizer();
+      recognizer = new FakeRecognizer();
 
       listener = new MM.Listener({});
       listener._recognizer = recognizer;
@@ -165,7 +158,11 @@ describe('Listener', function () {
     });
 
     it('should emit end event', function (done) {
-      listener.on('end', done);
+      listener.on('end', function () {
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
+        done();
+      });
       listener.stop();
     });
 
@@ -174,10 +171,10 @@ describe('Listener', function () {
       spyOn(recognizer, 'stop').and.callThrough();
       jasmine.clock().install();
       listener.start();
-      jasmine.clock().tick(2);
+      jasmine.clock().tick(20);
       listener.stop();
       expect(recognizer.stop).toHaveBeenCalled();
-      jasmine.clock().tick(2);
+      jasmine.clock().tick(20);
       listener.stop();
       expect(recognizer.abort).toHaveBeenCalled();
       jasmine.clock().uninstall();
@@ -205,7 +202,7 @@ describe('Listener', function () {
     var oldSupport = MM.support;
 
     beforeEach(function () {
-      recognizer = makeMockRecognizer();
+      recognizer = new FakeRecognizer();
 
       listener = new MM.Listener({});
       listener._recognizer = recognizer;
@@ -225,7 +222,11 @@ describe('Listener', function () {
     });
 
     it('should emit end event', function (done) {
-      listener.on('end', done);
+      listener.on('end', function () {
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
+        done();
+      });
       listener.cancel();
     });
 
@@ -237,7 +238,7 @@ describe('Listener', function () {
     var oldSupport = MM.support;
 
     beforeEach(function () {
-      recognizer = makeMockRecognizer();
+      recognizer = new FakeRecognizer();
 
       listener = new MM.Listener({});
       listener._recognizer = recognizer;
@@ -251,12 +252,21 @@ describe('Listener', function () {
     });
 
     it('should cause listener to emit start event', function (done) {
-      listener.on('start', done);
+      listener.on('start', function () {
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
+        done();
+      });
       recognizer.onstart();
     });
 
     it('should cause listener to invoke onStart', function (done) {
-      listener.setConfig( { onStart: done } );
+      listener.setConfig( { onStart: function () {
+          // Need this for it to be a valid test.
+          expect(true).toBe(true);
+          done();
+        }
+      });
       recognizer.onstart();
     });
 
@@ -268,7 +278,7 @@ describe('Listener', function () {
     var oldSupport = MM.support;
 
     beforeEach(function () {
-      recognizer = makeMockRecognizer();
+      recognizer = new FakeRecognizer();
 
       listener = new MM.Listener({});
       listener._recognizer = recognizer;
@@ -281,22 +291,36 @@ describe('Listener', function () {
       MM.support = oldSupport;
     });
 
-    it('should restart recognizer if in continuous mode', function () {
+    it('should restart recognizer if in continuous mode', function (done) {
       listener.continuous = true;
       listener.start();
       expect(recognizer.start.calls.count()).toEqual(1);
-      recognizer.onend();
-      expect(recognizer.start.calls.count()).toEqual(2);
+      listener.on('start', function () {
+        // Need to fake internal state.
+        recognizer._isStarting = false;
+        recognizer.onend();
+        expect(recognizer.start.calls.count()).toEqual(2);
+        done();
+      });
     });
 
     it('should cause listener to emit end event', function (done) {
-      listener.on('end', done);
+      listener.on('end', function () {
+        // Need this for it to be a valid test.
+        expect(true).toBe(true);
+        done();
+      });
       listener.start();
       recognizer.onend();
     });
 
     it('should cause listener to invoke onEnd', function (done) {
-      listener.setConfig( { onEnd: done } );
+      listener.setConfig( { onEnd: function () {
+          // Need this for it to be a valid test.
+          expect(true).toBe(true);
+          done();
+        }
+      });
       recognizer.onend();
     });
 
@@ -308,7 +332,7 @@ describe('Listener', function () {
     var oldSupport = MM.support;
 
     beforeEach(function () {
-      recognizer = makeMockRecognizer();
+      recognizer = new FakeRecognizer();
 
       listener = new MM.Listener({
         earlyFinalResults: false
@@ -393,6 +417,10 @@ describe('Listener', function () {
         fail('should not get result');
       });
       recognizer.onresult( makeResult(text, false) );
+
+      // Need this for it to be a valid test.
+      expect(true).toBe(true);
+
       // Give it time to emit
       setTimeout(done, 2);
     });
