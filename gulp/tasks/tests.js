@@ -3,6 +3,8 @@
 var gulp = require('gulp');
 var shell = require('gulp-shell');
 var taskListing  = require('gulp-task-listing');
+var concat = require('gulp-concat');
+var connect = require('gulp-connect');
 
 var rootDirectory = __dirname + '/../../';
 var distDirectory = rootDirectory + 'dist/';
@@ -15,6 +17,7 @@ var distBowerDirectory = distTestDirectory + 'bower_components/';
 var paths = {
   spec: srcTestDirectory + 'spec/*.js',
   data: srcTestDirectory + 'spec/data/*.js',
+  playbacks: srcTestDirectory + 'spec/data/playbacks/*.js',
   specRunner: srcTestDirectory + '*.html',
   bower: srcBowerDirectory + '**'
 };
@@ -41,7 +44,13 @@ gulp.task('tests.data', function () {
     .pipe(gulp.dest(distTestDirectory + 'spec/data'));
 });
 
-gulp.task('tests.build', ['sdk.build', 'tests.html', 'tests.spec', 'tests.data', 'tests.bower']);
+gulp.task('tests.playbacks', function () {
+  return gulp.src(paths.playbacks)
+    .pipe(concat('playbacks.js'))
+    .pipe(gulp.dest(distTestDirectory + 'spec/data'));
+});
+
+gulp.task('tests.build', ['sdk.uglify', 'tests.html', 'tests.spec', 'tests.data', 'tests.playbacks', 'tests.bower']);
 
 gulp.task('tests.watch', ['tests.build'], function () {
   gulp.watch(paths.specRunner, ['tests.html']);
@@ -66,4 +75,16 @@ gulp.task('tests.integration', ['tests.build'], function () {
 });
 
 gulp.task('tests', ['tests.unit', 'tests.integration']);
+
+gulp.task('tests.serve', function() {
+  // serve the repo to view examples
+  connect.server({
+    root: 'dist',
+    //https: true,
+    livereload: true
+  });
+});
+
+gulp.task('tests.develop', ['tests.serve', 'tests.watch', 'tests.build']);
+
 gulp.task('tests.tasks', taskListing.withFilters(/\./, /^(?!tests).+/));

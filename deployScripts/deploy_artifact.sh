@@ -2,6 +2,9 @@
 set -x # use + to only "echo" results on console (ie turn debugging off)
 set -e # exit if there are any errors at all (perfect build or none at all).
 
+# USAGE:
+# bash deployScripts/deploy_artifact.sh [AWS_PROFILE]
+
 SCRIPT_DIR=`dirname $0`
 
 #CIRCLE_PROJECT_USERNAME The username or organization name of the project being tested, i.e. "expectlabs"
@@ -33,7 +36,12 @@ REPO=$CIRCLE_PROJECT_REPONAME
 PREFIX="$REPO/"
 GIT_COMMIT=$CIRCLE_SHA1
 BUILD_ID="$CIRCLE_BUILD_NUM"_`date +"%Y-%m-%d_%H-%M-%S"`
-S3CMD="s3cmd --config=$SCRIPT_DIR/s3cfg"
+
+AWS_PROFILE=$1
+if [ -n "$AWS_PROFILE" ]; then
+  PROFILE="--profile $AWS_PROFILE"
+fi
+S3CMD="aws $PROFILE s3"
 
 tempDir="/var/tmp/${REPO}_${BUILD_ID}"
 tarFile="${REPO}_${BUILD_ID}.tgz"
@@ -41,8 +49,8 @@ tarSha="${REPO}_${BUILD_ID}.sha1"
 mkdir -p $tempDir
 $SCRIPT_DIR/git-archive-all --prefix=$PREFIX --extra='dist/' "$tempDir/$tarFile"
 echo $GIT_COMMIT > "$tempDir/$tarSha"
-$S3CMD put "$tempDir/$tarFile" "s3://elabs-pkg/releases/$tarFile"
-$S3CMD put "$tempDir/$tarSha" "s3://elabs-pkg/releases/$tarSha"
+$S3CMD cp "$tempDir/$tarFile" "s3://elabs-pkg/releases/$tarFile"
+$S3CMD cp "$tempDir/$tarSha" "s3://elabs-pkg/releases/$tarSha"
 $S3CMD cp "s3://elabs-pkg/releases/$tarFile" "s3://elabs-pkg/env/${CHEF_ENVIRONMENT}/${REPO}.tgz"
 $S3CMD cp "s3://elabs-pkg/releases/$tarSha" "s3://elabs-pkg/env/${CHEF_ENVIRONMENT}/${REPO}.sha1"
 

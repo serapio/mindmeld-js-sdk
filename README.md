@@ -28,12 +28,12 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.2.js"></script>
+<script type="text/javascript" src="https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.3.js"></script>
 ```
 
-* Un-minified: [mindmeld-2.9.2.js][versionedSDKDownloadLink]
-* Minified: [mindmeld-2.9.2.min.js][versionedMinifiedSDKDownloadLink]
-* Both + Hello World + Documentation: [mindmeld-js-sdk-2.9.2.zip][versionedSDKZIPDownloadLink]
+* Un-minified: [mindmeld-2.9.3.js][versionedSDKDownloadLink]
+* Minified: [mindmeld-2.9.3.min.js][versionedMinifiedSDKDownloadLink]
+* Both + Hello World + Documentation: [mindmeld-js-sdk-2.9.3.zip][versionedSDKZIPDownloadLink]
 
 ### Clone git repository
 Both files are also available directly from the mindmeld-js-sdk git repository. Simply clone the repo:
@@ -433,6 +433,6 @@ to run and modify it, in the
 [latestSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld.js
 [latestMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld.min.js
 [latestSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld-js-sdk.zip
-[versionedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.2.js
-[versionedMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.2.min.js
-[versionedSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.9.2.zip
+[versionedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.3.js
+[versionedMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.3.min.js
+[versionedSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.9.3.zip
