@@ -18,7 +18,7 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.9.1',
+        value: '2.9.3',
         writable: false
     });
 
@@ -855,7 +855,6 @@ var MM = ( function (window, ajax, Faye) {
               MM.activeUser.sessions.post(
                 session,
                 function onSessionCreate(result) {
-                  console.log('Create session results:', result);
                   MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
                 },
                 onError
@@ -873,13 +872,8 @@ var MM = ( function (window, ajax, Faye) {
             } else {
               // Default action is to make an anonymous session
               var credentials = config.credentials || makeAnonymousCredentials();
-
-
               MM.getToken(credentials, function onToken () {
-                console.log('Token retrieved.');
-
                 handleSession();
-
               }, onError);
             }
           };
