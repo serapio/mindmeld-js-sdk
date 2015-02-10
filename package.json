@@ -20,7 +20,7 @@
     "gulp-rename": "^1.2.0",
     "gulp-replace": "^0.3.0",
     "gulp-sass": "^0.7.1",
-    "gulp-shell": "^0.2.8",
+    "gulp-shell": "^0.3.0",
     "gulp-sourcemaps": "^1.1.1",
     "gulp-stylus": "^1.0.0",
     "gulp-task-listing": "^0.3.0",
