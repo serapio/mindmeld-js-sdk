@@ -22,7 +22,7 @@ machine:
 ## Customize dependencies
 dependencies:
   pre:
-    - npm install -g gulp@3.6.2 npm-cache@0.0.4
+    - npm install -g gulp@3.6.11 npm-cache@0.0.4
 
   override:
     - npm-cache install
