@@ -33,6 +33,7 @@ describe('API', function () {
       expect(MM.activeSession).toBeOk();
       expect(MM.activeUser).toBeOk();
       expect(MM.token).toBeOk();
+      expect(MM.activeDomainID).toBeOk();
       done();
     });
 
