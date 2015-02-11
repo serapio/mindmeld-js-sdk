@@ -11,10 +11,12 @@
 // You can copy and paste them manually into the UI or enter them here directly and they will be set as the default UI values.
 var APPID = 'enter your appid';
 var APPSECRET = 'enter your appsecret';
+var DOMAINID = 'enter your domainid';
 
 $(document).ready(function() { 
     $('#appid').val(APPID); 
     $('#appsecret').val(APPSECRET);
+    $('#domainid').val(DOMAINID);
     if (appIdNotSet()) return;
     init();
 });
@@ -56,6 +58,15 @@ $(document).on('blur', '#appsecret', function(e) {
     log("Appsecret set.  Now click 'request an access token' to get a token in order to access the MindMeld API.");
 });
 
+// ENTER DOMAINID:
+// Set the domainid based on the value entered into the 'domainid' field in the UI.  Display an error if the value is invalid.
+$(document).on('blur', '#domainid', function() {
+  DOMAINID = $(this).val();
+  if (domainIDNotSet()) return;
+  MM.setActiveDomainID(DOMAINID);
+  log("Domainid set. Once you have an admin token, you can now post documents to that domain.");
+});
+
 // STEP 1:
 // Request an admin access token when the button is clicked.  
 $(document).on('click', '.requestAdminToken', function() {
@@ -76,7 +87,9 @@ $(document).on('click', '.requestAdminToken', function() {
 // Post a new document to your searchable documents collection.  This can also be done by using the Crawl Manager tool to
 // automatically crawl specific sites on the Web.
 $(document).on('click', '.postDocument', function() { 
-    if (tokenIsNotSet()) return;
+    if (tokenIsNotSet() || domainIDNotSet()) {
+        return;
+    }
     var documents = [
         {'title': 'Sandra Bullock', 
          'originurl': 'http://en.wikipedia.org/wiki/Sandra_Bullock', 
@@ -296,6 +309,16 @@ function appSecretNotSet() {
     }
     return false;    
 }
+
+function domainIDNotSet() {
+  if (!isNaN(parseFloat(DOMAINID)) && isFinite(DOMAINID)) {
+    return false;
+  } else {
+    logError('Please enter a valid DOMAINID value. This can be found on your app console at www.expectlabs.com.');
+    return true;
+  }
+}
+
 function appIsNotSet() {
     if (appIdNotSet() || appSecretNotSet())  return true;
     return false;
@@ -331,7 +354,14 @@ td.controlPanel {
 }
 .btnarea input {
     margin: 0;
-    float: right;
+}
+
+.btnarea input.appid {
+  margin-left: 30px
+}
+
+.btnarea input.domainid {
+  margin-left: 6px;
 }
 .label {
     color: #bbbbbb;
@@ -371,8 +401,9 @@ td.controlPanel {
 <tr>
 
 <td class='controlPanel'>
-<div class='btnarea'><span class='label'>Appid: </span><input type="text" name="appid" size="60" id="appid"></div>
-<div class='btnarea'><span class='label'>Appsecret: </span><input type="text" name="appsecret" size="60" id="appsecret"></div>
+<div class='btnarea'><span class='label'>Appid: </span><input type="text" class="appid" name="appid" size="45" id="appid"></div>
+<div class='btnarea'><span class='label'>Appsecret: </span><input type="text" name="appsecret" size="45" id="appsecret"></div>
+<div class='btnarea'><span class='label'>Domainid: </span><input type="text" class="domainid" name="domainid" size="45" id="domainid"></div>
 <div class='btnarea'><span class='label'>Step 1: </span><span class='requestAdminToken btn'>Request an Admin Token</span></div>
 <div class='btnarea'><span class='label'>Step 2: </span><span class='postDocument btn'>Post a New Document</span></div>
 <div class='btnarea'><span class='label'>Step 3: </span><span class='requestUserToken btn'>Request a User Token</span></div>
@@ -384,7 +415,7 @@ td.controlPanel {
 <div class='btnarea'><span class='label'>Step 9: </span><span class='publishSessionEvent btn'>Publish Custom Session Event</span></div>
 </td>
    
-<td rowspan="2" width="100%">
+<td rowspan="2" width="65%">
 <div class='label'>JSON DATA:</div>
 <div id='json'></div> 
 </td>        
