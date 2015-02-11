@@ -212,7 +212,8 @@ describe('MM Unit', function () {
       var options = {
         userid: '1245',
         sessionid: '83434231',
-        token: 'ABCDEF123404b8053d18b859c5f682c7406e'
+        token: 'ABCDEF123404b8053d18b859c5f682c7406e',
+        domainid: '987'
       };
       var APP_ID = 'ASDFG';
 
@@ -224,11 +225,14 @@ describe('MM Unit', function () {
       stubAjax(fakePostSessionData);
       var fakeGetSessionData = FakeResponses.getSession(options);
       stubAjax(fakeGetSessionData);
+      var fakeDomainData = FakeResponses.getDomains(options);
+      stubAjax(fakeDomainData);
 
       MM.start({appid: APP_ID}, function onSuccess () {
         expect(MM.token).toEqual(options.token);
         expect(MM.activeUserID).toEqual(options.userid);
         expect(MM.activeSessionID).toEqual(options.sessionid);
+        expect(MM.activeDomainID).toEqual(options.domainid);
         done();
       }, function onFail (err) {
         fail('Should not have an error', err);
@@ -261,7 +265,8 @@ describe('MM Unit', function () {
             userid: options.userid,
             name: options.name
           }
-        }
+        },
+        domainid: '987'
       }, function onSuccess () {
         expect(MM.token).toEqual(options.token);
         expect(MM.activeUserID).toEqual(options.userid);
@@ -292,7 +297,8 @@ describe('MM Unit', function () {
       MM.start({
         appid: options.appid,
         token: options.token,
-        userid: options.userid
+        userid: options.userid,
+        domainid: '987'
       }, function onSuccess () {
         expect(MM.token).toEqual(options.token);
         expect(MM.activeUserID).toEqual(options.userid);
@@ -329,7 +335,8 @@ describe('MM Unit', function () {
         session: {
           name: options.sessionname,
           privacymode: options.privacymode
-        }
+        },
+        domainid: '987'
       }, function onSuccess () {
         expect(MM.token).toEqual(options.token);
         expect(MM.activeUserID).toEqual(options.userid);
@@ -339,6 +346,39 @@ describe('MM Unit', function () {
         console.error('Got error', err);
         fail('Should not have an error');
       });
+    });
+
+    it('with domainid should set domain', function (done) {
+      var options = {
+        userid: '1245',
+        sessionid: '83434231',
+        token: 'ABCDEF123404b8053d18b859c5f682c7406e',
+        domainid: '987'
+      };
+
+      var APP_ID = 'ASDFG';
+
+      var fakeTokenData = FakeResponses.getTokenAnon(options);
+      stubAjax(fakeTokenData);
+      var fakeUserData = FakeResponses.getUser(options);
+      stubAjax(fakeUserData);
+      var fakePostSessionData = FakeResponses.postSession(options);
+      stubAjax(fakePostSessionData);
+      var fakeGetSessionData = FakeResponses.getSession(options);
+      stubAjax(fakeGetSessionData);
+
+      MM.start({
+        appid: APP_ID,
+        domainid: '987'
+      }, function onSuccess () {
+        expect(MM.activeDomainID).toEqual(options.domainid);
+        done();
+      }, function onFail (err) {
+        console.error('Got error', err);
+        fail('Should not have an error');
+      });
+
+
     });
   });
 });

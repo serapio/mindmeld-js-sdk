@@ -767,14 +767,15 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         /**
-         *  This method will initialize the MindMeld SDK, get a token, and start
-         *  a session.  It is called instead of the  MM.init, .getToken, and
-         *  .setActiveSession seqence.
+         *  This method will initialize the MindMeld SDK, get a token, start
+         *  a session, and set the active domain .  It is called instead of
+         *  the  MM.init, .getToken, and .setActiveSession sequence.
          *
          * @param {Object} config configuration parameters containing developers' application id and
          *                  onInit callback
          *
          * @param {string} config.appid The application id for this MindMeld application.
+         * @param {string=} config.domainid If you know the domainid before hand, set it here
          * @param {Object=} config.credentials Credentials for getting a token using `getToken`.
          * Will use anonymous authentication if no credentials are given.
          * Please refer to [documentation here](https://www.expectlabs.com/docs/authentication) for details
@@ -841,8 +842,7 @@ var MM = ( function (window, ajax, Faye) {
             onError('You must supply the appid in the config object.');
           }
 
-          var makeAnonymousCredentials = function () {
-
+          function makeAnonymousCredentials () {
             var USER_ID_KEY = 'mindmeld_anon_user_id';
             // get user id cookie
             var userID = MM.support.localStorage && localStorage.getItem(USER_ID_KEY);
@@ -860,12 +860,12 @@ var MM = ( function (window, ajax, Faye) {
                 domain: window.location.hostname
               }
             };
-          };
+          }
 
-          var handleSession = function () {
+          function handleSession () {
             if (config.sessionid) {
               // We already have an id, let's use it
-              MM.setActiveSessionID(config.sessionid, onSuccess, onError);
+              MM.setActiveSessionID(config.sessionid, handleDomain, onError);
             } else {
               // Make a new session
               var session = config.session;
@@ -881,12 +881,32 @@ var MM = ( function (window, ajax, Faye) {
               MM.activeUser.sessions.post(
                 session,
                 function onSessionCreate(result) {
-                  MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                  MM.setActiveSessionID(result.data.sessionid, handleDomain, onError);
                 },
                 onError
               );
             }
-          };
+          }
+
+          // Sets MM.activeDomainID either from config, or by fetching domains
+          function handleDomain () {
+              if (config.domainid) {
+                  MM.setActiveDomainID(config.domainid);
+                  onSuccess();
+              } else {
+                  // fetch domains
+                  MM.domains.get(
+                    function onGetDomains (result) {
+                        if (result.data.length > 0) {
+                            // set active domain if there is one
+                            MM.setActiveDomainID(result.data[0].domainid);
+                        }
+                        onSuccess();
+                    },
+                    onError
+                  );
+              }
+          }
 
           config.onInit = function () {
             if (config.token && config.userid) {
