@@ -29,7 +29,7 @@ describe('API', function () {
       },
     };
 
-    MM.initializeMindMeld(config, function () {
+    MM.start(config, function () {
       expect(MM.activeSession).toBeOk();
       expect(MM.activeUser).toBeOk();
       expect(MM.token).toBeOk();
