@@ -26,12 +26,16 @@ dependencies:
     - phantomjs-2.0.0  # Store phantom tarball
 
   pre:
+    - > # Dependencies for phantomjs
+        sudo apt-get install g++ flex bison gperf ruby perl
+        libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev
+        libpng-dev libjpeg-dev
     - npm install -g gulp@3.8.11 npm-cache@0.0.4
-    - >
+    - > # Download phantomjs v2.0.0 and build; this will become obsolete
         if [ ! -d phantomjs-2.0.0 ]; then
           wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.0.0-source.zip
           unzip phantomjs-2.0.0-source.zip
-          ( cd phantomjs-2.0.0 && ./build.sh --confirm)
+          ( cd phantomjs-2.0.0 && ./build.sh --confirm )
         fi
 
   override:
