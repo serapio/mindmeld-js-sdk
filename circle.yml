@@ -31,7 +31,7 @@ dependencies:
         if [ ! -d phantomjs-2.0.0 ]; then
           wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.0.0-source.zip
           unzip phantomjs-2.0.0-source.zip
-          ( cd phantomjs-2.0.0 && ./build.sh)
+          ( cd phantomjs-2.0.0 && ./build.sh --confirm)
         fi
 
   override:
