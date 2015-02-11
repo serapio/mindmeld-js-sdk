@@ -3112,6 +3112,7 @@ var MM = ( function (window, ajax, Faye) {
          * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidDocuments)
          * for more details
          * For this function, the following additional parameters are also available:
+         * @param {string=} params.domainid optional ID of domain to search documents
          * @param {(string[]|string)=} params.entityids An array of entityid values or a single entityid value.
          * If specified, only documents related to the specified entities will be returned in the response.
          * @param {number=} params.numentities The number of most recent entities to include in the request. If
@@ -3181,6 +3182,15 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         get: function (params, onSuccess, onFail) {
+            params = params || {};
+            if (!('domainid' in params)) { // if no domain id specified, try to use activeDomainID
+                if (MM.activeDomainID !== null) {
+                    params.domainid = MM.activeDomainID;
+                } else { // error out early if no domainid in params or activeDomainID
+                    MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+                    return;
+                }
+            }
             this._get(params, onSuccess, onFail);
         },
         channelType: 'session',
@@ -3259,6 +3269,7 @@ var MM = ( function (window, ajax, Faye) {
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the documents returned.
          * See documentation [here](https://www.expectlabs.com/docs/endpointApp#getDocuments) for more details. For
          * this function, the following additional parameters are also available:
+         * @param {string=} params.domainid optional ID of domain to search documents
          * @param {string=} params.document-ranking-factors A JSON string containing custom factors that will be
          * used to rank the documents returned by this request. Read the section on
          * [custom ranking factors](https://www.expectlabs.com/docs/customRankingFactors) to learn more about
