@@ -21,8 +21,18 @@ machine:
 
 ## Customize dependencies
 dependencies:
+  cache_directories:
+    - "~/.package_cache" # Cache dependencies from npm, bower, and composer
+    - phantomjs-2.0.0  # Store phantom tarball
+
   pre:
     - npm install -g gulp@3.8.11 npm-cache@0.0.4
+    - >
+        if [ ! -d phantomjs-2.0.0 ]; then
+          wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.0.0-source.zip
+          unzip phantomjs-2.0.0-source.zip
+          ( cd phantomjs-2.0.0 && ./build.sh)
+        fi
 
   override:
     - npm-cache install
@@ -32,9 +42,6 @@ dependencies:
     - pip install -r deployScripts/requirements.txt
     # Build the dist files and docs.
     - gulp
-
-  cache_directories:
-    - "~/.package_cache" # Cache dependencies from npm, bower, and composer
 
 ## Omit database setup, until we need it
 database:
