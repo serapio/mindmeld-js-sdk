@@ -170,6 +170,7 @@ var MM = ( function (window, ajax, Faye) {
         setup: function () {
             MM.activeSessionID = null;
             MM.activeUserID = null;
+            MM.activeDomainID = null;
         },
 
         /**
@@ -196,6 +197,7 @@ var MM = ( function (window, ajax, Faye) {
             // App Model
             _extend(MM, new MM.models.App());
             MM.documents = new MM.models.AppDocumentList();
+            MM.domains = new MM.models.AppDomainList();
 
             // User Models
             MM.activeUser = new MM.models.ActiveUser();
@@ -232,6 +234,30 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.documents.clearAllData();
             MM.activeSession.liveusers.clearAllData();
             MM.activeSession.invitedusers.clearAllData();
+        },
+
+        /**
+         * If params is a string or an object specifying a domainID, return the domainID, else default to
+         * MM.activeDomainID
+         *
+         * @param params
+         * @return {*}
+         */
+        getDomainID: function (params) {
+            var domainID = MM.activeDomainID;
+            if (params !== undefined && params !== null) { // param may be specified
+                if (typeof params === 'string') {
+                    domainID = params;
+                } else if (typeof params === 'object' && 'domainid' in params) {
+                    domainID = params.domainid;
+                }
+            }
+            return domainID;
+        },
+
+        noDomainError: {
+            type: 'NoDomainError',
+            message: 'No active domain or domain ID, cannot get documents'
         },
 
         /**
@@ -1133,6 +1159,10 @@ var MM = ( function (window, ajax, Faye) {
             MM.setActiveUserID(userid, onSuccess, onError);
         },
 
+        setActiveDomainID: function (domainID) {
+            MM.activeDomainID = domainID;
+        },
+
         /**
          * Set the MM token directly instead of calling {@link MM#getToken}. This function also
          * provides valid/invalid callbacks to determine if the given token is valid or not.
@@ -1330,8 +1360,8 @@ var MM = ( function (window, ajax, Faye) {
                     MM.Internal.log(xhr.getAllResponseHeaders());
                     var errorObj = {
                         code: 0,
-                        type: 'Failed Ajax Request',
-                        message: ''+errorThrown
+                        type: 'FailedAjaxRequest',
+                        message: '' + errorThrown
                     };
                     MM.Util.testAndCall(error, errorObj);
                 }
@@ -3168,15 +3198,16 @@ var MM = ( function (window, ajax, Faye) {
          */
         constructor: function () {
             MM.models.AppDocumentList.superclass.constructor.apply(this, arguments);
+            this.domainID = null;
         },
         localStoragePath: function () {
             return 'MM.documents';
         },
         path: function () {
-            return('documents');
+            return 'domain/' + this.domainID + '/documents';
         },
         /**
-         * Helper function returns the JSON data from the application's document collection
+         * Helper function returns thMe JSON data from the application's document collection
          *
          * @returns {Array.<Object>}
          * @memberOf MM.documents
@@ -3220,10 +3251,9 @@ var MM = ( function (window, ajax, Faye) {
             this._onUpdate(updateHandler, null, null);
         },
         /**
-         * Get and search across all documents indexed for your application. This endpoint will let you access
-         * all documents that have been crawled from your website as well as all documents that you have posted
-         * to the documents collection for this application. User privileges do not permit access to this
-         * object; admin privileges are required
+         * Get and search across documents for a domain in your application. This endpoint will let you access
+         * documents that have been crawled from your website or documents that you have posted
+         * to a domain. User privileges do not permit access to this object; admin privileges are required
          *
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the documents returned.
@@ -3259,7 +3289,12 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         get: function (params, onSuccess, onFail) {
-            this._get(params, onSuccess, onFail);
+            this.domainID = MM.Internal.getDomainID(params);
+            if (this.domainID !== null) {
+                this._get(params, onSuccess, onFail);
+            } else {
+                MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+            }
         },
         /**
          * Upload a document to the application. This requires an admin token
@@ -3276,6 +3311,7 @@ var MM = ( function (window, ajax, Faye) {
          * count to be tracked and used to influence the document ranking calculation
          *
          * @param {string=} document.description A short text description of the contents of the document
+         * @param {string=} document.domainid The ID of the domain to upload document. Defaults to MM.activeDomainID
          * @param {string=} document.text The full text contents of the document
          * @param {string=} document.sections The text from the header sections of the document. This
          * includes any text contained in the h1, h2, h3, h4 and h5 tags, if your document is a webpage
@@ -3324,14 +3360,20 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         post: function (documentData, onSuccess, onFail) {
-            this.makeModelRequest('POST', this.path(), documentData, onSuccess, onFail);
+            this.domainID = MM.Internal.getDomainID(documentData);
+            if (this.domainID !== null) {
+                this.makeModelRequest('POST', this.path(), documentData, onSuccess, onFail);
+            } else {
+                MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+            }
         },
         /**
          * Delete a document from the application. This requires an admin token
          *
-         * @param {string} documentid id of the document to delete
+         * @param {string} documentID id of the document to delete
          * @param {APISuccessCallback=} onSuccess callback for when deleting object was successful
          * @param {APIErrorCallback=} onFail callback for when deleting object failed
+         * @param {string=} domainID optional id of domain from which to delete document. Defaults to MM.activeDomainID
          * @memberOf MM.documents
          * @instance
          *
@@ -3344,8 +3386,42 @@ var MM = ( function (window, ajax, Faye) {
             // document with documentid response.data.documentid deleted
          }
          */
-        delete: function (documentid, onSuccess, onFail) {
-            this.makeModelRequest('DELETE', 'document/' + documentid, null, onSuccess, onFail);
+        delete: function (documentID, onSuccess, onFail, domainID) {
+            this.domainID = MM.Internal.getDomainID(domainID);
+            if (this.domainID !== null) {
+                var deleteDocumentPath = 'domain/' + this.domainID + '/document/' + documentID;
+                this.makeModelRequest('DELETE', deleteDocumentPath, null, onSuccess, onFail);
+            } else {
+                MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+            }
+
+        }
+    });
+
+    MM.models.AppDomainList = new MM.Internal.createSubclass(MM.models.Model, {
+        constructor: function () {
+            MM.models.AppDomainList.superclass.constructor.apply(this, arguments);
+        },
+        localStoragePath: function () {
+            return 'MM.domains';
+        },
+        path: function () {
+            return 'domains';
+        },
+        json: function () {
+            return this._json();
+        },
+        get: function (onSuccess, onFail) {
+            this._get(null, onSuccess, onFail);
+        },
+        createNew: function (name, onSuccess, onFail) {
+            var params = {
+                uri: name
+            };
+            this.makeModelRequest('POST', this.path(), params, onSuccess, onFail);
+        },
+        delete: function (domainID, onSuccess, onFail) {
+            this.makeModelRequest('DELETE', 'domain/' + domainID, null, onSuccess, onFail);
         }
     });
 
