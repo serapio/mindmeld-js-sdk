@@ -4,14 +4,10 @@
 describe('MM Unit', function () {
   var baseUrl = FakeBaseUrl;
 
-  var checkAndRespond = function (fakeAjax, fakeReq, fakeRes) {
-    expect(fakeAjax.url).toBe(fakeReq.url);
-    expect(fakeAjax.method).toBe(fakeReq.method);
-
-    fakeAjax.respondWith({
-      status: 200,
+  var stubAjax = function (data) {
+    jasmine.Ajax.stubRequest(data.req.url, null, data.req.method).andReturn({
       contentType: 'text/html',
-      responseText: JSON.stringify(fakeRes)
+      responseText: JSON.stringify(data.res)
     });
   };
 
@@ -27,6 +23,7 @@ describe('MM Unit', function () {
   });
 
   describe('getToken', function () {
+
 
     var appid;
 
@@ -47,6 +44,7 @@ describe('MM Unit', function () {
     it ('should set a token and activeUserID on success', function (done) {
       var simpleData = { userid: '700', name: 'Jerry the cat'};
       var fakeData = FakeResponses.getToken(simpleData);
+      stubAjax(fakeData);
       MM.getToken({
         appsecret: 'ABCD',
         simple: simpleData
@@ -59,13 +57,12 @@ describe('MM Unit', function () {
         fail('should not have error');
       });
 
-      // Test the immediate properties here, outside of the async block.
-      checkAndRespond(jasmine.Ajax.requests.mostRecent(), fakeData.req, fakeData.res);
     });
 
     it ('should return appropriate error on failure', function (done) {
 
       var fakeData = FakeResponses.getTokenError();
+      stubAjax(fakeData);
       MM.getToken({
         appsecret: 'ABCD',
         simple: {
@@ -80,9 +77,6 @@ describe('MM Unit', function () {
         expect(MM.token).not.toBeOk();
         done();
       });
-
-      // Test the immediate properties here, outside of the async block.
-      checkAndRespond(jasmine.Ajax.requests.mostRecent(), fakeData.req, fakeData.res);
     });
 
   });
@@ -108,6 +102,7 @@ describe('MM Unit', function () {
     it ('should set a token on success', function (done) {
       var options = { appid: '123456', token: 'ABDE5431FF0' };
       var fakeData = FakeResponses.getApp(options);
+      stubAjax(fakeData);
       MM.setToken(options.token, function onSuccess () {
         expect(MM.token).toEqual(options.token);
         done();
@@ -115,13 +110,12 @@ describe('MM Unit', function () {
         fail('should not have error');
       });
 
-      // Test the immediate properties here, outside of the async block.
-      checkAndRespond(jasmine.Ajax.requests.mostRecent(), fakeData.req, fakeData.res);
     });
 
     it ('should return appropriate error on failure', function (done) {
 
       var fakeData = FakeResponses.invalidToken();
+      stubAjax(fakeData);
       var options = { appid: '123456', token: 'ABDE5431FF0' };
       MM.setToken(options.token, function onSuccess () {
         fail('setToken should not succeed');
@@ -160,6 +154,7 @@ describe('MM Unit', function () {
     it ('should set activeSessionID on success', function (done) {
       var sessionid = '34521';
       var fakeData = FakeResponses.getSession({sessionid: sessionid});
+      stubAjax(fakeData);
 
       MM.setActiveSessionID(sessionid,
         function onSessionStart () {
@@ -169,8 +164,6 @@ describe('MM Unit', function () {
         fail('Should not have error');
         done();
       });
-
-      checkAndRespond(jasmine.Ajax.requests.mostRecent(), fakeData.req, fakeData.res);
     });
 
   });
@@ -179,6 +172,7 @@ describe('MM Unit', function () {
 
     var APP_ID = 'ADF123512FFE';
     var fakeData = FakeResponses.getApp({ appid: APP_ID});
+
 
     beforeEach(function beforeGetAppTests (done) {
       MM.init({
@@ -197,6 +191,7 @@ describe('MM Unit', function () {
 
 
     it('should return data about the current MindMeld application', function (done) {
+      stubAjax(fakeData);
 
       MM.get(null,
         function onGetAppSuccess (response) {
@@ -208,19 +203,10 @@ describe('MM Unit', function () {
           done();
         }
       );
-
-      checkAndRespond(jasmine.Ajax.requests.mostRecent(), fakeData.req, fakeData.res);
     });
   });
 
   describe('start', function () {
-    var stubAjax = function (data) {
-      jasmine.Ajax.stubRequest(data.req.url, null, data.req.method).andReturn({
-        contentType: 'text/html',
-        responseText: JSON.stringify(data.res)
-      });
-    };
-
 
     it ('with only appid should set data', function (done) {
       var options = {
