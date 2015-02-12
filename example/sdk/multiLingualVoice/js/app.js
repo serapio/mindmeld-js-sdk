@@ -93,6 +93,7 @@
 
     var MM_APP_ID = 'ENTER_YOUR_APP_ID';
     var MM_APP_SECRET = 'ENTER_YOUR_APP_SECRET';
+    var MM_DOMAIN_ID = 'ENTER_YOUR_DOMAIN_ID';
 
     var MM_SIMPLE_USER_ID_PREFIX = 'mlvu';
     var MM_SIMPLE_USER_NAME = 'Multilingual Voice User';
@@ -209,9 +210,9 @@
             //
 
             // Make sure the app ID and app secret have been entered
-            if (MM_APP_ID === 'ENTER_YOUR_APP_ID' || MM_APP_SECRET === 'ENTER_YOUR_APP_SECRET') {
-                self.showDocumentsMessage('Modify \'app.js\' and enter your MindMeld Application ID ' +
-                    'and Application Secret');
+            if (MM_APP_ID === 'ENTER_YOUR_APP_ID' || MM_APP_SECRET === 'ENTER_YOUR_APP_SECRET' || MM_DOMAIN_ID === 'ENTER_YOUR_DOMAIN_ID') {
+                self.showDocumentsMessage('Modify \'app.js\' and enter your MindMeld Application ID,' +
+                ' Application Secret, and Domain ID');
                 return;
             }
 
@@ -350,6 +351,8 @@
                 window.console.log("Error subscribing to documents:  (Type " + error.code +
                     " - " + error.type + "): " + error.message);
             }
+
+            MM.setActiveDomainID(MM_DOMAIN_ID);
             MM.activeSession.documents.onUpdate(function (result) {
                 window.console.log('documents updated');
                 self.updateDocuments(result);

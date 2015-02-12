@@ -1378,7 +1378,7 @@ MMVoice.onConfig = function() {
             MM.setToken(voiceNavOptions.mmCredentials.token);
             MM.setActiveUserID(voiceNavOptions.mmCredentials.userID);
             MM.setActiveSessionID(voiceNavOptions.mmCredentials.sessionID);
-            onSessionStart();
+            setDomain();
         }
         else {
             getToken();
@@ -1453,10 +1453,34 @@ MMVoice.onConfig = function() {
             UTIL.log("Error setting session:  (Type " + error.code +
                 " - " + error.type + "): " + error.message);
         }
-        MM.setActiveSessionID(sessionID, onSessionStart, onError);
+        MM.setActiveSessionID(sessionID, setDomain, onError);
     }
 
-    function onSessionStart () {
+    // Determine which domain to search documents. Either use configured domainID
+    // or fetch domains and select 'first' one. This logic is copied from MM.start
+    function setDomain () {
+        if (MMVoice.config.domainID !== undefined) {
+            MM.setActiveDomainID(MMVoice.config.domainID);
+            onReady();
+        } else {
+            MM.domains.get(
+              function onGetDomains(result) {
+                  if (result.data.length > 0) {
+                      MM.setActiveDomainID(result.data[0].domainid);
+                      onReady();
+                  } else {
+                      UTIL.log('No domains in app, please create a domain with some documents');
+                  }
+              },
+              function onError (error) {
+                  UTIL.log("Error fetching domains:  (Type " + error.code +
+                  " - " + error.type + "): " + error.message);
+              }
+            );
+        }
+    }
+
+    function onReady () {
         subscribeToTextEntries();
         subscribeToEntities();
         setupSessionListener();

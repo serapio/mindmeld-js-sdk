@@ -1,4 +1,10 @@
 #! /bin/sh
-set +e
-command -v phantomjs >/dev/null 2>&1 || { echo >&2 "Please install phantomjs to run the tests.  Aborting."; exit 1; }
+set -e
+
+command -v phantomjs >/dev/null 2>&1 || {
+  echo >&2 "I require phantomjs >v2.0.0 but it's not installed.  Please install it."
+  echo >&2 "You can install it via brew, or by going to http://www.phantomjs.org"
+  exit 1
+}
+
 gulp tests

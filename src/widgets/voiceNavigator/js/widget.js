@@ -464,6 +464,9 @@ MM.voiceNavigator.showModal = function(options) {
                 if (typeof MM.widgets.config.fayeClientUrl !== 'undefined') {
                     MM.voiceNavigator.config.fayeClientUrl = MM.widgets.config.fayeClientUrl;
                 }
+                if (typeof MM.widgets.config.domainID !== 'undefined') {
+                    MM.voiceNavigator.config.domainID = MM.widgets.config.domainID;
+                }
             }
             if (typeof MM.voiceNavigator.config !== 'undefined') {
                 // parse card layout

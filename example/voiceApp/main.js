@@ -4,7 +4,8 @@
 
 var config = {
   // The id of the MindMeld app with the crawled documents
-  appid: 'b7653579dda418eded308a4e491595057f337448'
+  appid: 'a2b258bde95545580b8ec16994642bc74afe8d31'
+  // You can optionally set the domainid parameter here to search a specific domain
 };
 
 MM.start(config, function onSuccess () {
@@ -130,6 +131,7 @@ var getDocuments = function () {
   MM.activeSession.documents.get({
         limit: 12,
         textentryids: JSON.stringify(currentTextEntries)
+        // you can also optionally specify domainid here
   },
   function onSuccess (documentResult) {
     var cards = documentResult.data.map(processRawCardData);

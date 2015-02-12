@@ -28,12 +28,12 @@ take a hit. However, if you must link directly, you should use the versioned URL
 to prevent compatibility issues in the future.
 
 ```html
-<script type="text/javascript" src="https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.1.js"></script>
+<script type="text/javascript" src="https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.10.0.js"></script>
 ```
 
-* Un-minified: [mindmeld-2.9.1.js][versionedSDKDownloadLink]
-* Minified: [mindmeld-2.9.1.min.js][versionedMinifiedSDKDownloadLink]
-* Both + Hello World + Documentation: [mindmeld-js-sdk-2.9.1.zip][versionedSDKZIPDownloadLink]
+* Un-minified: [mindmeld-2.10.0.js][versionedSDKDownloadLink]
+* Minified: [mindmeld-2.10.0.min.js][versionedMinifiedSDKDownloadLink]
+* Both + Hello World + Documentation: [mindmeld-js-sdk-2.10.0.zip][versionedSDKZIPDownloadLink]
 
 ### Clone git repository
 Both files are also available directly from the mindmeld-js-sdk git repository. Simply clone the repo:
@@ -77,8 +77,8 @@ API. The JavaScript SDK also provides the ability to send and receive real-time 
 ### Quick Start
 
 The SDK contains a convenience wrapper method `MM.start` to get you up and
-running in no time.  To start a session, create an anonymous user, and create
-and use a new session:
+running in no time. To automatically specify a domain, get a user token,
+and create a session:
 
 ```javascript
 MM.start( { appid: "<your application id>" } );
@@ -95,7 +95,7 @@ MM.start( { appid: "<your application id>" }, function onSuccess () {
 });
 ```
 
-If you want to choose a particular user or session info, you can:
+If you want to choose a particular user, session, or domain, you can:
 ```javascript
 MM.start({
   appid: "<your application id>",
@@ -108,7 +108,8 @@ MM.start({
   session: {
     name: "The relative session",
     privacymode: "inviteonly"
-  }
+  },
+  domainid: "123
 }, function onSuccess () {
   console.log('MindMeld started with active user id', MM.activeUserID,
     'and session id', MM.activeSessionID);
@@ -420,7 +421,6 @@ to run and modify it, in the
 * *dist/widgets/voiceNavigator/modal/*: Directory containing voice navigator modal files loaded in the iframe modal
 * *dist/embed.js*: Minified embed script used in prod
 * *example/*: Directory mirroring src/ and dist/ directories containing example HTML pages showing basic usage of SDK and widgets
-* *archive/*: Directory containing all previous versions of mindmeld.js
 * *gulp/*: Directory containing gulpfiles for building SDK and widgets
 * *gulpfile.js*: Main gulpfile used to orchestrate build processes
 * *Gruntfile.js*: Legacy grunt file currently only used for building JS Doc because gulp-js doc does not support our JS doc template
@@ -434,6 +434,6 @@ to run and modify it, in the
 [latestSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld.js
 [latestMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld.min.js
 [latestSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/mindmeld-js-sdk.zip
-[versionedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.1.js
-[versionedMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.9.1.min.js
-[versionedSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.9.1.zip
+[versionedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.10.0.js
+[versionedMinifiedSDKDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-2.10.0.min.js
+[versionedSDKZIPDownloadLink]:https://www.expectlabs.com/public/sdks/js/archive/mindmeld-js-sdk-2.10.0.zip

@@ -66,7 +66,7 @@ window.FakeResponses = {
         data: {
           user: {
             userid: options.userid,
-            name: 'Anonymous User',
+            name: 'Anonymous User'
           },
           token: options.token || '8476d5d459894404b8053d18b859c5f682c7406e'
         },
@@ -172,7 +172,7 @@ window.FakeResponses = {
           method: 'post'
         },
         timestamp: 1406312093,
-        responsetime: 0.0018880367279053,
+        responsetime: 0.0018880367279053
       }
     };
   },
@@ -208,6 +208,39 @@ window.FakeResponses = {
         etag: 'ff1dbd858cf2c8c577724fa0087cc67e'
       }
     };
+  },
+
+  getDomains: function (options) {
+    required(options, 'domainid');
+    return {
+      domainid: options.domainid,
+      req: {
+        method: 'GET',
+        url: FakeBaseUrl + 'domains'
+      },
+      res: {
+        data: [
+          {
+            uri: 'http://dancingastronaut.com',
+            domainid: '987'
+          },
+          {
+            uri: 'test domain',
+            domainid: '988'
+          }
+        ],
+        request: {
+          objecttype: 'app',
+          objectid: 'fd10494022b004e65b461fa8f68841fcecb350ba',
+          connectiontype: 'domains',
+          method: 'get'
+        },
+        timestamp: 1423648747,
+        responsetime: 0.0046300888061523,
+        etag: '504f800371efc5069e6f23ae78cacc69'
+      }
+    };
+
   },
 
   getApp: function (options) {
@@ -340,6 +373,6 @@ window.FakeResponses = {
         }
       }
     };
-  },
+  }
 
 };
