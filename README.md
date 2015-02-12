@@ -77,8 +77,8 @@ API. The JavaScript SDK also provides the ability to send and receive real-time 
 ### Quick Start
 
 The SDK contains a convenience wrapper method `MM.start` to get you up and
-running in no time.  To start a session, create an anonymous user, and create
-and use a new session:
+running in no time. To automatically specify a domain, get a user token,
+and create a session:
 
 ```javascript
 MM.start( { appid: "<your application id>" } );
@@ -95,7 +95,7 @@ MM.start( { appid: "<your application id>" }, function onSuccess () {
 });
 ```
 
-If you want to choose a particular user or session info, you can:
+If you want to choose a particular user, session, or domain, you can:
 ```javascript
 MM.start({
   appid: "<your application id>",
@@ -108,7 +108,8 @@ MM.start({
   session: {
     name: "The relative session",
     privacymode: "inviteonly"
-  }
+  },
+  domainid: "123
 }, function onSuccess () {
   console.log('MindMeld started with active user id', MM.activeUserID,
     'and session id', MM.activeSessionID);
