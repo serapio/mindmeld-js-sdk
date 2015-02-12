@@ -55,8 +55,8 @@ database:
 ## Customize test commands
 test:
   override:
-      - echo "Tests disabled until Circle upgrades phantomjs to 2.0.0"
-      # - gulp tests
+    - gulp tests:
+       environment: PATH=$HOME/phantomjs-2.0.0/bin/:$PATH
 
 ## Customize deployment commands
 deployment:
