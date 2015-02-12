@@ -843,7 +843,7 @@ var MM = ( function (window, ajax, Faye) {
             onError('You must supply the appid in the config object.');
           }
 
-          function makeAnonymousCredentials () {
+          var makeAnonymousCredentials = function () {
             var USER_ID_KEY = 'mindmeld_anon_user_id';
             // get user id cookie
             var userID = MM.support.localStorage && localStorage.getItem(USER_ID_KEY);
@@ -861,9 +861,29 @@ var MM = ( function (window, ajax, Faye) {
                 domain: window.location.hostname
               }
             };
-          }
+          };
 
-          function handleSession () {
+          // Sets MM.activeDomainID either from config, or by fetching domains
+          var handleDomain = function () {
+              if (config.domainid) {
+                  MM.setActiveDomainID(config.domainid);
+                  onSuccess();
+              } else {
+                  // fetch domains
+                  MM.domains.get(
+                      function onGetDomains (result) {
+                          if (result.data.length > 0) {
+                              // set active domain if there is one
+                              MM.setActiveDomainID(result.data[0].domainid);
+                          }
+                          onSuccess();
+                      },
+                      onError
+                  );
+              }
+          };
+
+          var handleSession = function () {
             if (config.sessionid) {
               // We already have an id, let's use it
               MM.setActiveSessionID(config.sessionid, handleDomain, onError);
@@ -887,27 +907,7 @@ var MM = ( function (window, ajax, Faye) {
                 onError
               );
             }
-          }
-
-          // Sets MM.activeDomainID either from config, or by fetching domains
-          function handleDomain () {
-              if (config.domainid) {
-                  MM.setActiveDomainID(config.domainid);
-                  onSuccess();
-              } else {
-                  // fetch domains
-                  MM.domains.get(
-                    function onGetDomains (result) {
-                        if (result.data.length > 0) {
-                            // set active domain if there is one
-                            MM.setActiveDomainID(result.data[0].domainid);
-                        }
-                        onSuccess();
-                    },
-                    onError
-                  );
-              }
-          }
+          };
 
           config.onInit = function () {
             if (config.token && config.userid) {
