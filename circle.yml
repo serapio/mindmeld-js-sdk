@@ -55,7 +55,7 @@ database:
 ## Customize test commands
 test:
   override:
-    - export PATH=$HOME/phantomjs-2.0.0/bin/:$PATH gulp tests
+    - PATH=$PWD/phantomjs-2.0.0/bin:$PATH gulp tests
 
 ## Customize deployment commands
 deployment:
