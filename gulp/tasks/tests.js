@@ -33,10 +33,10 @@ gulp.task('tests.bower', function () {
 });
 
 gulp.task('tests.spec', function () {
-  gulp.src(paths.spec)
-    .pipe(gulp.dest(distTestDirectory + 'spec/'));
   gulp.src(srcTestDirectory + '/run-jasmine2.js')
     .pipe(gulp.dest(distTestDirectory));
+  return gulp.src(paths.spec)
+    .pipe(gulp.dest(distTestDirectory + 'spec/'));
 });
 
 gulp.task('tests.data', function () {
