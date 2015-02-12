@@ -91,9 +91,9 @@
         ['Lingua latīna',         ['la']]
     ];
 
-    var MM_APP_ID = 'a2b258bde95545580b8ec16994642bc74afe8d31';
-    var MM_APP_SECRET = 'fd90ccb6b5bf71a640ccba2bd66ff5018607d032';
-    var MM_DOMAIN_ID = '1989';
+    var MM_APP_ID = 'ENTER_YOUR_APP_ID';
+    var MM_APP_SECRET = 'ENTER_YOUR_APP_SECRET';
+    var MM_DOMAIN_ID = 'ENTER_YOUR_DOMAIN_ID';
 
     var MM_SIMPLE_USER_ID_PREFIX = 'mlvu';
     var MM_SIMPLE_USER_NAME = 'Multilingual Voice User';
