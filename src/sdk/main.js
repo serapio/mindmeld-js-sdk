@@ -255,6 +255,7 @@ var MM = ( function (window, ajax, Faye) {
             return domainID;
         },
 
+        // Error returned when no domain is specified
         noDomainError: {
             type: 'NoDomainError',
             message: 'No active domain or domain ID, cannot get documents'
@@ -1179,6 +1180,21 @@ var MM = ( function (window, ajax, Faye) {
             MM.setActiveUserID(userid, onSuccess, onError);
         },
 
+        /**
+         *
+         * Sets the active domain to the specified ID. The activeDomainID will be the default domain ID
+         * used for all document requests.
+         *
+         *  @param {string} domainID new active domain ID
+         * @memberOf MM
+         * @instance
+         *
+         * @example
+         *
+         function testSetActiveDomainID() {
+            MM.setActiveDomainID('<domain id>');
+         }
+         */
         setActiveDomainID: function (domainID) {
             MM.activeDomainID = domainID;
         },
@@ -3237,7 +3253,7 @@ var MM = ( function (window, ajax, Faye) {
             return 'domain/' + this.domainID + '/documents';
         },
         /**
-         * Helper function returns thMe JSON data from the application's document collection
+         * Helper function returns the JSON data from the application's document collection
          *
          * @returns {Array.<Object>}
          * @memberOf MM.documents
@@ -3429,6 +3445,14 @@ var MM = ( function (window, ajax, Faye) {
         }
     });
 
+    /**
+     *
+     * MM.domains represents the collection of Domains associated with this app.
+     * Each domain contains a collection of documents of the same type.
+     *
+     * @namespace MM.domains
+     * @memberOf MM
+     */
     MM.models.AppDomainList = new MM.Internal.createSubclass(MM.models.Model, {
         constructor: function () {
             MM.models.AppDomainList.superclass.constructor.apply(this, arguments);
@@ -3439,18 +3463,88 @@ var MM = ( function (window, ajax, Faye) {
         path: function () {
             return 'domains';
         },
+        /**
+         * Helper function returns the JSON data from the domain collection
+         *
+         * @returns {Array.<Object>}
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         *
+         function getDomains () {
+            MM.domains.get(onGetDomains);
+         }
+         function onGetDomains () {
+            var domains = MM.domains.json();
+         }
+         */
         json: function () {
             return this._json();
         },
+        /**
+         * Gets the list of domains associated with this app.
+         *
+         * @param {APISuccessCallback=} onSuccess callback after successfully getting domains
+         * @param {APIErrorCallback=} onFail callback when getting domain list failed
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         function getDomains () {
+             MM.domains.get(
+                 function onGetDomains (result) {
+                     var domains = result.data;
+                 }
+             );
+
+         }
+         */
         get: function (onSuccess, onFail) {
             this._get(null, onSuccess, onFail);
         },
+        /**
+         * Create a new domain object to upload new documents to. This requires an admin token
+         *
+         * @param {string} name name of the new domain
+         * @param {APISuccessCallback=} onSuccess callback after successfully creating a domain
+         * @param {APIErrorCallback=} onFail callback when failing to create a new domain
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         function createDomain () {
+             MM.domains.createDomain('new domain',
+                function onDomainCreated (result) {
+                    var newDomainID = result.data.domainid;
+                }
+             );
+         }
+         */
         createNew: function (name, onSuccess, onFail) {
             var params = {
                 uri: name
             };
             this.makeModelRequest('POST', this.path(), params, onSuccess, onFail);
         },
+        /**
+         * Delete a specified domain
+         *
+         * @param {string} domainID ID of domain to delete
+         * @param {APISuccessCallback=} onSuccess callback when successfully deleting domain
+         * @param {APIErrorCallback=} onFail callback for when deleting a domain failed
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         function deleteDomain () {
+            MM.domains.delete('123',
+                function onDomainDeleted () {
+                    // successfully deleted domain
+                }
+            );
+         }
+         */
         delete: function (domainID, onSuccess, onFail) {
             this.makeModelRequest('DELETE', 'domain/' + domainID, null, onSuccess, onFail);
         }
