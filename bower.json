@@ -23,7 +23,10 @@
     "url": "https://github.com/expectlabs/mindmeld-js-sdk.git"
   },
   "devDependencies": {
-    "jasmine": "^2.0.2",
-    "jasmine-ajax": "^2.0.2"
+    "jasmine": "2.0.4",
+    "jasmine-ajax": "2.0.1"
+  },
+  "resolutions": {
+    "jasmine": "2.0.4"
   }
 }

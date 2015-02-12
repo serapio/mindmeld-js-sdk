@@ -2928,7 +2928,7 @@ var MM = ( function (window, ajax, Faye) {
      * @private
      */
     Object.defineProperty(MM, 'version', {
-        value: '2.9.3',
+        value: '2.10.0',
         writable: false
     });
 
@@ -3080,6 +3080,7 @@ var MM = ( function (window, ajax, Faye) {
         setup: function () {
             MM.activeSessionID = null;
             MM.activeUserID = null;
+            MM.activeDomainID = null;
         },
 
         /**
@@ -3106,6 +3107,7 @@ var MM = ( function (window, ajax, Faye) {
             // App Model
             _extend(MM, new MM.models.App());
             MM.documents = new MM.models.AppDocumentList();
+            MM.domains = new MM.models.AppDomainList();
 
             // User Models
             MM.activeUser = new MM.models.ActiveUser();
@@ -3115,9 +3117,7 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession = new MM.models.ActiveSession();
             MM.activeSession.textentries = new MM.models.TextEntryList();
             MM.activeSession.entities = new MM.models.EntityList();
-            MM.activeSession.articles = new MM.models.ArticleList();
             MM.activeSession.documents = new MM.models.SessionDocumentList();
-            MM.activeSession.activities = new MM.models.ActivityList();
             MM.activeSession.liveusers = new MM.models.LiveUserList();
             MM.activeSession.invitedusers = new MM.models.InvitedUserList();
         },
@@ -3141,11 +3141,34 @@ var MM = ( function (window, ajax, Faye) {
             MM.activeSession.clearAllData();
             MM.activeSession.textentries.clearAllData();
             MM.activeSession.entities.clearAllData();
-            MM.activeSession.articles.clearAllData();
             MM.activeSession.documents.clearAllData();
-            MM.activeSession.activities.clearAllData();
             MM.activeSession.liveusers.clearAllData();
             MM.activeSession.invitedusers.clearAllData();
+        },
+
+        /**
+         * If params is a string or an object specifying a domainID, return the domainID, else default to
+         * MM.activeDomainID
+         *
+         * @param params
+         * @return {*}
+         */
+        getDomainID: function (params) {
+            var domainID = MM.activeDomainID;
+            if (params !== undefined && params !== null) { // param may be specified
+                if (typeof params === 'string') {
+                    domainID = params;
+                } else if (typeof params === 'object' && 'domainid' in params) {
+                    domainID = params.domainid;
+                }
+            }
+            return domainID;
+        },
+
+        // Error returned when no domain is specified
+        noDomainError: {
+            type: 'NoDomainError',
+            message: 'No active domain or domain ID, cannot get documents'
         },
 
         /**
@@ -3655,14 +3678,15 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         /**
-         *  This method will initialize the MindMeld SDK, get a token, and start
-         *  a session.  It is called instead of the  MM.init, .getToken, and
-         *  .setActiveSession seqence.
+         *  This method will initialize the MindMeld SDK, get a token, start
+         *  a session, and set the active domain .  It is called instead of
+         *  the  MM.init, .getToken, and .setActiveSession sequence.
          *
          * @param {Object} config configuration parameters containing developers' application id and
          *                  onInit callback
          *
          * @param {string} config.appid The application id for this MindMeld application.
+         * @param {string=} config.domainid If you know the domainid before hand, set it here
          * @param {Object=} config.credentials Credentials for getting a token using `getToken`.
          * Will use anonymous authentication if no credentials are given.
          * Please refer to [documentation here](https://www.expectlabs.com/docs/authentication) for details
@@ -3730,7 +3754,6 @@ var MM = ( function (window, ajax, Faye) {
           }
 
           var makeAnonymousCredentials = function () {
-
             var USER_ID_KEY = 'mindmeld_anon_user_id';
             // get user id cookie
             var userID = MM.support.localStorage && localStorage.getItem(USER_ID_KEY);
@@ -3750,10 +3773,30 @@ var MM = ( function (window, ajax, Faye) {
             };
           };
 
+          // Sets MM.activeDomainID either from config, or by fetching domains
+          var handleDomain = function () {
+              if (config.domainid) {
+                  MM.setActiveDomainID(config.domainid);
+                  onSuccess();
+              } else {
+                  // fetch domains
+                  MM.domains.get(
+                      function onGetDomains (result) {
+                          if (result.data.length > 0) {
+                              // set active domain if there is one
+                              MM.setActiveDomainID(result.data[0].domainid);
+                          }
+                          onSuccess();
+                      },
+                      onError
+                  );
+              }
+          };
+
           var handleSession = function () {
             if (config.sessionid) {
               // We already have an id, let's use it
-              MM.setActiveSessionID(config.sessionid, onSuccess, onError);
+              MM.setActiveSessionID(config.sessionid, handleDomain, onError);
             } else {
               // Make a new session
               var session = config.session;
@@ -3769,7 +3812,7 @@ var MM = ( function (window, ajax, Faye) {
               MM.activeUser.sessions.post(
                 session,
                 function onSessionCreate(result) {
-                  MM.setActiveSessionID(result.data.sessionid, onSuccess, onError);
+                  MM.setActiveSessionID(result.data.sessionid, handleDomain, onError);
                 },
                 onError
               );
@@ -4048,6 +4091,25 @@ var MM = ( function (window, ajax, Faye) {
         },
 
         /**
+         *
+         * Sets the active domain to the specified ID. The activeDomainID will be the default domain ID
+         * used for all document requests.
+         *
+         *  @param {string} domainID new active domain ID
+         * @memberOf MM
+         * @instance
+         *
+         * @example
+         *
+         function testSetActiveDomainID() {
+            MM.setActiveDomainID('<domain id>');
+         }
+         */
+        setActiveDomainID: function (domainID) {
+            MM.activeDomainID = domainID;
+        },
+
+        /**
          * Set the MM token directly instead of calling {@link MM#getToken}. This function also
          * provides valid/invalid callbacks to determine if the given token is valid or not.
          * Regardless of the token being valid, {@link MM#setToken} always sets the token
@@ -4244,8 +4306,8 @@ var MM = ( function (window, ajax, Faye) {
                     MM.Internal.log(xhr.getAllResponseHeaders());
                     var errorObj = {
                         code: 0,
-                        type: 'Failed Ajax Request',
-                        message: ''+errorThrown
+                        type: 'FailedAjaxRequest',
+                        message: '' + errorThrown
                     };
                     MM.Util.testAndCall(error, errorObj);
                 }
@@ -5890,116 +5952,6 @@ var MM = ( function (window, ajax, Faye) {
         updateEventName: 'entitiesUpdate'
     });
 
-    MM.models.ArticleList = MM.Internal.createSubclass(MM.models.Model, {
-        /**
-         * MM.activeSession.articles represents the Articles collection in the MindMeld API. This searchable collection
-         * contains Article objects that are relevant to the contextual history of the active session
-         * (Available for Enterprise developer accounts only).
-         *
-         * @namespace MM.activeSession.articles
-         * @memberOf MM.activeSession
-         */
-        constructor: function () {
-            MM.models.ArticleList.superclass.constructor.apply(this, arguments);
-        },
-        localStoragePath: function () {
-            return 'MM.activeSession.articles';
-        },
-        path: function () {
-            return('session/' + MM.activeSessionID + '/articles');
-        },
-        /**
-         * Helper function returns the JSON data for the articles collection
-         *
-         * @returns {Array.<Object>}
-         * @memberOf MM.activeSession.articles
-         * @instance
-         *
-         * @example
-         *
-         function getArticles () {
-            MM.activeSession.articles.get(null, onGetArticles);
-         }
-         function onGetArticles () {
-            var articles =  MM.activeSession.articles.json();
-            // MM.activeSession.articles.json() returns a JSON object
-            // containing data received from MM.activeSession.articles.get()
-         }
-         */
-        json: function () {
-            return this._json();
-        },
-        /**
-         * Sets the activeSession's articles' onUpdate handler. Pass null as the updateHandler parameter to
-         * deregister a previously set updateHandler. Note that there are no push events for the articles
-         * collection so it must be polled instead. The update handler will be called automatically when
-         * calling {@link MM.activeSession.articles#get}
-         *
-         * @param {APISuccessCallback=} updateHandler callback for when the activeSession's article list updates.
-         *
-         * @memberOf MM.activeSession.articles
-         * @instance
-         *
-         * @example
-         *
-         function getArticles () {
-            MM.activeSession.articles.onUpdate(onGetArticles); // Set the updateHandler
-            MM.activeSession.articles.get(); // Fetch articles
-         }
-         function onGetArticles (response) {
-            var articles = response.data;
-            console.log(articles);
-         }
-         */
-        onUpdate: function (updateHandler) {
-            this._onUpdate(updateHandler, null, null);
-        },
-        /**
-         * Get a list of articles from third-party data sources that are relevant to the context
-         * of the session. Articles typically include web pages, images, videos, and documents
-         * from data sources on the Internet. For example, articles might include pages from
-         * Wikipedia, videos from YouTube, or local business listings from Yelp. When enabled,
-         * relevant articles are automatically identified based on the contextual history of
-         * the session. Article sources can be configured for each application. A request with
-         * a user token can retrieve articles only if the associated user is permitted to access
-         * the session object itself. A request with an admin token can retrieve articles for
-         * any session associated with your application. Custom configuration of article
-         * sources is available for Enterprise developer accounts only.
-         *
-         *
-         * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the articles returned.
-         * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidArticles) for more details
-         * For this function, the following additional parameters are also available:
-         * @param {(string[]|string)=} params.entityids An array of entityid values or a single entityid value
-         * If specified, only articles related to the specified entities will be returned in the response.
-         * @param {number=} params.numentities The number of most recent entities to include in the request. If specified,
-         * only articles related to the specified number of most recent entities will be returned in the response.
-         * @param {(string[]|string)=} params.textentryids An array of textentryid values or a single textentryid
-         * value. If specified, only articles related to the specified text entries will be returned in the response
-         * @param {APISuccessCallback=} onSuccess callback for when getting the article list was successful
-         * @param {APIErrorCallback=} onFail callback for when getting the article list failed
-         * @memberOf MM.activeSession.articles
-         * @instance
-         *
-         * @example
-         *
-         function getArticles () {
-            var queryParams = {
-                limit: 5, // only return 5 articles
-                entityids: "[54321, 432432]" // only return articles related to these 2 entities
-                                             // note that the entityids array is a JSON string
-            };
-            MM.activeSession.articles.get(queryParams, onGetArticles);
-         }
-         function onGetArticles (response) {
-            var articles = response.data;
-         }
-         */
-        get: function (params, onSuccess, onFail) {
-            this._get(params, onSuccess, onFail);
-        }
-    });
-
     MM.models.SessionDocumentList = MM.Internal.createSubclass(MM.models.Model, {
         /**
          * MM.activeSession.documents represents the Documents collection related to a session in the MindMeld API.
@@ -6106,6 +6058,7 @@ var MM = ( function (window, ajax, Faye) {
          * See documentation [here](https://www.expectlabs.com/docs/endpointSession#getSessionSessionidDocuments)
          * for more details
          * For this function, the following additional parameters are also available:
+         * @param {string=} params.domainid optional ID of domain to search documents
          * @param {(string[]|string)=} params.entityids An array of entityid values or a single entityid value.
          * If specified, only documents related to the specified entities will be returned in the response.
          * @param {number=} params.numentities The number of most recent entities to include in the request. If
@@ -6175,6 +6128,15 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         get: function (params, onSuccess, onFail) {
+            params = params || {};
+            if (!('domainid' in params)) { // if no domain id specified, try to use activeDomainID
+                if (MM.activeDomainID !== null) {
+                    params.domainid = MM.activeDomainID;
+                } else { // error out early if no domainid in params or activeDomainID
+                    MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+                    return;
+                }
+            }
             this._get(params, onSuccess, onFail);
         },
         channelType: 'session',
@@ -6192,12 +6154,13 @@ var MM = ( function (window, ajax, Faye) {
          */
         constructor: function () {
             MM.models.AppDocumentList.superclass.constructor.apply(this, arguments);
+            this.domainID = null;
         },
         localStoragePath: function () {
             return 'MM.documents';
         },
         path: function () {
-            return('documents');
+            return 'domain/' + this.domainID + '/documents';
         },
         /**
          * Helper function returns the JSON data from the application's document collection
@@ -6244,15 +6207,15 @@ var MM = ( function (window, ajax, Faye) {
             this._onUpdate(updateHandler, null, null);
         },
         /**
-         * Get and search across all documents indexed for your application. This endpoint will let you access
-         * all documents that have been crawled from your website as well as all documents that you have posted
-         * to the documents collection for this application. User privileges do not permit access to this
-         * object; admin privileges are required
+         * Get and search across documents for a domain in your application. This endpoint will let you access
+         * documents that have been crawled from your website or documents that you have posted
+         * to a domain. User privileges do not permit access to this object; admin privileges are required
          *
          *
          * @param {QueryParameters=} params A {@link QueryParameters} object allowing you to filter the documents returned.
          * See documentation [here](https://www.expectlabs.com/docs/endpointApp#getDocuments) for more details. For
          * this function, the following additional parameters are also available:
+         * @param {string=} params.domainid optional ID of domain to search documents
          * @param {string=} params.document-ranking-factors A JSON string containing custom factors that will be
          * used to rank the documents returned by this request. Read the section on
          * [custom ranking factors](https://www.expectlabs.com/docs/customRankingFactors) to learn more about
@@ -6283,7 +6246,12 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         get: function (params, onSuccess, onFail) {
-            this._get(params, onSuccess, onFail);
+            this.domainID = MM.Internal.getDomainID(params);
+            if (this.domainID !== null) {
+                this._get(params, onSuccess, onFail);
+            } else {
+                MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+            }
         },
         /**
          * Upload a document to the application. This requires an admin token
@@ -6300,6 +6268,7 @@ var MM = ( function (window, ajax, Faye) {
          * count to be tracked and used to influence the document ranking calculation
          *
          * @param {string=} document.description A short text description of the contents of the document
+         * @param {string=} document.domainid The ID of the domain to upload document. Defaults to MM.activeDomainID
          * @param {string=} document.text The full text contents of the document
          * @param {string=} document.sections The text from the header sections of the document. This
          * includes any text contained in the h1, h2, h3, h4 and h5 tags, if your document is a webpage
@@ -6348,14 +6317,20 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         post: function (documentData, onSuccess, onFail) {
-            this.makeModelRequest('POST', this.path(), documentData, onSuccess, onFail);
+            this.domainID = MM.Internal.getDomainID(documentData);
+            if (this.domainID !== null) {
+                this.makeModelRequest('POST', this.path(), documentData, onSuccess, onFail);
+            } else {
+                MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+            }
         },
         /**
          * Delete a document from the application. This requires an admin token
          *
-         * @param {string} documentid id of the document to delete
+         * @param {string} documentID id of the document to delete
          * @param {APISuccessCallback=} onSuccess callback for when deleting object was successful
          * @param {APIErrorCallback=} onFail callback for when deleting object failed
+         * @param {string=} domainID optional id of domain from which to delete document. Defaults to MM.activeDomainID
          * @memberOf MM.documents
          * @instance
          *
@@ -6368,8 +6343,120 @@ var MM = ( function (window, ajax, Faye) {
             // document with documentid response.data.documentid deleted
          }
          */
-        delete: function (documentid, onSuccess, onFail) {
-            this.makeModelRequest('DELETE', 'document/' + documentid, null, onSuccess, onFail);
+        delete: function (documentID, onSuccess, onFail, domainID) {
+            this.domainID = MM.Internal.getDomainID(domainID);
+            if (this.domainID !== null) {
+                var deleteDocumentPath = 'domain/' + this.domainID + '/document/' + documentID;
+                this.makeModelRequest('DELETE', deleteDocumentPath, null, onSuccess, onFail);
+            } else {
+                MM.Util.testAndCall(onFail, MM.Internal.noDomainError);
+            }
+
+        }
+    });
+
+    /**
+     *
+     * MM.domains represents the collection of Domains associated with this app.
+     * Each domain contains a collection of documents of the same type.
+     *
+     * @namespace MM.domains
+     * @memberOf MM
+     */
+    MM.models.AppDomainList = new MM.Internal.createSubclass(MM.models.Model, {
+        constructor: function () {
+            MM.models.AppDomainList.superclass.constructor.apply(this, arguments);
+        },
+        localStoragePath: function () {
+            return 'MM.domains';
+        },
+        path: function () {
+            return 'domains';
+        },
+        /**
+         * Helper function returns the JSON data from the domain collection
+         *
+         * @returns {Array.<Object>}
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         *
+         function getDomains () {
+            MM.domains.get(onGetDomains);
+         }
+         function onGetDomains () {
+            var domains = MM.domains.json();
+         }
+         */
+        json: function () {
+            return this._json();
+        },
+        /**
+         * Gets the list of domains associated with this app.
+         *
+         * @param {APISuccessCallback=} onSuccess callback after successfully getting domains
+         * @param {APIErrorCallback=} onFail callback when getting domain list failed
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         function getDomains () {
+             MM.domains.get(
+                 function onGetDomains (result) {
+                     var domains = result.data;
+                 }
+             );
+
+         }
+         */
+        get: function (onSuccess, onFail) {
+            this._get(null, onSuccess, onFail);
+        },
+        /**
+         * Create a new domain object to upload new documents to. This requires an admin token
+         *
+         * @param {string} name name of the new domain
+         * @param {APISuccessCallback=} onSuccess callback after successfully creating a domain
+         * @param {APIErrorCallback=} onFail callback when failing to create a new domain
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         function createDomain () {
+             MM.domains.createDomain('new domain',
+                function onDomainCreated (result) {
+                    var newDomainID = result.data.domainid;
+                }
+             );
+         }
+         */
+        createNew: function (name, onSuccess, onFail) {
+            var params = {
+                uri: name
+            };
+            this.makeModelRequest('POST', this.path(), params, onSuccess, onFail);
+        },
+        /**
+         * Delete a specified domain
+         *
+         * @param {string} domainID ID of domain to delete
+         * @param {APISuccessCallback=} onSuccess callback when successfully deleting domain
+         * @param {APIErrorCallback=} onFail callback for when deleting a domain failed
+         * @memberOf MM.domains
+         * @instance
+         *
+         * @example
+         function deleteDomain () {
+            MM.domains.delete('123',
+                function onDomainDeleted () {
+                    // successfully deleted domain
+                }
+            );
+         }
+         */
+        delete: function (domainID, onSuccess, onFail) {
+            this.makeModelRequest('DELETE', 'domain/' + domainID, null, onSuccess, onFail);
         }
     });
 
@@ -6423,8 +6510,8 @@ var MM = ( function (window, ajax, Faye) {
          * @memberOf MM.activeSession.liveusers
          * @instance
          *
-         * @example <caption> Setting the onUpdate handler, creating a new activity, and
-         * obtaining the latest activities list </caption>
+         * @example <caption> Setting the onUpdate handler, adding a live user, and
+         * obtaining the latest live user list </caption>
          *
          function liveUsersOnUpdateExample () {
             // set the onUpdate handler for the liveusers list
@@ -6725,203 +6812,6 @@ var MM = ( function (window, ajax, Faye) {
         },
         channelType: 'session',
         updateEventName: 'invitedusersUpdate'
-    });
-
-    MM.models.ActivityList = MM.Internal.createSubclass(MM.models.Model, {
-        /**
-         * MM.activeSession.activities represents the Activities collection in the MindMeld API. This collection captures
-         * the history of user actions and other non-text contextual signals associated with the active session
-         *
-         * @namespace MM.activeSession.activities
-         * @memberOf MM.activeSession
-         */
-        constructor: function () {
-            MM.models.ActivityList.superclass.constructor.apply(this, arguments);
-        },
-        localStoragePath: function () {
-            return 'MM.activeSession.activities';
-        },
-        path: function () {
-            return('session/' + MM.activeSessionID + '/activities');
-        },
-        /**
-         * Helper function returns the JSON data for the activities collection
-         *
-         * @returns {Array.<Object>}
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function getActivities () {
-            MM.activeSession.activities.get(null, onGetActivities);
-         }
-         function onGetActivities () {
-            var activities =  MM.activeSession.activities.json();
-            // MM.activeSession.activities.json() returns a JSON object
-            // containing data received from MM.activeSession.activities.get()
-         }
-         */
-        json: function () {
-            return this._json();
-        },
-        /**
-         * Sets the activeSession's activities' onUpdate handler. The onUpdate handler is called once
-         * there is an update to the active session's activities list AND the latest
-         * activities list is fetched successfully. If no updateHandler is passed in,
-         * {@link MM.activeSession.activities#onUpdate} unsubscribes from push events.
-         *
-         * @param {APISuccessCallback=} updateHandler callback for when the activeSession's activity list updates
-         * @param {function=} onSuccess callback for when subscription to onUpdate event succeeds
-         * @param {function=} onError callback for when subscription to onUpdate event fails
-         * @param {QueryParamGetter=} getQueryParams custom function used to determine {@link QueryParameters} used to
-         * in get() request when collection updates
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example <caption> Setting the onUpdate handler, creating a new activity, and
-         * obtaining the latest activities list </caption>
-         *
-         function activitiesOnUpdateExample () {
-            // set the onUpdate handler for the activities list
-            MM.activeSession.activities.onUpdate(
-                onActivitiesUpdate,
-                onSubscribedToActivitiesUpdates,
-                onSubscribeToActivityUpdatesError,
-                getActivitiesParams
-            );
-         }
-         function onSubscribedToActivitiesUpdates () {
-            // successfully subscribed to updates to the session's activities list
-            // now, create a new activity
-            createNewActivity();
-         }
-         function onSubscribeToActivityUpdatesError () {
-            console.log('error subscribing to activity list updates');
-         }
-         function getActivitiesParams () {
-            // When the activity list updates, only fetch 5 objects
-            return {
-                limit: 5
-            };
-         }
-         function onActivitiesUpdate () {
-            // there was an update to the activities list
-            var activities = MM.activeSession.activities.json();
-            // activities contains the latest list of activities
-         }
-         function createNewActivity () {
-            var newActivityData = {
-                activitytype: 'status update',
-                title: 'hello world'
-            };
-            MM.activeSession.activities.post(newActivityData);
-         }
-         *
-         * @example <caption> Deregistering the onUpdate handler </caption>
-         *
-         function deregisterActivitiesOnUpdate () {
-            MM.activeSession.activities.onUpdate(null);
-         }
-         */
-        onUpdate: function (updateHandler, onSuccess, onError, getQueryParams) {
-            this._onUpdate(updateHandler,  onSuccess, onError, getQueryParams);
-        },
-        /**
-         * Get and search through the activity stream for the specified session. The activity stream is designed to
-         * capture non-text contextual signals important to your application. For example, the activity stream could
-         * be used keep track of the location history for a given user; it could be used to log the time when a user
-         * joins or leaves a session; or it could be used to track when users select certain documents, articles or
-         * entities. Currently, the activites collection provides a consistent data representation to capture and search
-         * through a history of non-text contextual signals. As we enhance the MindMeld Platform in the coming months,
-         * we will add capabilities to recognize patterns and make recommendations based on commonly observed
-         * activity histories. A request with a user token can retrieve activites only if the associated user
-         * is permitted to access the session object itself. A request with an admin token can retrieve activites
-         * for any session associated with your application.
-         *
-         * @param {QueryParameters=} params query parameters when fetching the activities list
-         * @param {APISuccessCallback=} onSuccess callback for when getting activities list was successful
-         * @param {APIErrorCallback=} onFail callback for when getting activities list failed
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function getActivities () {
-            MM.activeSession.activities.get(null, onGetActivities);
-         }
-         function onGetActivities (response) {
-            var activities = response.data;
-            console.log(activities);
-         }
-         */
-        get: function (params, onSuccess, onFail) {
-            this._get(params, onSuccess, onFail);
-        },
-        /**
-         * Adds a new activity to the activity stream of the active session. The activity
-         * stream is designed to capture non-text contextual signals important to your
-         * application. This endpoint can be used to create new activities when your
-         * users take specific actions in your app
-         *
-         * @param {Object} activityData Object containing new activity data.
-         * @param {string} activityData.activitytype A short string
-         * identifying the type of activity this object represents. For example, if the activity
-         * corresponds to a user selecting an entity, this attribute could be set to 'select entity'.
-         * If the activity is an update in user status, such as joining or leaving a session,
-         * this attribute could be 'user status update'
-         * @param {string} activityData.title A short text string that can be displayed as the title for the activity
-         * @param {Location=} activityData.location A location object containing the longitude and
-         * latitude coordinates associated with the activity. This can be used to keep track
-         * of location history for a user
-         * @param {string=} activityData.documentid The id of a document, if any, associated with the activity
-         * @param {string=} activityData.articleid The id of an article, if any, associated with the activity
-         * @param {string=} activityData.entityid The id of an entity, if any, associated with the activity
-         * @param {string=} activityData.textentryid The id of a textentry, if any, associated with the activity
-         * @param {APISuccessCallback=} onSuccess callback for when creating new activity was successful
-         * @param {APIErrorCallback=} onFail callback for when creating new activity failed
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function createNewActivity () {
-            var newActivityData = {
-                activitytype: 'status update',
-                title: 'hello world'
-            };
-            MM.activeSession.activities.post(newActivityData, onCreateNewActivity);
-         }
-         function onCreateNewActivity () {
-            // New activity created
-         }
-         */
-        post: function (activityData, onSuccess, onFail) {
-            this.makeModelRequest('POST', this.path(), activityData, onSuccess, onFail);
-        },
-        /**
-         * Delete an activity from the active session
-         *
-         * @param {string} activityid id of the activity to delete
-         * @param {APISuccessCallback=} onSuccess callback for when deleting the activity was successful
-         * @param {APIErrorCallback=} onFail callback for when deleting the activity failed
-         * @memberOf MM.activeSession.activities
-         * @instance
-         *
-         * @example
-         *
-         function deleteActivity () {
-            MM.activeSession.activities.delete('<activity id>', onActivityDeleted);
-         }
-         function onActivityDeleted () {
-            // activity deleted
-         }
-         */
-        delete: function (activityid, onSuccess, onFail) {
-            this.makeModelRequest('DELETE', 'activity/' + activityid, null, onSuccess, onFail);
-        },
-        channelType: 'session',
-        updateEventName: 'activitiesUpdate'
     });
 
     MM.models.ActiveSession = MM.Internal.createSubclass(MM.models.Model, {
