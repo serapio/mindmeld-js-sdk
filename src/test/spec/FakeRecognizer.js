@@ -72,7 +72,7 @@
   FakeRecognizer.prototype._currentTimestamp = function () {
     var currentEvent = this._currentEvent();
     if (currentEvent) {
-      return currentEvent.timestamp;
+      return currentEvent.timeStamp;
     } else {
       return null;
     }

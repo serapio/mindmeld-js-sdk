@@ -450,7 +450,7 @@
     var registerEvent = function (name, e) {
       e = e || {};
       e.type = name;
-      e.timestamp = Date.now();
+      e.timeStamp = Date.now();
 
       if (listener._captureEvents) {
         listener._rawEvents.push(e);
