@@ -1196,7 +1196,11 @@ var MM = ( function (window, ajax, Faye) {
          }
          */
         setActiveDomainID: function (domainID) {
-            MM.activeDomainID = domainID;
+            if (typeof domainID === 'string') {
+                MM.activeDomainID = domainID;
+            } else {
+                MM.activeDomainID = null;
+            }
         },
 
         /**
